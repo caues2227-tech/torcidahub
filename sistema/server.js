@@ -8,18 +8,50 @@ const PORT = 3000;
 const ROOT = __dirname;
 const DATA = path.join(ROOT, "data", "db.json");
 const PUBLIC = path.join(ROOT, "public");
+const SECRET = "torcida-aps2";
 
 const TIMES = [
   "Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos",
   "Vasco", "Grêmio", "Internacional", "Atlético-MG", "Cruzeiro"
 ];
 
+function hoje() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function load() {
   if (!fs.existsSync(DATA)) {
     fs.mkdirSync(path.dirname(DATA), { recursive: true });
-    fs.writeFileSync(DATA, JSON.stringify({ usuarios: [] }, null, 2));
+    const seed = {
+      usuarios: [],
+      posts: [],
+      curtidas: [],
+      comentarios: [],
+      jogos: [
+        { id: 1, mandante: "Flamengo", visitante: "Palmeiras", data: hoje(), horario: "16:00", placarMandante: null, placarVisitante: null },
+        { id: 2, mandante: "Grêmio", visitante: "Internacional", data: hoje(), horario: "18:30", placarMandante: null, placarVisitante: null }
+      ]
+    };
+    fs.writeFileSync(DATA, JSON.stringify(seed, null, 2));
   }
-  return JSON.parse(fs.readFileSync(DATA, "utf8"));
+  const db = JSON.parse(fs.readFileSync(DATA, "utf8"));
+  db.usuarios = db.usuarios || [];
+  db.posts = db.posts || [];
+  db.curtidas = db.curtidas || [];
+  db.comentarios = db.comentarios || [];
+  db.jogos = db.jogos || [];
+  if (db.usuarios.length && !db.usuarios.some((u) => u.papel === "admin")) {
+    db.usuarios[0].papel = "admin";
+    save(db);
+  }
+  if (!db.jogos.length) {
+    db.jogos = [
+      { id: 1, mandante: "Flamengo", visitante: "Palmeiras", data: hoje(), horario: "16:00", placarMandante: null, placarVisitante: null },
+      { id: 2, mandante: "Grêmio", visitante: "Internacional", data: hoje(), horario: "18:30", placarMandante: null, placarVisitante: null }
+    ];
+    save(db);
+  }
+  return db;
 }
 
 function save(db) {
@@ -39,9 +71,19 @@ function senhaOk(senha, gravado) {
 }
 
 function token(user) {
-  const payload = Buffer.from(JSON.stringify({ id: user.id, email: user.email, time: user.time })).toString("base64url");
-  const sig = crypto.createHmac("sha256", "torcida-aps2").update(payload).digest("base64url");
+  const payload = Buffer.from(JSON.stringify({ id: user.id, email: user.email, time: user.time, nome: user.nome, papel: user.papel || "torcedor" })).toString("base64url");
+  const sig = crypto.createHmac("sha256", SECRET).update(payload).digest("base64url");
   return `${payload}.${sig}`;
+}
+
+function usuarioDoReq(req) {
+  const h = req.headers.authorization || "";
+  const t = h.startsWith("Bearer ") ? h.slice(7) : "";
+  if (!t || !t.includes(".")) return null;
+  const [payload, sig] = t.split(".");
+  const ok = crypto.createHmac("sha256", SECRET).update(payload).digest("base64url");
+  if (ok !== sig) return null;
+  try { return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")); } catch { return null; }
 }
 
 function json(res, code, body) {
@@ -72,8 +114,25 @@ function readBody(req) {
   });
 }
 
+function postPublico(db, p) {
+  const autor = db.usuarios.find((u) => u.id === p.usuarioId);
+  return {
+    id: p.id,
+    texto: p.texto,
+    time: p.time,
+    nome: autor ? autor.nome : "torcedor",
+    criadoEm: p.criadoEm,
+    likes: db.curtidas.filter((c) => c.postId === p.id).length,
+    comentarios: db.comentarios.filter((c) => c.postId === p.id).map((c) => {
+      const u = db.usuarios.find((x) => x.id === c.usuarioId);
+      return { id: c.id, texto: c.texto, nome: u ? u.nome : "torcedor", criadoEm: c.criadoEm };
+    })
+  };
+}
+
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, `http://localhost:${PORT}`);
+  const eu = usuarioDoReq(req);
 
   if (req.method === "GET" && u.pathname === "/api/times") {
     return json(res, 200, { times: TIMES });
@@ -86,15 +145,16 @@ const server = http.createServer(async (req, res) => {
       const email = String(b.email || "").trim().toLowerCase();
       const senha = String(b.senha || "");
       const time = String(b.time || "").trim();
-      if (!nome || !email || !senha || !time) return json(res, 400, { erro: "Preencha nome, e-mail, senha e time de coração." });
-      if (senha.length < 6) return json(res, 400, { erro: "A senha deve ter no mínimo 6 caracteres." });
+      if (!nome || !email || !senha || !time) return json(res, 400, { erro: "Preencha nome, e-mail, senha e time." });
+      if (senha.length < 6) return json(res, 400, { erro: "Senha com no mínimo 6 caracteres." });
       if (!TIMES.includes(time)) return json(res, 400, { erro: "Escolha um time da lista." });
       const db = load();
       if (db.usuarios.some((x) => x.email === email)) return json(res, 400, { erro: "E-mail já cadastrado." });
-      const user = { id: Date.now(), nome, email, senhaHash: hashSenha(senha), time, papel: "torcedor" };
+      const papel = db.usuarios.length === 0 ? "admin" : "torcedor";
+      const user = { id: Date.now(), nome, email, senhaHash: hashSenha(senha), time, papel };
       db.usuarios.push(user);
       save(db);
-      return json(res, 201, { ok: true, mensagem: "Cadastro realizado." });
+      return json(res, 201, { ok: true });
     } catch {
       return json(res, 400, { erro: "JSON inválido." });
     }
@@ -109,7 +169,134 @@ const server = http.createServer(async (req, res) => {
       const db = load();
       const user = db.usuarios.find((x) => x.email === email);
       if (!user || !senhaOk(senha, user.senhaHash)) return json(res, 401, { erro: "E-mail ou senha inválidos." });
-      return json(res, 200, { ok: true, token: token(user), nome: user.nome, time: user.time });
+      return json(res, 200, { ok: true, token: token(user), nome: user.nome, time: user.time, papel: user.papel });
+    } catch {
+      return json(res, 400, { erro: "JSON inválido." });
+    }
+  }
+
+  if (req.method === "GET" && u.pathname === "/api/feed") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    const db = load();
+    const lista = db.posts.slice().sort((a, b) => b.id - a.id).map((p) => postPublico(db, p));
+    return json(res, 200, { posts: lista });
+  }
+
+  if (req.method === "POST" && u.pathname === "/api/posts") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    try {
+      const b = await readBody(req);
+      const texto = String(b.texto || "").trim();
+      if (!texto) return json(res, 400, { erro: "Escreve alguma coisa." });
+      if (texto.length > 280) return json(res, 400, { erro: "Máximo 280 caracteres." });
+      const db = load();
+      const post = { id: Date.now(), usuarioId: eu.id, time: eu.time, texto, criadoEm: new Date().toISOString() };
+      db.posts.push(post);
+      save(db);
+      return json(res, 201, { post: postPublico(db, post) });
+    } catch {
+      return json(res, 400, { erro: "JSON inválido." });
+    }
+  }
+
+  if (req.method === "POST" && u.pathname.match(/^\/api\/posts\/\d+\/curtir$/)) {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    const postId = Number(u.pathname.split("/")[3]);
+    const db = load();
+    const i = db.curtidas.findIndex((c) => c.postId === postId && c.usuarioId === eu.id);
+    if (i >= 0) db.curtidas.splice(i, 1);
+    else db.curtidas.push({ postId, usuarioId: eu.id });
+    save(db);
+    return json(res, 200, { ok: true });
+  }
+
+  if (req.method === "POST" && u.pathname.match(/^\/api\/posts\/\d+\/comentar$/)) {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    const postId = Number(u.pathname.split("/")[3]);
+    try {
+      const b = await readBody(req);
+      const texto = String(b.texto || "").trim();
+      if (!texto) return json(res, 400, { erro: "Comentário vazio." });
+      const db = load();
+      db.comentarios.push({ id: Date.now(), postId, usuarioId: eu.id, texto, criadoEm: new Date().toISOString() });
+      save(db);
+      return json(res, 201, { ok: true });
+    } catch {
+      return json(res, 400, { erro: "JSON inválido." });
+    }
+  }
+
+  if (req.method === "GET" && u.pathname === "/api/ranking") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    const db = load();
+    const contagem = {};
+    for (const t of TIMES) contagem[t] = 0;
+    for (const user of db.usuarios) contagem[user.time] = (contagem[user.time] || 0) + 1;
+    const ranking = Object.entries(contagem)
+      .map(([time, qtd]) => ({ time, qtd }))
+      .sort((a, b) => b.qtd - a.qtd || a.time.localeCompare(b.time));
+    return json(res, 200, { ranking });
+  }
+
+  if (req.method === "GET" && u.pathname === "/api/resumo") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    const db = load();
+    const jogos = db.jogos.filter((j) => j.data === hoje() && (j.mandante === eu.time || j.visitante === eu.time));
+    const postsTime = db.posts.filter((p) => p.time === eu.time).length;
+    let texto;
+    if (!jogos.length) texto = `Hoje o ${eu.time} não tem jogo cadastrado. A torcida já soltou ${postsTime} post(s).`;
+    else {
+      const j = jogos[0];
+      const placar = j.placarMandante == null ? "ainda sem placar" : `${j.placarMandante} x ${j.placarVisitante}`;
+      texto = `Hoje: ${j.mandante} x ${j.visitante} às ${j.horario} (${placar}). Posts do ${eu.time}: ${postsTime}.`;
+    }
+    return json(res, 200, { texto, time: eu.time });
+  }
+
+  if (req.method === "POST" && u.pathname === "/api/chatbot") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    try {
+      const b = await readBody(req);
+      const pergunta = String(b.pergunta || "").toLowerCase();
+      const db = load();
+      const jogosHoje = db.jogos.filter((j) => j.data === hoje());
+      let resposta;
+      if (pergunta.includes("jogo") || pergunta.includes("hoje")) {
+        resposta = jogosHoje.length
+          ? "Hoje: " + jogosHoje.map((j) => `${j.mandante} x ${j.visitante} (${j.horario})`).join("; ") + "."
+          : "Não tem jogo cadastrado pra hoje.";
+      } else if (pergunta.includes("resumo") || pergunta.includes("meu time")) {
+        const jogos = jogosHoje.filter((j) => j.mandante === eu.time || j.visitante === eu.time);
+        resposta = jogos.length
+          ? `${eu.time} joga: ` + jogos.map((j) => `${j.mandante} x ${j.visitante} às ${j.horario}`).join("; ") + "."
+          : `${eu.time} não tem jogo cadastrado hoje.`;
+      } else {
+        resposta = 'Pergunta "quais jogos tem hoje?" ou "resumo do meu time".';
+      }
+      return json(res, 200, { resposta });
+    } catch {
+      return json(res, 400, { erro: "JSON inválido." });
+    }
+  }
+
+  if (req.method === "POST" && u.pathname === "/api/jogos") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    if (eu.papel !== "admin") return json(res, 403, { erro: "Só admin cadastra jogo." });
+    try {
+      const b = await readBody(req);
+      const mandante = String(b.mandante || "").trim();
+      const visitante = String(b.visitante || "").trim();
+      const data = String(b.data || hoje());
+      const horario = String(b.horario || "").trim();
+      if (!mandante || !visitante || !horario) return json(res, 400, { erro: "Preenche mandante, visitante e horário." });
+      const db = load();
+      db.jogos.push({
+        id: Date.now(), mandante, visitante, data, horario,
+        placarMandante: b.placarMandante == null || b.placarMandante === "" ? null : Number(b.placarMandante),
+        placarVisitante: b.placarVisitante == null || b.placarVisitante === "" ? null : Number(b.placarVisitante)
+      });
+      save(db);
+      return json(res, 201, { ok: true });
     } catch {
       return json(res, 400, { erro: "JSON inválido." });
     }
@@ -118,6 +305,9 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && (u.pathname === "/" || u.pathname === "/login.html")) return sendFile(res, "login.html");
   if (req.method === "GET" && u.pathname === "/cadastro.html") return sendFile(res, "cadastro.html");
   if (req.method === "GET" && u.pathname === "/feed.html") return sendFile(res, "feed.html");
+  if (req.method === "GET" && u.pathname === "/ranking.html") return sendFile(res, "ranking.html");
+  if (req.method === "GET" && u.pathname === "/chatbot.html") return sendFile(res, "chatbot.html");
+  if (req.method === "GET" && u.pathname === "/admin.html") return sendFile(res, "admin.html");
   if (req.method === "GET" && u.pathname === "/estilos.css") return sendFile(res, "estilos.css");
 
   res.writeHead(404);

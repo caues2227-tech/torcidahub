@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chatbot | Torcida</title>
+  <link rel="stylesheet" href="/estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">TORCIDA<span>.</span></div>
+      <nav>
+        <a href="/feed.html">Feed</a>
+        <a href="/ranking.html">Ranking</a>
+        <a href="/chatbot.html">Chatbot</a>
+        <a href="/login.html" id="sair">Sair</a>
+      </nav>
+    </div>
+    <div class="page">
+      <h1>Jogos de hoje</h1>
+      <p class="muted">Pergunta pelos jogos ou pelo teu time. Os dados saem do nosso banco.</p>
+      <div class="card" id="chat"></div>
+      <div class="card">
+        <input id="pergunta" placeholder='quais jogos tem hoje?' />
+        <button class="btn" id="enviar" type="button">Enviar</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const s = sessionStorage.getItem("torcida");
+    if (!s) location.href = "/login.html";
+    const eu = JSON.parse(s);
+    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
+    const chat = document.getElementById("chat");
+    async function manda() {
+      const pergunta = document.getElementById("pergunta").value.trim();
+      if (!pergunta) return;
+      chat.innerHTML += `<div class="bubble">${pergunta}</div>`;
+      const r = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + eu.token },
+        body: JSON.stringify({ pergunta })
+      });
+      const d = await r.json();
+      chat.innerHTML += `<div class="bubble me">${d.resposta}</div>`;
+      document.getElementById("pergunta").value = "";
+    }
+    document.getElementById("enviar").onclick = manda;
+    document.getElementById("pergunta").addEventListener("keydown", (e) => { if (e.key === "Enter") manda(); });
+  </script>
+</body>
+</html>

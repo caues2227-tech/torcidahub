@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ranking | Torcida</title>
+  <link rel="stylesheet" href="/estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">TORCIDA<span>.</span></div>
+      <nav>
+        <a href="/feed.html">Feed</a>
+        <a href="/ranking.html">Ranking</a>
+        <a href="/chatbot.html">Chatbot</a>
+        <a href="/login.html" id="sair">Sair</a>
+      </nav>
+    </div>
+    <div class="page">
+      <h1>Ranking de torcida</h1>
+      <p class="muted">Quem tem mais gente cadastrada no site.</p>
+      <div class="card" id="lista"></div>
+    </div>
+  </div>
+  <script>
+    const s = sessionStorage.getItem("torcida");
+    if (!s) location.href = "/login.html";
+    const eu = JSON.parse(s);
+    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
+    fetch("/api/ranking", { headers: { Authorization: "Bearer " + eu.token } })
+      .then((r) => r.json())
+      .then((d) => {
+        document.getElementById("lista").innerHTML = (d.ranking || []).map((x, i) =>
+          `<div class="rank"><span class="pos">${i + 1}</span> ${x.time}<span style="margin-left:auto">${x.qtd} torcedor(es)</span></div>`
+        ).join("");
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin | Torcida</title>
+  <link rel="stylesheet" href="/estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">TORCIDA<span>.</span></div>
+      <nav>
+        <a href="/feed.html">Feed</a>
+        <a href="/ranking.html">Ranking</a>
+        <a href="/chatbot.html">Chatbot</a>
+        <a href="/login.html" id="sair">Sair</a>
+      </nav>
+    </div>
+    <div class="page">
+      <h1>Cadastrar jogo</h1>
+      <p class="muted">Primeiro cadastro do site vira admin.</p>
+      <div class="card">
+        <label>Mandante</label>
+        <select id="mandante"></select>
+        <label>Visitante</label>
+        <select id="visitante"></select>
+        <label>Data</label>
+        <input id="data" type="date" />
+        <label>Horário</label>
+        <input id="horario" value="16:00" />
+        <button class="btn" id="salvar" type="button">Salvar</button>
+        <p class="erro" id="erro"></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const s = sessionStorage.getItem("torcida");
+    if (!s) location.href = "/login.html";
+    const eu = JSON.parse(s);
+    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
+    document.getElementById("data").value = new Date().toISOString().slice(0, 10);
+    fetch("/api/times").then((r) => r.json()).then((d) => {
+      const o = d.times.map((t) => `<option>${t}</option>`).join("");
+      document.getElementById("mandante").innerHTML = o;
+      document.getElementById("visitante").innerHTML = o;
+    });
+    document.getElementById("salvar").onclick = async () => {
+      const erro = document.getElementById("erro");
+      erro.textContent = "";
+      const r = await fetch("/api/jogos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + eu.token },
+        body: JSON.stringify({
+          mandante: document.getElementById("mandante").value,
+          visitante: document.getElementById("visitante").value,
+          data: document.getElementById("data").value,
+          horario: document.getElementById("horario").value
+        })
+      });
+      const d = await r.json();
+      erro.textContent = r.ok ? "Jogo salvo." : (d.erro || "Não rolou");
+    };
+  </script>
+</body>
+</html>

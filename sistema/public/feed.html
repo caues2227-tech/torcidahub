@@ -10,25 +10,83 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">TORCIDA<span>.</span></div>
-      <nav><a href="/login.html" id="sair">Sair</a></nav>
+      <nav>
+        <a href="/feed.html">Feed</a>
+        <a href="/ranking.html">Ranking</a>
+        <a href="/chatbot.html">Chatbot</a>
+        <a href="/admin.html" id="linkAdmin" style="display:none">Admin</a>
+        <a href="/login.html" id="sair">Sair</a>
+      </nav>
     </div>
     <div class="page">
+      <div class="card" id="resumo"></div>
       <div class="card">
-        <p>Olá, <strong id="nome"></strong></p>
-        <p class="muted">Time de coração: <span class="tag" id="time"></span></p>
-        <p class="muted">Cadastro e login já funcionam. Feed, ranking e chatbot vêm nas próximas tarefas do A FAZER.</p>
+        <label>O que tá rolando?</label>
+        <textarea id="texto" maxlength="280" rows="3"></textarea>
+        <div class="muted">Vai com a etiqueta do seu time · <span id="rest">280</span></div>
+        <button class="btn" id="btnPost" type="button">Publicar</button>
+        <p class="erro" id="erro"></p>
       </div>
+      <div id="lista"></div>
     </div>
   </div>
   <script>
     const s = sessionStorage.getItem("torcida");
     if (!s) location.href = "/login.html";
-    else {
-      const u = JSON.parse(s);
-      document.getElementById("nome").textContent = u.nome;
-      document.getElementById("time").textContent = u.time;
+    const eu = JSON.parse(s);
+    if (eu.papel === "admin") document.getElementById("linkAdmin").style.display = "inline";
+    const H = { "Content-Type": "application/json", Authorization: "Bearer " + eu.token };
+    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
+    const ta = document.getElementById("texto");
+    ta.oninput = () => document.getElementById("rest").textContent = 280 - ta.value.length;
+
+    async function carregar() {
+      const r = await fetch("/api/resumo", { headers: H });
+      const d = await r.json();
+      document.getElementById("resumo").innerHTML = "<strong>Resumo do dia — " + eu.time + "</strong><p class='muted'>" + (d.texto || "") + "</p>";
+      const f = await fetch("/api/feed", { headers: H });
+      const g = await f.json();
+      document.getElementById("lista").innerHTML = (g.posts || []).map((p) => `
+        <div class="card">
+          <div><span class="tag">${p.time}</span> <strong>${p.nome}</strong></div>
+          <div class="muted">${new Date(p.criadoEm).toLocaleString("pt-BR")}</div>
+          <p>${p.texto}</p>
+          <div class="acoes">
+            <button type="button" data-like="${p.id}">Curtir ${p.likes}</button>
+          </div>
+          ${(p.comentarios || []).map((c) => `<p class="muted">${c.nome}: ${c.texto}</p>`).join("")}
+          <input data-com="${p.id}" placeholder="Comentar" />
+        </div>
+      `).join("");
+      document.querySelectorAll("[data-like]").forEach((b) => b.onclick = async () => {
+        await fetch("/api/posts/" + b.dataset.like + "/curtir", { method: "POST", headers: H });
+        carregar();
+      });
+      document.querySelectorAll("[data-com]").forEach((inp) => {
+        inp.addEventListener("keydown", async (e) => {
+          if (e.key !== "Enter") return;
+          const texto = inp.value.trim();
+          if (!texto) return;
+          await fetch("/api/posts/" + inp.dataset.com + "/comentar", {
+            method: "POST", headers: H, body: JSON.stringify({ texto })
+          });
+          carregar();
+        });
+      });
     }
-    document.getElementById("sair").addEventListener("click", () => sessionStorage.removeItem("torcida"));
+
+    document.getElementById("btnPost").onclick = async () => {
+      const erro = document.getElementById("erro");
+      erro.textContent = "";
+      const r = await fetch("/api/posts", {
+        method: "POST", headers: H, body: JSON.stringify({ texto: ta.value })
+      });
+      const d = await r.json();
+      if (!r.ok) { erro.textContent = d.erro; return; }
+      ta.value = "";
+      carregar();
+    };
+    carregar();
   </script>
 </body>
 </html>

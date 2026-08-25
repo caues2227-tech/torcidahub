@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrega 2 — Torcida | Análise e Projeto de Sistemas II</title>
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --muted: #444;
+      --line: #ccc;
+      --bg: #fff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0 auto;
+      max-width: 900px;
+      padding: 32px 40px 80px;
+      font-family: "Times New Roman", Times, serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.45;
+      font-size: 13.5pt;
+    }
+    h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 15pt; border-bottom: 1px solid var(--ink); padding-bottom: 4px; margin-top: 32px; }
+    h3 { font-size: 13pt; margin-top: 22px; }
+    h4 { font-size: 12pt; margin-top: 16px; }
+    .cover { text-align: center; margin-bottom: 36px; }
+    .cover p { margin: 4px 0; }
+    .muted { color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: 11.5pt;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 6px 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: #f0f0f0; }
+    ul { margin-top: 6px; }
+    .page-break { page-break-before: always; }
+    .id { font-family: Consolas, "Courier New", monospace; font-weight: bold; }
+    .note {
+      border-left: 3px solid #333;
+      padding: 8px 12px;
+      margin: 12px 0 20px;
+      font-size: 11.5pt;
+    }
+    @media print {
+      body { padding: 0; max-width: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II</p>
+    <p>Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega 2 — Documento de Análise</h1>
+    <p><strong>Projeto Torcida</strong> — rede social de futebol</p>
+    <p class="muted">Artefato 1: Documento de Visão &nbsp;·&nbsp; Artefato 2: Requisitos &nbsp;·&nbsp; Casos de uso</p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa</p>
+    <p>25/08/2026</p>
+  </header>
+
+  <h2>Artefato 1 — Documento de Visão</h2>
+
+  <h3>1. Introdução</h3>
+  <p>Este documento apresenta a visão do sistema <strong>Torcida</strong>, uma aplicação web no estilo Twitter/Threads voltada exclusivamente ao futebol. O objetivo é alinhar o grupo, o professor e os demais interessados quanto ao problema, à solução proposta, ao escopo do MVP e às restrições do projeto.</p>
+
+  <h3>2. Problema</h3>
+  <p>O torcedor brasileiro acompanha o time de coração principalmente em redes sociais genéricas (X/Twitter, Instagram, Threads). Nesses ambientes, o conteúdo de futebol se mistura a outros assuntos, o feed não é organizado pelo time e não existe uma visão coletiva de qual clube tem mais torcida dentro da própria comunidade.</p>
+  <p>Na prática, isso gera três dificuldades:</p>
+  <ol>
+    <li><strong>Falta de contexto:</strong> o usuário não declara o time de coração como parte da identidade na plataforma, então o sistema não consegue priorizar o que importa para ele.</li>
+    <li><strong>Dispersão:</strong> comentários sobre jogos e times se perdem no meio de outros temas.</li>
+    <li><strong>Ausência de indicador comunitário:</strong> não há um ranking simples que mostre, na plataforma, qual time reúne mais torcedores.</li>
+  </ol>
+
+  <h3>3. Oportunidade</h3>
+  <p>Há espaço para uma rede social especializada em futebol, com regra clara de identidade (time de coração no cadastro), feed com etiqueta do time, ranking de torcida e um resumo inteligente do dia.</p>
+  <p>O diferencial do Torcida não é copiar o Twitter. É usar o time de coração como eixo da experiência: o post já nasce ligado a um clube; o ranking mostra a força da torcida na plataforma; o resumo do dia e o chatbot concentram jogos e movimentação do time do usuário, com dados armazenados no próprio sistema.</p>
+  <p>Essa combinação é viável como MVP acadêmico: autenticação, publicação, consulta/relatório (ranking) e um módulo de resumo/chatbot, todos testáveis.</p>
+
+  <h3>4. Objetivos</h3>
+  <h4>4.1 Objetivo geral</h4>
+  <p>Desenvolver uma plataforma web no estilo Twitter/Threads exclusiva para futebol, na qual cada usuário informa o time de coração no cadastro e passa a publicar, acompanhar o feed, visualizar o ranking de torcida e receber um resumo do dia relacionado ao seu time.</p>
+  <h4>4.2 Objetivos específicos</h4>
+  <ul>
+    <li>Permitir cadastro, login e logout, com escolha obrigatória do time de coração.</li>
+    <li>Permitir a publicação de posts em texto com etiqueta do time (imagem opcional).</li>
+    <li>Disponibilizar feed com curtida e comentário.</li>
+    <li>Exibir ranking de torcida (quantidade de usuários por time).</li>
+    <li>Gerar o resumo do dia do time do usuário.</li>
+    <li>Oferecer um chatbot simples para perguntas sobre os jogos do dia.</li>
+    <li>Manter jogos, times, usuários e posts no banco de dados do próprio sistema, sem depender de API externa no momento da apresentação.</li>
+  </ul>
+
+  <h3>5. Público-alvo</h3>
+  <p>Torcedores de futebol que já usam redes sociais para comentar jogos, escalação, contratações e resultados, com foco inicial no <strong>público brasileiro</strong>.</p>
+  <p>Perfil principal: jovem ou adulto com acesso a navegador web, que torce para um clube e quer um espaço só de futebol, ligado ao seu time.</p>
+  <p>Fora do público inicial: imprensa profissional, scouts, apostadores e uso corporativo.</p>
+
+  <h3>6. Stakeholders</h3>
+  <table>
+    <thead>
+      <tr><th>Stakeholder</th><th>Papel</th><th>Interesse</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Torcedor (usuário)</td><td>Ator principal</td><td>Cadastrar-se com o time, postar, ver o feed, ranking e resumo do dia</td></tr>
+      <tr><td>Administrador da plataforma</td><td>Ator interno</td><td>Cadastrar times e jogos do dia para alimentar ranking, resumo e chatbot</td></tr>
+      <tr><td>Equipe de desenvolvimento</td><td>Grupo da disciplina</td><td>Entregar o MVP, a documentação e os testes no prazo</td></tr>
+      <tr><td>Professor / banca</td><td>Avaliador</td><td>Verificar se o sistema atende ao ciclo da disciplina</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7. Visão geral da solução</h3>
+  <p>O Torcida é uma aplicação web. Após o login, o usuário vê cabeçalho, campo de post, card fixo “Resumo do dia”, feed com etiqueta do time, aba Ranking e chatbot.</p>
+  <p>A inteligência do resumo <strong>não depende de API externa na banca</strong>. Jogos e resultados ficam cadastrados no banco; o módulo de resumo/chatbot lê esses dados e, quando couber, os posts recentes do time.</p>
+
+  <h3>8. Escopo (MVP)</h3>
+  <ul>
+    <li>Cadastro, login e logout, com time de coração obrigatório.</li>
+    <li>Posts em texto com etiqueta do time; imagem opcional.</li>
+    <li>Feed, curtida e comentário.</li>
+    <li>Ranking de torcida.</li>
+    <li>Card de resumo do dia e chatbot simples sobre jogos do dia.</li>
+    <li>Cadastro interno de times e de jogos.</li>
+    <li>Banco próprio para usuário, time, post, comentário e jogo.</li>
+  </ul>
+
+  <h3>9. Fora do escopo</h3>
+  <ul>
+    <li>Stories, chat privado, aplicativo mobile nativo, transmissão ao vivo.</li>
+    <li>Apostas, fantasy, marketplace ou venda de ingressos.</li>
+    <li>Dependência obrigatória de API externa de jogos na apresentação.</li>
+    <li>Recuperação de senha por e-mail e notificações push em tempo real.</li>
+  </ul>
+
+  <h3>10. Restrições</h3>
+  <ul>
+    <li>O sistema deve funcionar em navegador web.</li>
+    <li>O prazo segue o cronograma da disciplina (MVP no fim de setembro; apresentação em novembro de 2026).</li>
+    <li>A demonstração final precisa funcionar offline de APIs de futebol de terceiros.</li>
+  </ul>
+
+  <h3>11. Premissas</h3>
+  <ul>
+    <li>Cada usuário torce para um time de coração nesta versão.</li>
+    <li>Os times disponíveis no cadastro serão pré-cadastrados.</li>
+    <li>Haverá perfil de administrador para incluir jogos do dia.</li>
+    <li>O ranking considera a quantidade de usuários cadastrados em cada time.</li>
+    <li>Imagens em posts não são obrigatórias para o MVP ser considerado completo.</li>
+  </ul>
+
+  <h3>12. Tecnologias pretendidas</h3>
+  <table>
+    <thead>
+      <tr><th>Camada</th><th>Tecnologia</th><th>Justificativa</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Frontend</td><td>React</td><td>Interface de feed com componentes reutilizáveis</td></tr>
+      <tr><td>Backend</td><td>Node.js + Express</td><td>API REST simples de integrar ao React e ao JWT</td></tr>
+      <tr><td>Banco de dados</td><td>PostgreSQL</td><td>Modelo relacional claro (usuário, time, post, comentário, jogo)</td></tr>
+      <tr><td>Autenticação</td><td>JWT</td><td>Sessão de usuário para rotas protegidas</td></tr>
+      <tr><td>Versionamento</td><td>Git / GitHub</td><td>Exigência da disciplina e trabalho em grupo</td></tr>
+      <tr><td>Resumo / chatbot</td><td>Módulo interno + IA opcional</td><td>Lê dados do próprio banco; a IA apenas redige o texto</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13. Critério de sucesso do MVP</h3>
+  <p>O MVP estará pronto quando o usuário conseguir criar conta com time de coração, entrar, publicar, curtir, comentar, ver o ranking, ver o resumo do dia e perguntar ao chatbot quais jogos há no dia. Esses fluxos terão evidência de teste na Entrega 6.</p>
+
+  <h2 class="page-break">Artefato 2 — Requisitos</h2>
+
+  <h3>Requisitos funcionais — autenticação e perfil</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th><th>Prioridade</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF01</td><td>O sistema deverá permitir o cadastro de usuário com nome, e-mail, senha e time de coração.</td><td>Alta</td></tr>
+      <tr><td class="id">RF02</td><td>O sistema deverá exigir o time de coração como campo obrigatório no cadastro.</td><td>Alta</td></tr>
+      <tr><td class="id">RF03</td><td>O sistema deverá validar e-mail único, senha com mínimo de 6 caracteres e preenchimento dos campos obrigatórios.</td><td>Alta</td></tr>
+      <tr><td class="id">RF04</td><td>O sistema deverá permitir o login com e-mail e senha.</td><td>Alta</td></tr>
+      <tr><td class="id">RF05</td><td>O sistema deverá recusar o login quando o e-mail ou a senha estiverem incorretos.</td><td>Alta</td></tr>
+      <tr><td class="id">RF06</td><td>O sistema deverá permitir o logout.</td><td>Alta</td></tr>
+      <tr><td class="id">RF07</td><td>O sistema deverá impedir o acesso ao feed, ao ranking e ao resumo do dia sem autenticação.</td><td>Alta</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Requisitos funcionais — posts e feed</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th><th>Prioridade</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF08</td><td>O sistema deverá permitir que o usuário autenticado crie um post em texto.</td><td>Alta</td></tr>
+      <tr><td class="id">RF09</td><td>O sistema deverá associar automaticamente a etiqueta do time de coração ao post.</td><td>Alta</td></tr>
+      <tr><td class="id">RF10</td><td>O sistema deverá permitir imagem no post de forma opcional.</td><td>Média</td></tr>
+      <tr><td class="id">RF11</td><td>O sistema deverá listar o feed de posts em ordem cronológica inversa (mais recente primeiro).</td><td>Alta</td></tr>
+      <tr><td class="id">RF12</td><td>O sistema deverá exibir, em cada post, autor, time, texto, data, quantidade de curtidas e comentários.</td><td>Alta</td></tr>
+      <tr><td class="id">RF13</td><td>O sistema deverá limitar o texto do post a 280 caracteres.</td><td>Alta</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Requisitos funcionais — interações</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th><th>Prioridade</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF14</td><td>O sistema deverá permitir curtir um post.</td><td>Alta</td></tr>
+      <tr><td class="id">RF15</td><td>O sistema deverá permitir remover a própria curtida.</td><td>Alta</td></tr>
+      <tr><td class="id">RF16</td><td>O sistema deverá impedir mais de uma curtida do mesmo usuário no mesmo post.</td><td>Alta</td></tr>
+      <tr><td class="id">RF17</td><td>O sistema deverá permitir comentar um post.</td><td>Alta</td></tr>
+      <tr><td class="id">RF18</td><td>O sistema deverá listar os comentários de um post com autor e data.</td><td>Alta</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Requisitos funcionais — ranking, resumo, chatbot e administração</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th><th>Prioridade</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF19</td><td>O sistema deverá exibir o ranking de torcida, ordenado pela quantidade de usuários cadastrados em cada time.</td><td>Alta</td></tr>
+      <tr><td class="id">RF20</td><td>O sistema deverá mostrar posição, nome do time e número de torcedores.</td><td>Alta</td></tr>
+      <tr><td class="id">RF21</td><td>O sistema deverá atualizar o ranking automaticamente quando um novo usuário se cadastrar.</td><td>Alta</td></tr>
+      <tr><td class="id">RF22</td><td>O sistema deverá exibir um card fixo “Resumo do dia” com texto referente ao time de coração do usuário logado.</td><td>Alta</td></tr>
+      <tr><td class="id">RF23</td><td>O sistema deverá montar o resumo do dia a partir dos jogos cadastrados no banco e, quando houver, de posts recentes daquele time.</td><td>Alta</td></tr>
+      <tr><td class="id">RF24</td><td>O sistema deverá oferecer um chatbot para o usuário perguntar quais jogos há no dia.</td><td>Alta</td></tr>
+      <tr><td class="id">RF25</td><td>O sistema deverá permitir que o chatbot informe o resumo do time de coração do usuário.</td><td>Alta</td></tr>
+      <tr><td class="id">RF26</td><td>O sistema deverá responder com mensagem clara quando não houver jogos cadastrados para a data.</td><td>Alta</td></tr>
+      <tr><td class="id">RF27</td><td>O sistema deverá permitir que o administrador cadastre times (nome e sigla).</td><td>Alta</td></tr>
+      <tr><td class="id">RF28</td><td>O sistema deverá permitir que o administrador cadastre jogos do dia (mandante, visitante, data, horário e, se houver, placar).</td><td>Alta</td></tr>
+      <tr><td class="id">RF29</td><td>O sistema deverá listar os times disponíveis para escolha no cadastro do torcedor.</td><td>Alta</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Requisitos não funcionais</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th><th>Categoria</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RNF01</td><td>O sistema deverá possuir autenticação de usuários.</td><td>Segurança</td></tr>
+      <tr><td class="id">RNF02</td><td>O sistema deverá funcionar em navegador web (Chrome, Edge ou Firefox).</td><td>Compatibilidade</td></tr>
+      <tr><td class="id">RNF03</td><td>O sistema deverá realizar validação dos campos obrigatórios no cadastro, no login e na publicação.</td><td>Usabilidade</td></tr>
+      <tr><td class="id">RNF04</td><td>As senhas deverão ser armazenadas de forma criptografada (hash), nunca em texto puro.</td><td>Segurança</td></tr>
+      <tr><td class="id">RNF05</td><td>As telas principais deverão estar em português.</td><td>Usabilidade</td></tr>
+      <tr><td class="id">RNF06</td><td>O sistema deverá ser utilizável em resolução de desktop (mínimo 1280×720).</td><td>Interface</td></tr>
+      <tr><td class="id">RNF07</td><td>As operações principais deverão responder em até 3 segundos em ambiente local.</td><td>Desempenho</td></tr>
+      <tr><td class="id">RNF08</td><td>O MVP deverá funcionar na apresentação sem API externa de jogos.</td><td>Disponibilidade</td></tr>
+      <tr><td class="id">RNF09</td><td>O código deverá ser versionado no GitHub, com histórico de commits do grupo.</td><td>Manutenibilidade</td></tr>
+      <tr><td class="id">RNF10</td><td>O acesso às rotas autenticadas deverá exigir token/sessão válido.</td><td>Segurança</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Regras de negócio</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Regra</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RN01</td><td>Cada usuário possui exatamente um time de coração nesta versão.</td></tr>
+      <tr><td class="id">RN02</td><td>A etiqueta do post é sempre o time de coração do autor.</td></tr>
+      <tr><td class="id">RN03</td><td>O ranking conta usuários cadastrados por time, não o número de posts.</td></tr>
+      <tr><td class="id">RN04</td><td>Jogos do dia são os registros cuja data é a data atual do sistema.</td></tr>
+      <tr><td class="id">RN05</td><td>Apenas o administrador cadastra times e jogos.</td></tr>
+      <tr><td class="id">RN06</td><td>Post sem texto não pode ser publicado.</td></tr>
+      <tr><td class="id">RN07</td><td>Comentário vazio não pode ser enviado.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="page-break">Casos de uso</h2>
+
+  <h3>Atores</h3>
+  <table>
+    <thead><tr><th>Ator</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td>Visitante</td><td>Usuário ainda não autenticado</td></tr>
+      <tr><td>Torcedor</td><td>Usuário autenticado que posta, interage, vê ranking, resumo e chatbot</td></tr>
+      <tr><td>Administrador</td><td>Usuário com permissão para cadastrar times e jogos</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Lista de casos de uso</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Caso de uso</th><th>Ator</th></tr></thead>
+    <tbody>
+      <tr><td class="id">UC01</td><td>Cadastrar-se</td><td>Visitante</td></tr>
+      <tr><td class="id">UC02</td><td>Realizar login</td><td>Visitante</td></tr>
+      <tr><td class="id">UC03</td><td>Realizar logout</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC04</td><td>Publicar post</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC05</td><td>Visualizar feed</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC06</td><td>Curtir post</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC07</td><td>Comentar post</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC08</td><td>Visualizar ranking de torcida</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC09</td><td>Visualizar resumo do dia</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC10</td><td>Consultar chatbot</td><td>Torcedor</td></tr>
+      <tr><td class="id">UC11</td><td>Cadastrar time</td><td>Administrador</td></tr>
+      <tr><td class="id">UC12</td><td>Cadastrar jogo do dia</td><td>Administrador</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Diagrama (visão textual):</strong> Visitante realiza UC01 e UC02. Torcedor realiza UC03 a UC10 (todas dependem do login). Administrador realiza UC11 e UC12. O diagrama gráfico em Mermaid está no arquivo <em>03-Casos-de-Uso.md</em>.
+  </div>
+
+  <h3>UC01 — Cadastrar-se</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Visitante</td></tr>
+      <tr><th>Pré-condição</th><td>Não autenticado; existem times cadastrados</td></tr>
+      <tr><th>Pós-condição</th><td>Usuário criado</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Acessa cadastro. 2. Informa nome, e-mail, senha e time. 3. Sistema valida. 4. Grava o usuário. 5. Encaminha ao login.</td></tr>
+      <tr><th>Alternativos</th><td>E-mail já usado; time não informado; senha com menos de 6 caracteres.</td></tr>
+      <tr><th>Requisitos</th><td>RF01, RF02, RF03, RF29</td></tr>
+    </tbody>
+  </table>
+
+  <h3>UC02 — Realizar login</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Visitante</td></tr>
+      <tr><th>Pré-condição</th><td>Usuário já cadastrado</td></tr>
+      <tr><th>Pós-condição</th><td>Sessão autenticada</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Informa e-mail e senha. 2. Sistema verifica. 3. Cria sessão/token. 4. Redireciona ao feed.</td></tr>
+      <tr><th>Alternativos</th><td>Credenciais inválidas; campos vazios.</td></tr>
+      <tr><th>Requisitos</th><td>RF04, RF05, RF07, RNF01, RNF10</td></tr>
+    </tbody>
+  </table>
+
+  <h3>UC04 — Publicar post</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Torcedor</td></tr>
+      <tr><th>Pré-condição</th><td>Autenticado</td></tr>
+      <tr><th>Pós-condição</th><td>Post no feed com etiqueta do time</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Preenche o texto. 2. Opcionalmente anexa imagem. 3. Confirma. 4. Sistema valida (obrigatório, até 280). 5. Grava com a etiqueta do time. 6. Atualiza o feed.</td></tr>
+      <tr><th>Alternativos</th><td>Texto vazio; texto maior que 280; post só com texto (válido no MVP).</td></tr>
+      <tr><th>Requisitos</th><td>RF08, RF09, RF10, RF13, RN02, RN06</td></tr>
+    </tbody>
+  </table>
+
+  <h3>UC08 — Visualizar ranking de torcida</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Torcedor</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Abre a aba Ranking. 2. Sistema conta usuários por time. 3. Ordena do maior para o menor. 4. Exibe posição, time e quantidade.</td></tr>
+      <tr><th>Requisitos</th><td>RF19, RF20, RF21, RN03</td></tr>
+    </tbody>
+  </table>
+
+  <h3>UC09 — Visualizar resumo do dia</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Torcedor</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Identifica o time do usuário. 2. Busca jogos do dia. 3. Busca posts recentes daquele time. 4. Monta o texto. 5. Exibe o card.</td></tr>
+      <tr><th>Alternativos</th><td>Sem jogo no dia; sem posts recentes.</td></tr>
+      <tr><th>Requisitos</th><td>RF22, RF23, RN04</td></tr>
+    </tbody>
+  </table>
+
+  <h3>UC10 — Consultar chatbot</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Torcedor</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Envia pergunta (ex.: “quais jogos tem hoje?”). 2. Sistema interpreta a intenção. 3. Consulta o banco. 4. Responde em português.</td></tr>
+      <tr><th>Alternativos</th><td>Pergunta não reconhecida; nenhum jogo cadastrado.</td></tr>
+      <tr><th>Requisitos</th><td>RF24, RF25, RF26</td></tr>
+    </tbody>
+  </table>
+
+  <h3>UC12 — Cadastrar jogo do dia</h3>
+  <table>
+    <tbody>
+      <tr><th>Ator</th><td>Administrador</td></tr>
+      <tr><th>Fluxo principal</th><td>1. Informa mandante, visitante, data e horário. 2. Opcionalmente informa o placar. 3. Sistema valida. 4. Grava o jogo.</td></tr>
+      <tr><th>Requisitos</th><td>RF28, RN05</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Para a Entrega 3 (diagramas de sequência):</strong> usar UC02 Realizar login e UC04 Publicar post. Alternativa de diferencial: UC08 Ranking ou UC10 Chatbot.
+  </div>
+
+</body>
+</html>

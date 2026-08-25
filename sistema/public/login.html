@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | Torcida</title>
+  <link rel="stylesheet" href="/estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><div class="brand">TORCIDA<span>.</span></div></div>
+    <div class="page auth">
+      <h1>Entrar</h1>
+      <p class="muted">Rede social só de futebol. Projeto novo da APS II.</p>
+      <form id="form">
+        <label>E-mail</label>
+        <input id="email" type="email" required />
+        <label>Senha</label>
+        <input id="senha" type="password" required minlength="6" />
+        <button class="btn" type="submit">Entrar</button>
+        <a class="btn ghost" href="/cadastro.html">Criar conta</a>
+        <p class="erro" id="erro"></p>
+      </form>
+    </div>
+  </div>
+  <script>
+    document.getElementById("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const erro = document.getElementById("erro");
+      erro.textContent = "";
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("email").value,
+          senha: document.getElementById("senha").value
+        })
+      });
+      const d = await r.json();
+      if (!r.ok) { erro.textContent = d.erro || "Falha no login"; return; }
+      sessionStorage.setItem("torcida", JSON.stringify(d));
+      location.href = "/feed.html";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Proposta do novo projeto — Torcida</title>
+  <style>
+    body {
+      margin: 0 auto;
+      max-width: 900px;
+      padding: 36px 44px 72px;
+      font-family: "Times New Roman", Times, serif;
+      color: #1a1a1a;
+      line-height: 1.45;
+      font-size: 13.5pt;
+    }
+    h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 14pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 28px; }
+    h3 { font-size: 12.5pt; margin-top: 18px; }
+    .cover { text-align: center; margin-bottom: 28px; }
+    .cover p { margin: 4px 0; }
+    .aviso {
+      border: 1.5px solid #111;
+      padding: 12px 14px;
+      margin: 0 0 24px;
+      background: #f7f7f7;
+    }
+    .aviso strong { display: block; margin-bottom: 6px; font-family: Arial, Helvetica, sans-serif; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 12pt; }
+    th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    ul, ol { margin-top: 6px; }
+    .muted { color: #444; font-size: 12pt; }
+    .page-break { page-break-before: always; }
+    @media print {
+      body { padding: 0; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Centro Universitário — Análise e Projeto de Sistemas II</p>
+    <p>Prof. Silvio Rogerio de Lucia</p>
+    <h1>Proposta do novo projeto</h1>
+    <p><strong>Torcida</strong> — rede social web de futebol</p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa</p>
+    <p>25/08/2026</p>
+  </header>
+
+  <div class="aviso">
+    <strong>Observação ao professor</strong>
+    O grupo <strong>não dará continuidade ao projeto da APS I</strong>. O tema anterior foi encerrado. Para a APS II, iniciamos um <strong>projeto novo</strong>, descrito neste documento. Pedimos a discussão em sala sobre a sequência deste trabalho a partir da proposta abaixo.
+  </div>
+
+  <h2>1. Nome do projeto</h2>
+  <p><strong>Torcida</strong> — rede social web exclusiva de futebol, no estilo Twitter/Threads, centrada no <em>time de coração</em> do usuário.</p>
+
+  <h2>2. Integrantes do grupo</h2>
+  <table>
+    <thead>
+      <tr><th>Nome</th><th>Papel previsto no grupo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Cauê Souza Marinho</td><td>Organização do Trello, documentação e integração</td></tr>
+      <tr><td>Bruno Souza</td><td>Análise, requisitos e modelagem</td></tr>
+      <tr><td>Erick</td><td>Protótipos e frontend</td></tr>
+      <tr><td>Kaique Souza</td><td>Backend, banco de dados e autenticação</td></tr>
+      <tr><td>Guilherme Sousa</td><td>Testes, ranking, resumo do dia e apresentação</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">A divisão é inicial e pode ser ajustada nas avaliações 360°.</p>
+
+  <h2>3. Problema que será resolvido</h2>
+  <p>O torcedor comenta o time em redes genéricas (X/Twitter, Instagram, Threads). O conteúdo de futebol se perde no meio de outros assuntos, o sistema não sabe qual é o time de coração do usuário e não existe um ranking da torcida da própria comunidade.</p>
+  <p>Três dificuldades práticas:</p>
+  <ol>
+    <li><strong>Falta de contexto:</strong> o usuário não declara o time como identidade da plataforma.</li>
+    <li><strong>Dispersão:</strong> comentários de jogos se misturam a outros temas.</li>
+    <li><strong>Ausência de indicador comunitário:</strong> não há ranking simples de torcida dentro da rede.</li>
+  </ol>
+
+  <h2>4. Público-alvo</h2>
+  <p>Torcedores de futebol que usam redes sociais para comentar jogos e times, com foco inicial no público brasileiro, em navegador web.</p>
+  <p class="muted">Fora do público inicial: imprensa profissional, scouts, apostadores e uso corporativo.</p>
+
+  <h2>5. Objetivo geral</h2>
+  <p>Criar uma plataforma web exclusiva de futebol em que cada usuário informa o time de coração no cadastro e passa a publicar, acompanhar o feed, ver o ranking de torcida e receber um resumo do dia do seu time.</p>
+
+  <h2>6. Objetivos específicos</h2>
+  <ul>
+    <li>Permitir cadastro e login com escolha obrigatória do time de coração.</li>
+    <li>Permitir posts em texto com etiqueta do time, curtida e comentário.</li>
+    <li>Exibir ranking de torcida da plataforma (quantidade de usuários por clube).</li>
+    <li>Gerar o resumo do dia e um chatbot simples sobre os jogos do dia.</li>
+    <li>Manter os dados (usuários, times, posts, jogos) no próprio banco, sem API externa na apresentação.</li>
+  </ul>
+
+  <h2>7. Solução proposta</h2>
+  <p>Uma aplicação web com feed semelhante ao Twitter/Threads, porém só de futebol. No cadastro o usuário escolhe o time. Cada post nasce com a etiqueta desse time. Há uma aba de ranking (quantidade de torcedores por clube) e um card/chatbot de “resumo do dia”, alimentado pelos jogos cadastrados no banco.</p>
+  <p>Após o login, o usuário vê:</p>
+  <ol>
+    <li>Campo de post (texto obrigatório; imagem opcional), já ligado ao time de coração.</li>
+    <li>Card fixo “Resumo do dia” do seu time.</li>
+    <li>Feed de posts de outros torcedores, com etiqueta, curtida e comentários.</li>
+    <li>Aba Ranking, com a classificação dos clubes pelo número de torcedores cadastrados.</li>
+    <li>Chatbot para perguntas como “quais jogos tem hoje?” e “resumo do meu time”.</li>
+  </ol>
+
+  <h2>8. Escopo inicial (MVP)</h2>
+  <ul>
+    <li>Cadastro, login e logout.</li>
+    <li>Time de coração obrigatório no cadastro.</li>
+    <li>Post em texto com etiqueta do time (imagem opcional).</li>
+    <li>Feed, like e comentário.</li>
+    <li>Ranking de torcida.</li>
+    <li>Resumo do dia e chatbot de jogos.</li>
+    <li>Cadastro interno de times e jogos (administrador).</li>
+  </ul>
+
+  <h2>9. O que o sistema NÃO fará nesta versão</h2>
+  <ul>
+    <li>Stories, chat privado, aplicativo mobile nativo, transmissão ao vivo.</li>
+    <li>Apostas, fantasy, marketplace ou venda de ingressos.</li>
+    <li>Dependência de API externa de jogos no dia da banca.</li>
+    <li>Recuperação de senha por e-mail e notificações push em tempo real.</li>
+  </ul>
+
+  <h2>10. Tecnologias pretendidas</h2>
+  <table>
+    <thead>
+      <tr><th>Camada</th><th>Tecnologia</th><th>Justificativa</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Frontend</td><td>React</td><td>Interface de feed com componentes reutilizáveis, próxima ao Twitter/Threads.</td></tr>
+      <tr><td>Backend</td><td>Node.js + Express</td><td>API REST simples, boa integração com o frontend e com JWT.</td></tr>
+      <tr><td>Banco de dados</td><td>PostgreSQL</td><td>Modelo relacional claro para usuário, time, post, comentário e jogo. No desenvolvimento local pode-se usar SQLite com o mesmo modelo.</td></tr>
+      <tr><td>Autenticação</td><td>JWT</td><td>Proteção das rotas do feed, ranking e resumo.</td></tr>
+      <tr><td>Versionamento</td><td>Git / GitHub</td><td>Exigência da disciplina e trabalho em grupo.</td></tr>
+      <tr><td>Resumo / chatbot</td><td>Módulo interno (IA opcional)</td><td>Lê jogos e posts do banco; a IA, se usada, só redige o texto e não é ponto único de falha na apresentação.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>11. Premissas e regras principais</h2>
+  <ul>
+    <li>Cada usuário torce para <strong>um</strong> time de coração nesta versão.</li>
+    <li>A etiqueta do post é sempre o time do autor; o usuário não escolhe outro clube na hora de postar.</li>
+    <li>O ranking conta usuários cadastrados por time, não o número de posts.</li>
+    <li>Jogos do dia são os registros cuja data é a data atual do sistema.</li>
+    <li>Apenas o administrador cadastra times e jogos.</li>
+    <li>A demonstração final precisa funcionar sem API de futebol de terceiros.</li>
+  </ul>
+
+  <h2>12. Critério de sucesso do MVP</h2>
+  <p>O MVP estará pronto quando um usuário conseguir:</p>
+  <ol>
+    <li>criar conta informando o time de coração;</li>
+    <li>entrar no sistema;</li>
+    <li>publicar um post;</li>
+    <li>curtir e comentar;</li>
+    <li>ver o ranking de torcida;</li>
+    <li>ver o resumo do dia e perguntar ao chatbot quais jogos há no dia.</li>
+  </ol>
+
+  <h2>13. Sequência do trabalho na APS II</h2>
+  <p>Proposta de continuidade para discussão em sala:</p>
+  <table>
+    <thead>
+      <tr><th>Etapa</th><th>O que entregar</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Entrega 1</td><td>Proposta do tema (este documento)</td></tr>
+      <tr><td>Entrega 2</td><td>Documento de visão, requisitos e casos de uso</td></tr>
+      <tr><td>Entrega 3</td><td>Modelagem (casos de uso, classes, sequência, E/R e modelo físico)</td></tr>
+      <tr><td>Entrega 4</td><td>Protótipos de tela (login, cadastro, feed, ranking, admin, chatbot)</td></tr>
+      <tr><td>Entrega 5</td><td>Projeto técnico e início do MVP</td></tr>
+      <tr><td>Entrega 6</td><td>Testes e evidências dos fluxos principais</td></tr>
+    </tbody>
+  </table>
+  <p>Processos indicados para diagrama de sequência: <strong>login</strong> e <strong>publicar post</strong> (alternativas: ranking ou chatbot).</p>
+
+  <h2 class="page-break">14. Roteiro curto para a apresentação em sala</h2>
+  <ol>
+    <li>Informar que o projeto da APS I <strong>não será continuado</strong>.</li>
+    <li>Apresentar o nome: <strong>Torcida</strong>.</li>
+    <li>Explicar o problema em uma frase: o torcedor não tem uma rede só do seu time.</li>
+    <li>Mostrar o diferencial: time de coração + ranking + resumo do dia/chatbot.</li>
+    <li>Citar o MVP (cadastro, post, feed, ranking, resumo).</li>
+    <li>Citar as tecnologias (React, Node, PostgreSQL, JWT, GitHub).</li>
+    <li>Pedir o alinhamento da sequência das entregas 2 a 6.</li>
+  </ol>
+</body>
+</html>

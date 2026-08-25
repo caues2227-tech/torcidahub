@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Identificação — Projeto novo | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 900px; padding: 36px 44px 64px; font-family: "Times New Roman", Times, serif; color: #111; line-height: 1.45; font-size: 13pt; }
+    h1, h2 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 18pt; text-align: center; }
+    h2 { font-size: 13.5pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 24px; }
+    .cover { text-align: center; margin-bottom: 20px; }
+    .banner { border: 2px solid #111; padding: 12px 14px; text-align: center; font-family: Arial, sans-serif; font-size: 13pt; margin: 16px 0 24px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 12pt; }
+    th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    ul { margin-top: 6px; }
+    @media print { body { padding: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II — Prof. Silvio Rogerio de Lucia</p>
+    <h1>Identificação do projeto</h1>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa · 25/08/2026</p>
+  </header>
+
+  <div class="banner">
+    <strong>TIPO: PROJETO NOVO</strong><br />
+    Este grupo <strong>não</strong> dá continuidade ao site da APS I.<br />
+    Não se aplica a etiqueta “Continuando Site”.
+  </div>
+
+  <h2>1. Para que serve o site</h2>
+  <p><strong>Torcida</strong> é uma rede social web só de futebol, no estilo Twitter/Threads. O usuário escolhe o time de coração no cadastro, publica no feed com a etiqueta do time, vê o ranking de torcida da plataforma e recebe um resumo do dia (e um chatbot) sobre os jogos, com dados no próprio banco.</p>
+
+  <h2>2. Linguagens e tecnologias</h2>
+  <table>
+    <thead><tr><th>Camada</th><th>Tecnologia</th><th>Para que serve</th></tr></thead>
+    <tbody>
+      <tr><td>Frontend</td><td>JavaScript + React</td><td>Telas: login, cadastro, feed, ranking, chatbot</td></tr>
+      <tr><td>Backend</td><td>JavaScript + Node.js + Express</td><td>API REST (cadastro, posts, ranking, resumo)</td></tr>
+      <tr><td>Banco</td><td>PostgreSQL (oficial) / SQLite na demo</td><td>Usuário, time, post, comentário, jogo</td></tr>
+      <tr><td>Autenticação</td><td>JWT</td><td>Proteger feed, ranking e resumo</td></tr>
+      <tr><td>Versionamento</td><td>Git / GitHub</td><td>Histórico do grupo</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Função de cada um do grupo</h2>
+  <table>
+    <thead><tr><th>Integrante</th><th>Função</th></tr></thead>
+    <tbody>
+      <tr><td>Cauê Souza Marinho</td><td>Organização do Trello, documentação e integração das entregas</td></tr>
+      <tr><td>Bruno Souza</td><td>Análise, requisitos (RF/RNF/RN) e modelagem UML/banco</td></tr>
+      <tr><td>Erick</td><td>Protótipos e frontend (React)</td></tr>
+      <tr><td>Kaique Souza</td><td>Backend, banco de dados e autenticação</td></tr>
+      <tr><td>Guilherme Sousa</td><td>Testes, ranking, resumo do dia/chatbot e apresentação</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Tudo que vai ser feito (projeto novo — nada herdado)</h2>
+  <table>
+    <thead><tr><th>O que será feito</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Cadastro e login com time de coração</td><td>A fazer (novo)</td></tr>
+      <tr><td>Post em texto com etiqueta do time, feed, like e comentário</td><td>A fazer (novo)</td></tr>
+      <tr><td>Ranking de torcida</td><td>A fazer (novo)</td></tr>
+      <tr><td>Resumo do dia e chatbot de jogos</td><td>A fazer (novo)</td></tr>
+      <tr><td>Admin cadastrar times e jogos no banco</td><td>A fazer (novo)</td></tr>
+      <tr><td>Protótipos, UML, testes e apresentação</td><td>Documentação em andamento; código a fazer</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5. Observação sobre “Continuando Site”</h2>
+  <p>A orientação do professor para quem <em>herda</em> o sistema da APS I é: escrever no Trello <strong>Continuando Site</strong> e listar as melhorias. <strong>Não é o caso deste grupo.</strong> O Torcida começa do zero; portanto não há funcionalidade já implementada nem lista de melhorias sobre um código antigo.</p>
+</body>
+</html>

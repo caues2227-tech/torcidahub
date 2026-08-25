@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastro | Torcida</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><div class="brand">TORCIDA<span>.</span></div></div>
+    <div class="page auth">
+      <h1>Criar conta</h1>
+      <p class="muted">O time de coração é obrigatório.</p>
+      <form action="login.html">
+        <label>Nome</label>
+        <input type="text" value="Cauê Souza Marinho" required />
+        <label>E-mail</label>
+        <input type="email" value="caue@torcida.com" required />
+        <label>Senha</label>
+        <input type="password" value="123456" required />
+        <label>Time de coração</label>
+        <select required>
+          <option>Flamengo</option>
+          <option>Palmeiras</option>
+          <option>Corinthians</option>
+          <option>São Paulo</option>
+          <option>Santos</option>
+          <option>Vasco</option>
+          <option>Grêmio</option>
+          <option>Internacional</option>
+          <option>Atlético-MG</option>
+          <option>Cruzeiro</option>
+        </select>
+        <button class="btn" type="submit">Cadastrar</button>
+        <a class="btn ghost" href="login.html">Já tenho conta</a>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

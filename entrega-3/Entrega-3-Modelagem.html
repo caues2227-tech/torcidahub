@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega 3 — Modelagem | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 960px; padding: 36px 40px 72px; font-family: "Times New Roman", Times, serif; color: #1a1a1a; line-height: 1.42; font-size: 12.5pt; }
+    h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 14pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 28px; page-break-before: auto; }
+    .page { page-break-before: always; }
+    .cover { text-align: center; margin-bottom: 28px; }
+    .cover p { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 11pt; }
+    th, td { border: 1px solid #333; padding: 5px 7px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    .diagram { text-align: center; margin: 16px 0 8px; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .caption { text-align: center; font-size: 10.5pt; margin: 0 0 18px; }
+    pre { background: #f6f6f6; border: 1px solid #ccc; padding: 12px; font-size: 9.5pt; overflow: auto; line-height: 1.35; }
+    .box { border: 1px solid #111; display: inline-block; text-align: left; font-family: Arial, sans-serif; font-size: 10pt; vertical-align: top; margin: 6px; }
+    .box b { display: block; background: #eee; padding: 4px 8px; border-bottom: 1px solid #111; text-align: center; }
+    .box span { display: block; padding: 2px 8px; }
+    @media print { body { padding: 12px; max-width: none; } pre { white-space: pre-wrap; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II — Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega 3 — Modelagem do sistema</h1>
+    <p><strong>Projeto Torcida</strong></p>
+    <p>Artefato 3 — casos de uso, classes, sequência, E/R e modelo físico</p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa · 25/08/2026</p>
+  </header>
+
+  <h2>1. Diagrama de casos de uso</h2>
+  <div class="diagram">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 520" width="880" height="500">
+      <rect x="1" y="1" width="918" height="518" fill="#fff" stroke="#111"/>
+      <text x="460" y="28" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold">Torcida</text>
+      <ellipse cx="200" cy="90" rx="72" ry="22" fill="#fff" stroke="#111"/>
+      <text x="200" y="94" text-anchor="middle" font-family="Arial" font-size="11">UC01 Cadastrar-se</text>
+      <ellipse cx="200" cy="140" rx="78" ry="22" fill="#fff" stroke="#111"/>
+      <text x="200" y="144" text-anchor="middle" font-family="Arial" font-size="11">UC02 Realizar login</text>
+      <ellipse cx="460" cy="70" rx="70" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="74" text-anchor="middle" font-family="Arial" font-size="11">UC03 Logout</text>
+      <ellipse cx="460" cy="115" rx="80" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="119" text-anchor="middle" font-family="Arial" font-size="11">UC04 Publicar post</text>
+      <ellipse cx="460" cy="160" rx="80" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="164" text-anchor="middle" font-family="Arial" font-size="11">UC05 Ver feed</text>
+      <ellipse cx="460" cy="205" rx="78" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="209" text-anchor="middle" font-family="Arial" font-size="11">UC06 Curtir post</text>
+      <ellipse cx="460" cy="250" rx="86" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="254" text-anchor="middle" font-family="Arial" font-size="11">UC07 Comentar post</text>
+      <ellipse cx="460" cy="300" rx="100" ry="22" fill="#fff" stroke="#111"/>
+      <text x="460" y="304" text-anchor="middle" font-family="Arial" font-size="11">UC08 Ranking de torcida</text>
+      <ellipse cx="460" cy="350" rx="96" ry="22" fill="#fff" stroke="#111"/>
+      <text x="460" y="354" text-anchor="middle" font-family="Arial" font-size="11">UC09 Resumo do dia</text>
+      <ellipse cx="460" cy="400" rx="90" ry="22" fill="#fff" stroke="#111"/>
+      <text x="460" y="404" text-anchor="middle" font-family="Arial" font-size="11">UC10 Chatbot</text>
+      <ellipse cx="740" cy="200" rx="86" ry="22" fill="#fff" stroke="#111"/>
+      <text x="740" y="204" text-anchor="middle" font-family="Arial" font-size="11">UC11 Cadastrar time</text>
+      <ellipse cx="740" cy="260" rx="96" ry="22" fill="#fff" stroke="#111"/>
+      <text x="740" y="264" text-anchor="middle" font-family="Arial" font-size="11">UC12 Cadastrar jogo</text>
+      <circle cx="48" cy="115" r="18" fill="#fff" stroke="#111"/>
+      <line x1="48" y1="133" x2="48" y2="175" stroke="#111"/>
+      <line x1="48" y1="148" x2="28" y2="165" stroke="#111"/>
+      <line x1="48" y1="148" x2="68" y2="165" stroke="#111"/>
+      <line x1="48" y1="175" x2="32" y2="210" stroke="#111"/>
+      <line x1="48" y1="175" x2="64" y2="210" stroke="#111"/>
+      <text x="48" y="230" text-anchor="middle" font-family="Arial" font-size="12">Visitante</text>
+      <line x1="66" y1="115" x2="128" y2="90" stroke="#111"/>
+      <line x1="66" y1="125" x2="122" y2="140" stroke="#111"/>
+      <circle cx="48" cy="330" r="18" fill="#fff" stroke="#111"/>
+      <line x1="48" y1="348" x2="48" y2="390" stroke="#111"/>
+      <line x1="48" y1="363" x2="28" y2="380" stroke="#111"/>
+      <line x1="48" y1="363" x2="68" y2="380" stroke="#111"/>
+      <line x1="48" y1="390" x2="32" y2="425" stroke="#111"/>
+      <line x1="48" y1="390" x2="64" y2="425" stroke="#111"/>
+      <text x="48" y="448" text-anchor="middle" font-family="Arial" font-size="12">Torcedor</text>
+      <line x1="66" y1="320" x2="360" y2="70" stroke="#111"/>
+      <line x1="66" y1="325" x2="360" y2="250" stroke="#111"/>
+      <line x1="66" y1="335" x2="360" y2="350" stroke="#111"/>
+      <line x1="66" y1="340" x2="360" y2="400" stroke="#111"/>
+      <circle cx="872" cy="230" r="18" fill="#fff" stroke="#111"/>
+      <line x1="872" y1="248" x2="872" y2="290" stroke="#111"/>
+      <line x1="872" y1="263" x2="852" y2="280" stroke="#111"/>
+      <line x1="872" y1="263" x2="892" y2="280" stroke="#111"/>
+      <line x1="872" y1="290" x2="856" y2="325" stroke="#111"/>
+      <line x1="872" y1="290" x2="888" y2="325" stroke="#111"/>
+      <text x="872" y="348" text-anchor="middle" font-family="Arial" font-size="12">Admin</text>
+      <line x1="854" y1="230" x2="826" y2="200" stroke="#111"/>
+      <line x1="854" y1="240" x2="836" y2="260" stroke="#111"/>
+    </svg>
+  </div>
+  <p class="caption">Figura 1 — Diagrama de casos de uso do Torcida.</p>
+
+  <h2>2. Diagrama de classes</h2>
+  <div class="diagram">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" width="920" height="530">
+      <rect x="20" y="20" width="170" height="168" fill="#fff" stroke="#111"/>
+      <rect x="20" y="20" width="170" height="28" fill="#eee" stroke="#111"/>
+      <text x="105" y="40" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Usuario</text>
+      <text x="30" y="62" font-family="Arial" font-size="11">id: int</text>
+      <text x="30" y="78" font-family="Arial" font-size="11">nome: string</text>
+      <text x="30" y="94" font-family="Arial" font-size="11">email: string</text>
+      <text x="30" y="110" font-family="Arial" font-size="11">senhaHash: string</text>
+      <text x="30" y="126" font-family="Arial" font-size="11">papel: enum</text>
+      <line x1="20" y1="136" x2="190" y2="136" stroke="#111"/>
+      <text x="30" y="154" font-family="Arial" font-size="11">autenticar()</text>
+      <text x="30" y="170" font-family="Arial" font-size="11">cadastrar()</text>
+
+      <rect x="280" y="20" width="170" height="120" fill="#fff" stroke="#111"/>
+      <rect x="280" y="20" width="170" height="28" fill="#eee" stroke="#111"/>
+      <text x="365" y="40" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Time</text>
+      <text x="290" y="62" font-family="Arial" font-size="11">id: int</text>
+      <text x="290" y="78" font-family="Arial" font-size="11">nome: string</text>
+      <text x="290" y="94" font-family="Arial" font-size="11">sigla: string</text>
+      <line x1="280" y1="104" x2="450" y2="104" stroke="#111"/>
+      <text x="290" y="122" font-family="Arial" font-size="11">contarTorcedores()</text>
+
+      <rect x="540" y="20" width="190" height="168" fill="#fff" stroke="#111"/>
+      <rect x="540" y="20" width="190" height="28" fill="#eee" stroke="#111"/>
+      <text x="635" y="40" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Post</text>
+      <text x="550" y="62" font-family="Arial" font-size="11">id: int</text>
+      <text x="550" y="78" font-family="Arial" font-size="11">texto: string</text>
+      <text x="550" y="94" font-family="Arial" font-size="11">imagemUrl: string</text>
+      <text x="550" y="110" font-family="Arial" font-size="11">dataHora: datetime</text>
+      <line x1="540" y1="120" x2="730" y2="120" stroke="#111"/>
+      <text x="550" y="138" font-family="Arial" font-size="11">publicar()</text>
+      <text x="550" y="154" font-family="Arial" font-size="11">listarFeed()</text>
+      <text x="550" y="170" font-family="Arial" font-size="11">contarCurtidas()</text>
+
+      <rect x="780" y="20" width="180" height="136" fill="#fff" stroke="#111"/>
+      <rect x="780" y="20" width="180" height="28" fill="#eee" stroke="#111"/>
+      <text x="870" y="40" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Comentario</text>
+      <text x="790" y="62" font-family="Arial" font-size="11">id: int</text>
+      <text x="790" y="78" font-family="Arial" font-size="11">texto: string</text>
+      <text x="790" y="94" font-family="Arial" font-size="11">dataHora: datetime</text>
+      <line x1="780" y1="104" x2="960" y2="104" stroke="#111"/>
+      <text x="790" y="122" font-family="Arial" font-size="11">comentar()</text>
+      <text x="790" y="138" font-family="Arial" font-size="11">listarPorPost()</text>
+
+      <rect x="280" y="250" width="200" height="152" fill="#fff" stroke="#111"/>
+      <rect x="280" y="250" width="200" height="28" fill="#eee" stroke="#111"/>
+      <text x="380" y="270" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Jogo</text>
+      <text x="290" y="292" font-family="Arial" font-size="11">id: int</text>
+      <text x="290" y="308" font-family="Arial" font-size="11">data: date</text>
+      <text x="290" y="324" font-family="Arial" font-size="11">horario: string</text>
+      <text x="290" y="340" font-family="Arial" font-size="11">placarMandante: int</text>
+      <text x="290" y="356" font-family="Arial" font-size="11">placarVisitante: int</text>
+      <line x1="280" y1="366" x2="480" y2="366" stroke="#111"/>
+      <text x="290" y="384" font-family="Arial" font-size="11">jogosDoDia()</text>
+
+      <rect x="20" y="250" width="180" height="120" fill="#fff" stroke="#111"/>
+      <rect x="20" y="250" width="180" height="28" fill="#eee" stroke="#111"/>
+      <text x="110" y="270" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Curtida</text>
+      <text x="30" y="292" font-family="Arial" font-size="11">usuarioId: int</text>
+      <text x="30" y="308" font-family="Arial" font-size="11">postId: int</text>
+      <line x1="20" y1="318" x2="200" y2="318" stroke="#111"/>
+      <text x="30" y="336" font-family="Arial" font-size="11">curtir()</text>
+      <text x="30" y="352" font-family="Arial" font-size="11">descurtir()</text>
+
+      <rect x="540" y="250" width="210" height="136" fill="#fff" stroke="#111"/>
+      <rect x="540" y="250" width="210" height="28" fill="#eee" stroke="#111"/>
+      <text x="645" y="270" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">ResumoDia</text>
+      <text x="550" y="292" font-family="Arial" font-size="11">texto: string</text>
+      <text x="550" y="308" font-family="Arial" font-size="11">data: date</text>
+      <text x="550" y="324" font-family="Arial" font-size="11">timeId: int</text>
+      <line x1="540" y1="334" x2="750" y2="334" stroke="#111"/>
+      <text x="550" y="352" font-family="Arial" font-size="11">gerar(time, jogos, posts)</text>
+      <text x="550" y="368" font-family="Arial" font-size="11">responderChatbot()</text>
+
+      <line x1="190" y1="70" x2="280" y2="70" stroke="#111" marker-end="url(#a)"/>
+      <text x="235" y="62" text-anchor="middle" font-family="Arial" font-size="10">torce 1</text>
+      <line x1="105" y1="188" x2="105" y2="250" stroke="#111"/>
+      <text x="118" y="228" font-family="Arial" font-size="10">1..*</text>
+      <line x1="190" y1="100" x2="540" y2="100" stroke="#111"/>
+      <text x="360" y="92" font-family="Arial" font-size="10">publica 1..*</text>
+      <line x1="730" y1="80" x2="780" y2="80" stroke="#111"/>
+      <text x="755" y="72" font-family="Arial" font-size="10">1..*</text>
+      <line x1="365" y1="140" x2="365" y2="250" stroke="#111"/>
+      <text x="372" y="200" font-family="Arial" font-size="10">mandante/visitante</text>
+      <line x1="635" y1="188" x2="635" y2="250" stroke="#111"/>
+      <text x="640" y="228" font-family="Arial" font-size="10">usa</text>
+    </svg>
+  </div>
+  <p class="caption">Figura 2 — Diagrama de classes (MVP). ResumoDia é gerado, não necessariamente persistido.</p>
+
+  <h2 class="page">3. Diagrama de sequência — UC02 Login</h2>
+  <div class="diagram">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="860" height="400">
+      <text x="80" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Torcedor</text>
+      <text x="300" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Frontend</text>
+      <text x="520" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">API / Auth</text>
+      <text x="740" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Banco</text>
+      <line x1="80" y1="40" x2="80" y2="400" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="300" y1="40" x2="300" y2="400" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="520" y1="40" x2="520" y2="400" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="740" y1="40" x2="740" y2="400" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="80" y1="70" x2="300" y2="70" stroke="#111" marker-end="url(#m)"/>
+      <text x="190" y="64" text-anchor="middle" font-family="Arial" font-size="11">1. e-mail e senha</text>
+      <line x1="300" y1="110" x2="520" y2="110" stroke="#111"/>
+      <text x="410" y="104" text-anchor="middle" font-family="Arial" font-size="11">2. POST /login</text>
+      <line x1="520" y1="150" x2="740" y2="150" stroke="#111"/>
+      <text x="630" y="144" text-anchor="middle" font-family="Arial" font-size="11">3. buscar usuário</text>
+      <line x1="740" y1="190" x2="520" y2="190" stroke="#111"/>
+      <text x="630" y="184" text-anchor="middle" font-family="Arial" font-size="11">4. registro / vazio</text>
+      <text x="520" y="230" text-anchor="middle" font-family="Arial" font-size="11">5. validar hash da senha</text>
+      <line x1="520" y1="270" x2="300" y2="270" stroke="#111"/>
+      <text x="410" y="264" text-anchor="middle" font-family="Arial" font-size="11">6. JWT ou 401</text>
+      <line x1="300" y1="320" x2="80" y2="320" stroke="#111"/>
+      <text x="190" y="314" text-anchor="middle" font-family="Arial" font-size="11">7. abre o feed ou erro</text>
+    </svg>
+  </div>
+  <p class="caption">Figura 3 — Sequência do login. Credencial inválida retorna 401 e não gera token.</p>
+
+  <h2>4. Diagrama de sequência — UC04 Publicar post</h2>
+  <div class="diagram">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" width="860" height="420">
+      <text x="80" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Torcedor</text>
+      <text x="300" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Feed</text>
+      <text x="520" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">API / Posts</text>
+      <text x="740" y="24" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Banco</text>
+      <line x1="80" y1="40" x2="80" y2="420" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="300" y1="40" x2="300" y2="420" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="520" y1="40" x2="520" y2="420" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="740" y1="40" x2="740" y2="420" stroke="#111" stroke-dasharray="3 3"/>
+      <line x1="80" y1="70" x2="300" y2="70" stroke="#111"/>
+      <text x="190" y="64" text-anchor="middle" font-family="Arial" font-size="11">1. texto (até 280)</text>
+      <line x1="300" y1="110" x2="520" y2="110" stroke="#111"/>
+      <text x="410" y="104" text-anchor="middle" font-family="Arial" font-size="11">2. POST /posts + JWT</text>
+      <text x="520" y="148" text-anchor="middle" font-family="Arial" font-size="11">3. validar token e texto</text>
+      <line x1="520" y1="190" x2="740" y2="190" stroke="#111"/>
+      <text x="630" y="184" text-anchor="middle" font-family="Arial" font-size="11">4. INSERT post + time_id</text>
+      <line x1="740" y1="230" x2="520" y2="230" stroke="#111"/>
+      <text x="630" y="224" text-anchor="middle" font-family="Arial" font-size="11">5. post gravado</text>
+      <line x1="520" y1="270" x2="300" y2="270" stroke="#111"/>
+      <text x="410" y="264" text-anchor="middle" font-family="Arial" font-size="11">6. JSON do post</text>
+      <line x1="300" y1="320" x2="80" y2="320" stroke="#111"/>
+      <text x="190" y="314" text-anchor="middle" font-family="Arial" font-size="11">7. post no topo do feed</text>
+    </svg>
+  </div>
+  <p class="caption">Figura 4 — Sequência de publicar post. A etiqueta do time vem do cadastro do autor, não da tela.</p>
+
+  <h2 class="page">5. Modelo entidade-relacionamento</h2>
+  <div class="diagram">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 480" width="880" height="460">
+      <rect x="40" y="40" width="150" height="70" rx="8" fill="#fff" stroke="#111"/>
+      <text x="115" y="80" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">TIME</text>
+      <rect x="360" y="40" width="160" height="70" rx="8" fill="#fff" stroke="#111"/>
+      <text x="440" y="80" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">USUARIO</text>
+      <rect x="680" y="40" width="150" height="70" rx="8" fill="#fff" stroke="#111"/>
+      <text x="755" y="80" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">POST</text>
+      <rect x="680" y="220" width="160" height="70" rx="8" fill="#fff" stroke="#111"/>
+      <text x="760" y="260" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">COMENTARIO</text>
+      <rect x="360" y="220" width="160" height="70" rx="8" fill="#fff" stroke="#111"/>
+      <text x="440" y="260" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">CURTIDA</text>
+      <rect x="40" y="220" width="150" height="70" rx="8" fill="#fff" stroke="#111"/>
+      <text x="115" y="260" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">JOGO</text>
+      <line x1="190" y1="75" x2="360" y2="75" stroke="#111"/>
+      <text x="275" y="66" text-anchor="middle" font-family="Arial" font-size="11">1 torce N</text>
+      <line x1="520" y1="75" x2="680" y2="75" stroke="#111"/>
+      <text x="600" y="66" text-anchor="middle" font-family="Arial" font-size="11">1 publica N</text>
+      <line x1="755" y1="110" x2="755" y2="220" stroke="#111"/>
+      <text x="768" y="170" font-family="Arial" font-size="11">1 — N</text>
+      <line x1="440" y1="110" x2="440" y2="220" stroke="#111"/>
+      <text x="452" y="170" font-family="Arial" font-size="11">N — N (via CURTIDA)</text>
+      <line x1="115" y1="110" x2="115" y2="220" stroke="#111"/>
+      <text x="128" y="170" font-family="Arial" font-size="11">1 mandante/visitante N</text>
+      <line x1="190" y1="255" x2="360" y2="75" stroke="#111"/>
+      <text x="220" y="150" font-family="Arial" font-size="10">POST também referencia TIME</text>
+    </svg>
+  </div>
+  <p class="caption">Figura 5 — Modelo E/R. CURTIDA é entidade associativa (usuário, post), com unicidade do par.</p>
+
+  <h2>6. Dicionário de dados (principais tabelas)</h2>
+  <table>
+    <thead><tr><th>Tabela</th><th>Campo</th><th>Tipo</th><th>Obs.</th></tr></thead>
+    <tbody>
+      <tr><td>times</td><td>id</td><td>PK inteiro</td><td>surrogate</td></tr>
+      <tr><td>times</td><td>nome, sigla</td><td>varchar</td><td>únicos</td></tr>
+      <tr><td>usuarios</td><td>email</td><td>varchar</td><td>único</td></tr>
+      <tr><td>usuarios</td><td>senha_hash</td><td>varchar</td><td>nunca texto puro</td></tr>
+      <tr><td>usuarios</td><td>time_id</td><td>FK</td><td>time de coração, obrigatório</td></tr>
+      <tr><td>usuarios</td><td>papel</td><td>enum</td><td>torcedor | admin</td></tr>
+      <tr><td>posts</td><td>texto</td><td>varchar(280)</td><td>obrigatório</td></tr>
+      <tr><td>posts</td><td>time_id</td><td>FK</td><td>cópia do time do autor</td></tr>
+      <tr><td>curtidas</td><td>usuario_id + post_id</td><td>PK composta</td><td>impede like duplicado</td></tr>
+      <tr><td>jogos</td><td>data</td><td>date</td><td>filtro do “dia”</td></tr>
+    </tbody>
+  </table>
+
+  <h2>7. Modelo físico (SQL)</h2>
+<pre>CREATE TABLE times (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(80) NOT NULL UNIQUE,
+  sigla VARCHAR(10) NOT NULL UNIQUE
+);
+
+CREATE TABLE usuarios (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(80) NOT NULL,
+  email VARCHAR(120) NOT NULL UNIQUE,
+  senha_hash VARCHAR(120) NOT NULL,
+  time_id INTEGER NOT NULL REFERENCES times(id),
+  papel VARCHAR(20) NOT NULL DEFAULT 'torcedor',
+  criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+  time_id INTEGER NOT NULL REFERENCES times(id),
+  texto VARCHAR(280) NOT NULL,
+  imagem_url VARCHAR(255),
+  criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE comentarios (
+  id SERIAL PRIMARY KEY,
+  post_id INTEGER NOT NULL REFERENCES posts(id),
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+  texto VARCHAR(280) NOT NULL,
+  criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE curtidas (
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+  post_id INTEGER NOT NULL REFERENCES posts(id),
+  PRIMARY KEY (usuario_id, post_id)
+);
+
+CREATE TABLE jogos (
+  id SERIAL PRIMARY KEY,
+  mandante_id INTEGER NOT NULL REFERENCES times(id),
+  visitante_id INTEGER NOT NULL REFERENCES times(id),
+  data DATE NOT NULL,
+  horario VARCHAR(5) NOT NULL,
+  placar_mandante INTEGER,
+  placar_visitante INTEGER
+);</pre>
+
+  <h2>8. Arquitetura (Entrega 4/5 — visão técnica)</h2>
+  <table>
+    <thead><tr><th>Camada</th><th>Escolha</th></tr></thead>
+    <tbody>
+      <tr><td>Cliente</td><td>React (ou HTML de protótipo na Entrega 4)</td></tr>
+      <tr><td>API</td><td>Node.js + Express, JWT</td></tr>
+      <tr><td>Dados</td><td>PostgreSQL em produção; SQLite local com o mesmo esquema para a demo</td></tr>
+      <tr><td>Git</td><td>GitHub do grupo</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

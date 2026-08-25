@@ -1,0 +1,10 @@
+{
+  "name": "torcida",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MVP Torcida — cadastro e login com time de coração",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

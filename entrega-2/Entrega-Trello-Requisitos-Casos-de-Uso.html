@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega Trello — Requisitos e casos de uso | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 960px; padding: 32px 40px 64px; font-family: "Times New Roman", Times, serif; color: #1a1a1a; line-height: 1.4; font-size: 12.5pt; }
+    h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 18pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 13.5pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 24px; }
+    .cover { text-align: center; margin-bottom: 22px; }
+    .cover p { margin: 3px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 10.5pt; }
+    th, td { border: 1px solid #333; padding: 5px 7px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    .nova { background: #e8f5e9; }
+    .diagram { text-align: center; margin: 12px 0 6px; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .caption { text-align: center; font-size: 10.5pt; margin: 0 0 16px; }
+    .note { border: 1px solid #333; padding: 10px 12px; margin: 12px 0; font-size: 11.5pt; }
+    @media print { body { padding: 8px; max-width: none; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II — Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega no Trello — Requisitos e casos de uso</h1>
+    <p><strong>Projeto Torcida</strong> (projeto novo)</p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa</p>
+    <p>25/08/2026</p>
+  </header>
+
+  <div class="note">
+    <strong>Tipo de projeto:</strong> este grupo <strong>não</strong> dá continuidade a um sistema anterior. O Torcida é um projeto novo. Por isso, todas as funcionalidades abaixo são <strong>novas</strong>. Nenhuma está implementada ainda (o código do MVP será feito nas próximas entregas).
+  </div>
+
+  <h2>1. Identificação do projeto</h2>
+  <table>
+    <tbody>
+      <tr><th>Nome</th><td>Torcida — rede social de futebol</td></tr>
+      <tr><th>Problema</th><td>Torcedor comenta o time em redes genéricas; não há time de coração nem ranking da torcida na plataforma.</td></tr>
+      <tr><th>Solução</th><td>Feed estilo Twitter/Threads só de futebol, com time de coração, ranking e resumo do dia/chatbot.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Funcionalidades novas × já implementadas</h2>
+  <p>Pedido do professor para grupos que continuam projeto anterior. No Torcida, a coluna “Já implementada?” fica <strong>Não</strong> em todas.</p>
+  <table>
+    <thead>
+      <tr><th>Funcionalidade</th><th>Situação</th><th>Já implementada?</th></tr>
+    </thead>
+    <tbody>
+      <tr class="nova"><td>Cadastro e login com time de coração</td><td>Nova</td><td>Não</td></tr>
+      <tr class="nova"><td>Post em texto com etiqueta do time</td><td>Nova</td><td>Não</td></tr>
+      <tr class="nova"><td>Feed, curtida e comentário</td><td>Nova</td><td>Não</td></tr>
+      <tr class="nova"><td>Ranking de torcida</td><td>Nova</td><td>Não</td></tr>
+      <tr class="nova"><td>Resumo do dia do time</td><td>Nova</td><td>Não</td></tr>
+      <tr class="nova"><td>Chatbot de jogos do dia</td><td>Nova</td><td>Não</td></tr>
+      <tr class="nova"><td>Admin cadastrar times e jogos</td><td>Nova</td><td>Não</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Lista de requisitos funcionais</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th></tr></thead>
+    <tbody>
+      <tr><td>RF01</td><td>O sistema deverá permitir o cadastro de usuário com nome, e-mail, senha e time de coração.</td></tr>
+      <tr><td>RF02</td><td>O sistema deverá exigir o time de coração como campo obrigatório no cadastro.</td></tr>
+      <tr><td>RF03</td><td>O sistema deverá validar e-mail único, senha com mínimo de 6 caracteres e preenchimento dos campos obrigatórios.</td></tr>
+      <tr><td>RF04</td><td>O sistema deverá permitir o login com e-mail e senha.</td></tr>
+      <tr><td>RF05</td><td>O sistema deverá recusar o login quando o e-mail ou a senha estiverem incorretos.</td></tr>
+      <tr><td>RF06</td><td>O sistema deverá permitir o logout.</td></tr>
+      <tr><td>RF07</td><td>O sistema deverá impedir o acesso ao feed, ao ranking e ao resumo do dia sem autenticação.</td></tr>
+      <tr><td>RF08</td><td>O sistema deverá permitir que o usuário autenticado crie um post em texto.</td></tr>
+      <tr><td>RF09</td><td>O sistema deverá associar automaticamente a etiqueta do time de coração ao post.</td></tr>
+      <tr><td>RF10</td><td>O sistema deverá permitir imagem no post de forma opcional.</td></tr>
+      <tr><td>RF11</td><td>O sistema deverá listar o feed de posts em ordem cronológica inversa (mais recente primeiro).</td></tr>
+      <tr><td>RF12</td><td>O sistema deverá exibir, em cada post, autor, time, texto, data, quantidade de curtidas e comentários.</td></tr>
+      <tr><td>RF13</td><td>O sistema deverá limitar o texto do post a 280 caracteres.</td></tr>
+      <tr><td>RF14</td><td>O sistema deverá permitir curtir um post.</td></tr>
+      <tr><td>RF15</td><td>O sistema deverá permitir remover a própria curtida.</td></tr>
+      <tr><td>RF16</td><td>O sistema deverá impedir mais de uma curtida do mesmo usuário no mesmo post.</td></tr>
+      <tr><td>RF17</td><td>O sistema deverá permitir comentar um post.</td></tr>
+      <tr><td>RF18</td><td>O sistema deverá listar os comentários de um post com autor e data.</td></tr>
+      <tr><td>RF19</td><td>O sistema deverá exibir o ranking de torcida, ordenado pela quantidade de usuários cadastrados em cada time.</td></tr>
+      <tr><td>RF20</td><td>O sistema deverá mostrar posição, nome do time e número de torcedores.</td></tr>
+      <tr><td>RF21</td><td>O sistema deverá atualizar o ranking automaticamente quando um novo usuário se cadastrar.</td></tr>
+      <tr><td>RF22</td><td>O sistema deverá exibir um card fixo “Resumo do dia” com texto referente ao time de coração do usuário logado.</td></tr>
+      <tr><td>RF23</td><td>O sistema deverá montar o resumo do dia a partir dos jogos cadastrados no banco e, quando houver, de posts recentes daquele time.</td></tr>
+      <tr><td>RF24</td><td>O sistema deverá oferecer um chatbot para o usuário perguntar quais jogos há no dia.</td></tr>
+      <tr><td>RF25</td><td>O sistema deverá permitir que o chatbot informe o resumo do time de coração do usuário.</td></tr>
+      <tr><td>RF26</td><td>O sistema deverá responder com mensagem clara quando não houver jogos cadastrados para a data.</td></tr>
+      <tr><td>RF27</td><td>O sistema deverá permitir que o administrador cadastre times (nome e sigla).</td></tr>
+      <tr><td>RF28</td><td>O sistema deverá permitir que o administrador cadastre jogos do dia (mandante, visitante, data, horário e, se houver, placar).</td></tr>
+      <tr><td>RF29</td><td>O sistema deverá listar os times disponíveis para escolha no cadastro do torcedor.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Lista de requisitos não funcionais</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Requisito</th><th>Categoria</th></tr></thead>
+    <tbody>
+      <tr><td>RNF01</td><td>O sistema deverá possuir autenticação de usuários.</td><td>Segurança</td></tr>
+      <tr><td>RNF02</td><td>O sistema deverá funcionar em navegador web (Chrome, Edge ou Firefox).</td><td>Compatibilidade</td></tr>
+      <tr><td>RNF03</td><td>O sistema deverá realizar validação dos campos obrigatórios no cadastro, no login e na publicação.</td><td>Usabilidade</td></tr>
+      <tr><td>RNF04</td><td>As senhas deverão ser armazenadas de forma criptografada (hash), nunca em texto puro.</td><td>Segurança</td></tr>
+      <tr><td>RNF05</td><td>As telas principais deverão estar em português.</td><td>Usabilidade</td></tr>
+      <tr><td>RNF06</td><td>O sistema deverá ser utilizável em resolução de desktop (mínimo 1280×720).</td><td>Interface</td></tr>
+      <tr><td>RNF07</td><td>As operações principais deverão responder em até 3 segundos em ambiente local.</td><td>Desempenho</td></tr>
+      <tr><td>RNF08</td><td>O MVP deverá funcionar na apresentação sem API externa de jogos.</td><td>Disponibilidade</td></tr>
+      <tr><td>RNF09</td><td>O código deverá ser versionado no GitHub, com histórico de commits do grupo.</td><td>Manutenibilidade</td></tr>
+      <tr><td>RNF10</td><td>O acesso às rotas autenticadas deverá exigir token/sessão válido.</td><td>Segurança</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5. Regras de negócio</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Regra</th></tr></thead>
+    <tbody>
+      <tr><td>RN01</td><td>Cada usuário possui exatamente um time de coração nesta versão.</td></tr>
+      <tr><td>RN02</td><td>A etiqueta do post é sempre o time de coração do autor; o usuário não escolhe outro time na hora de postar.</td></tr>
+      <tr><td>RN03</td><td>O ranking conta usuários cadastrados por time, não o número de posts.</td></tr>
+      <tr><td>RN04</td><td>Jogos do dia são os registros cuja data é a data atual do sistema.</td></tr>
+      <tr><td>RN05</td><td>Apenas o administrador cadastra times e jogos.</td></tr>
+      <tr><td>RN06</td><td>Post sem texto não pode ser publicado.</td></tr>
+      <tr><td>RN07</td><td>Comentário vazio não pode ser enviado.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6. Desenho do caso de uso</h2>
+  <div class="diagram">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 520" width="880" height="480">
+      <rect x="1" y="1" width="918" height="518" fill="#fff" stroke="#111"/>
+      <text x="460" y="28" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold">Torcida</text>
+      <ellipse cx="200" cy="90" rx="72" ry="22" fill="#fff" stroke="#111"/>
+      <text x="200" y="94" text-anchor="middle" font-family="Arial" font-size="11">UC01 Cadastrar-se</text>
+      <ellipse cx="200" cy="140" rx="78" ry="22" fill="#fff" stroke="#111"/>
+      <text x="200" y="144" text-anchor="middle" font-family="Arial" font-size="11">UC02 Realizar login</text>
+      <ellipse cx="460" cy="70" rx="70" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="74" text-anchor="middle" font-family="Arial" font-size="11">UC03 Logout</text>
+      <ellipse cx="460" cy="115" rx="80" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="119" text-anchor="middle" font-family="Arial" font-size="11">UC04 Publicar post</text>
+      <ellipse cx="460" cy="160" rx="80" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="164" text-anchor="middle" font-family="Arial" font-size="11">UC05 Ver feed</text>
+      <ellipse cx="460" cy="205" rx="78" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="209" text-anchor="middle" font-family="Arial" font-size="11">UC06 Curtir post</text>
+      <ellipse cx="460" cy="250" rx="86" ry="20" fill="#fff" stroke="#111"/>
+      <text x="460" y="254" text-anchor="middle" font-family="Arial" font-size="11">UC07 Comentar post</text>
+      <ellipse cx="460" cy="300" rx="100" ry="22" fill="#fff" stroke="#111"/>
+      <text x="460" y="304" text-anchor="middle" font-family="Arial" font-size="11">UC08 Ranking de torcida</text>
+      <ellipse cx="460" cy="350" rx="96" ry="22" fill="#fff" stroke="#111"/>
+      <text x="460" y="354" text-anchor="middle" font-family="Arial" font-size="11">UC09 Resumo do dia</text>
+      <ellipse cx="460" cy="400" rx="90" ry="22" fill="#fff" stroke="#111"/>
+      <text x="460" y="404" text-anchor="middle" font-family="Arial" font-size="11">UC10 Chatbot</text>
+      <ellipse cx="740" cy="200" rx="86" ry="22" fill="#fff" stroke="#111"/>
+      <text x="740" y="204" text-anchor="middle" font-family="Arial" font-size="11">UC11 Cadastrar time</text>
+      <ellipse cx="740" cy="260" rx="96" ry="22" fill="#fff" stroke="#111"/>
+      <text x="740" y="264" text-anchor="middle" font-family="Arial" font-size="11">UC12 Cadastrar jogo</text>
+      <circle cx="48" cy="115" r="18" fill="#fff" stroke="#111"/>
+      <line x1="48" y1="133" x2="48" y2="175" stroke="#111"/>
+      <line x1="48" y1="148" x2="28" y2="165" stroke="#111"/>
+      <line x1="48" y1="148" x2="68" y2="165" stroke="#111"/>
+      <line x1="48" y1="175" x2="32" y2="210" stroke="#111"/>
+      <line x1="48" y1="175" x2="64" y2="210" stroke="#111"/>
+      <text x="48" y="230" text-anchor="middle" font-family="Arial" font-size="12">Visitante</text>
+      <line x1="66" y1="115" x2="128" y2="90" stroke="#111"/>
+      <line x1="66" y1="125" x2="122" y2="140" stroke="#111"/>
+      <circle cx="48" cy="330" r="18" fill="#fff" stroke="#111"/>
+      <line x1="48" y1="348" x2="48" y2="390" stroke="#111"/>
+      <line x1="48" y1="363" x2="28" y2="380" stroke="#111"/>
+      <line x1="48" y1="363" x2="68" y2="380" stroke="#111"/>
+      <line x1="48" y1="390" x2="32" y2="425" stroke="#111"/>
+      <line x1="48" y1="390" x2="64" y2="425" stroke="#111"/>
+      <text x="48" y="448" text-anchor="middle" font-family="Arial" font-size="12">Torcedor</text>
+      <line x1="66" y1="320" x2="360" y2="70" stroke="#111"/>
+      <line x1="66" y1="325" x2="360" y2="250" stroke="#111"/>
+      <line x1="66" y1="335" x2="360" y2="350" stroke="#111"/>
+      <line x1="66" y1="340" x2="360" y2="400" stroke="#111"/>
+      <circle cx="872" cy="230" r="18" fill="#fff" stroke="#111"/>
+      <line x1="872" y1="248" x2="872" y2="290" stroke="#111"/>
+      <line x1="872" y1="263" x2="852" y2="280" stroke="#111"/>
+      <line x1="872" y1="263" x2="892" y2="280" stroke="#111"/>
+      <line x1="872" y1="290" x2="856" y2="325" stroke="#111"/>
+      <line x1="872" y1="290" x2="888" y2="325" stroke="#111"/>
+      <text x="872" y="348" text-anchor="middle" font-family="Arial" font-size="12">Admin</text>
+      <line x1="854" y1="230" x2="826" y2="200" stroke="#111"/>
+      <line x1="854" y1="240" x2="836" y2="260" stroke="#111"/>
+    </svg>
+  </div>
+  <p class="caption">Figura 1 — Diagrama de casos de uso do Torcida.</p>
+
+  <table>
+    <thead><tr><th>Ator</th><th>Casos de uso</th></tr></thead>
+    <tbody>
+      <tr><td>Visitante</td><td>UC01 Cadastrar-se, UC02 Realizar login</td></tr>
+      <tr><td>Torcedor</td><td>UC03 Logout, UC04 Publicar post, UC05 Ver feed, UC06 Curtir, UC07 Comentar, UC08 Ranking, UC09 Resumo do dia, UC10 Chatbot</td></tr>
+      <tr><td>Administrador</td><td>UC11 Cadastrar time, UC12 Cadastrar jogo</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

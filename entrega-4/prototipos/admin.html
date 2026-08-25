@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin | Torcida</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">TORCIDA<span>.</span></div>
+      <nav>
+        <a href="feed.html">Feed</a>
+        <a href="ranking.html">Ranking</a>
+        <a href="chatbot.html">Chatbot</a>
+        <a class="active" href="admin.html">Admin</a>
+        <a href="login.html">Sair</a>
+      </nav>
+    </div>
+    <div class="page">
+      <h1>Cadastrar jogo do dia</h1>
+      <p class="muted">Só o administrador alimenta o resumo e o chatbot.</p>
+      <div class="card">
+        <label>Mandante</label>
+        <select><option>Flamengo</option><option>Palmeiras</option><option>Grêmio</option></select>
+        <label>Visitante</label>
+        <select><option>Palmeiras</option><option>Flamengo</option><option>Internacional</option></select>
+        <label>Data</label>
+        <input type="date" value="2026-08-25" />
+        <label>Horário</label>
+        <input value="16:00" />
+        <label>Placar (opcional)</label>
+        <input placeholder="ex.: 2-1" />
+        <button class="btn" type="button">Salvar jogo</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

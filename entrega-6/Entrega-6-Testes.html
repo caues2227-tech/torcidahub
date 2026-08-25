@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega 6 — Testes | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 980px; padding: 36px 36px 72px; font-family: "Times New Roman", Times, serif; color: #1a1a1a; line-height: 1.4; font-size: 12.5pt; }
+    h1, h2 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 14pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 26px; }
+    .cover { text-align: center; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 10.5pt; }
+    th, td { border: 1px solid #333; padding: 5px 6px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    @media print { body { padding: 8px; max-width: none; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II — Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega 6 — Plano e evidências de testes</h1>
+    <p><strong>Projeto Torcida</strong></p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa · 25/08/2026</p>
+  </header>
+
+  <h2>1. Objetivo</h2>
+  <p>Validar os requisitos do MVP com testes funcionais. A coluna “Resultado obtido” será preenchida na execução do sistema (Entrega 5). Enquanto o código não roda, o status é <strong>pendente</strong>. Depois da execução, troca-se para OK ou Falha, com evidência (print).</p>
+
+  <h2>2. Casos de teste</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Funcionalidade</th>
+        <th>Entrada</th>
+        <th>Resultado esperado</th>
+        <th>Resultado obtido</th>
+        <th>RF</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>CT01</td><td>Cadastro</td><td>Dados válidos + time</td><td>Cadastro realizado</td><td>Pendente</td><td>RF01, RF02</td></tr>
+      <tr><td>CT02</td><td>Cadastro</td><td>Time de coração vazio</td><td>Sistema rejeita</td><td>Pendente</td><td>RF02, RNF03</td></tr>
+      <tr><td>CT03</td><td>Cadastro</td><td>E-mail já usado</td><td>Sistema rejeita</td><td>Pendente</td><td>RF03</td></tr>
+      <tr><td>CT04</td><td>Cadastro</td><td>Senha com 4 caracteres</td><td>Sistema rejeita</td><td>Pendente</td><td>RF03</td></tr>
+      <tr><td>CT05</td><td>Login</td><td>Usuário válido</td><td>Acesso permitido, vai ao feed</td><td>Pendente</td><td>RF04</td></tr>
+      <tr><td>CT06</td><td>Login</td><td>Senha inválida</td><td>Acesso negado</td><td>Pendente</td><td>RF05</td></tr>
+      <tr><td>CT07</td><td>Login</td><td>Campos vazios</td><td>Sistema rejeita</td><td>Pendente</td><td>RNF03</td></tr>
+      <tr><td>CT08</td><td>Logout</td><td>Usuário logado clica em Sair</td><td>Sessão encerrada</td><td>Pendente</td><td>RF06</td></tr>
+      <tr><td>CT09</td><td>Rota protegida</td><td>Acessar feed sem login</td><td>Redireciona ao login</td><td>Pendente</td><td>RF07</td></tr>
+      <tr><td>CT10</td><td>Post</td><td>Texto válido</td><td>Post no feed com etiqueta do time</td><td>Pendente</td><td>RF08, RF09</td></tr>
+      <tr><td>CT11</td><td>Post</td><td>Texto vazio</td><td>Sistema rejeita</td><td>Pendente</td><td>RF08, RN06</td></tr>
+      <tr><td>CT12</td><td>Post</td><td>Mais de 280 caracteres</td><td>Sistema rejeita</td><td>Pendente</td><td>RF13</td></tr>
+      <tr><td>CT13</td><td>Post</td><td>Só texto, sem imagem</td><td>Publicação aceita</td><td>Pendente</td><td>RF10</td></tr>
+      <tr><td>CT14</td><td>Feed</td><td>Vários posts</td><td>Mais recente primeiro</td><td>Pendente</td><td>RF11, RF12</td></tr>
+      <tr><td>CT15</td><td>Curtir</td><td>Like em post</td><td>Contador incrementa</td><td>Pendente</td><td>RF14</td></tr>
+      <tr><td>CT16</td><td>Curtir</td><td>Segundo like do mesmo usuário</td><td>Não duplica; pode descurtir</td><td>Pendente</td><td>RF15, RF16</td></tr>
+      <tr><td>CT17</td><td>Comentar</td><td>Texto válido</td><td>Comentário listado</td><td>Pendente</td><td>RF17, RF18</td></tr>
+      <tr><td>CT18</td><td>Comentar</td><td>Texto vazio</td><td>Sistema rejeita</td><td>Pendente</td><td>RN07</td></tr>
+      <tr><td>CT19</td><td>Ranking</td><td>Usuários em times diferentes</td><td>Ordem por quantidade de torcedores</td><td>Pendente</td><td>RF19, RF20</td></tr>
+      <tr><td>CT20</td><td>Ranking</td><td>Novo cadastro no time X</td><td>Contagem de X sobe</td><td>Pendente</td><td>RF21</td></tr>
+      <tr><td>CT21</td><td>Resumo do dia</td><td>Usuário do Flamengo, jogo cadastrado</td><td>Card cita o jogo do Flamengo</td><td>Pendente</td><td>RF22, RF23</td></tr>
+      <tr><td>CT22</td><td>Resumo do dia</td><td>Sem jogo do time</td><td>Mensagem de que não há partida</td><td>Pendente</td><td>RF26</td></tr>
+      <tr><td>CT23</td><td>Chatbot</td><td>“quais jogos tem hoje?”</td><td>Lista jogos da data atual</td><td>Pendente</td><td>RF24</td></tr>
+      <tr><td>CT24</td><td>Chatbot</td><td>“resumo do meu time”</td><td>Resumo do time de coração</td><td>Pendente</td><td>RF25</td></tr>
+      <tr><td>CT25</td><td>Chatbot</td><td>Nenhum jogo no dia</td><td>Informa que não há jogos cadastrados</td><td>Pendente</td><td>RF26</td></tr>
+      <tr><td>CT26</td><td>Admin</td><td>Cadastrar time</td><td>Time aparece no cadastro</td><td>Pendente</td><td>RF27, RF29</td></tr>
+      <tr><td>CT27</td><td>Admin</td><td>Cadastrar jogo</td><td>Jogo entra no resumo/chatbot</td><td>Pendente</td><td>RF28</td></tr>
+      <tr><td>CT28</td><td>Segurança</td><td>Ver senha no banco</td><td>Apenas hash, nunca texto puro</td><td>Pendente</td><td>RNF04</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Evidências</h2>
+  <p>Para cada CT executado: print da tela (sucesso ou mensagem de erro) na pasta <em>entrega-6/evidencias</em>, com o nome do arquivo igual ao ID (CT05-login-ok.png, etc.).</p>
+
+  <h2>4. Correção</h2>
+  <p>Falhas abrem cartão em IMPEDIMENTOS ou voltam para A FAZER no Trello, são corrigidas e o teste é reexecutado até OK.</p>
+</body>
+</html>

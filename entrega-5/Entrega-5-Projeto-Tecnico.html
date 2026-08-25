@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega 5 — Projeto técnico | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 900px; padding: 36px 44px 72px; font-family: "Times New Roman", Times, serif; color: #1a1a1a; line-height: 1.45; font-size: 13pt; }
+    h1, h2 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; }
+    h2 { font-size: 14pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 26px; }
+    .cover { text-align: center; margin-bottom: 28px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12pt; }
+    th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    @media print { body { padding: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II — Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega 5 — Projeto técnico e MVP</h1>
+    <p><strong>Projeto Torcida</strong> · Como a solução será construída</p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa · 25/08/2026</p>
+  </header>
+
+  <h2>1. Como a solução será construída</h2>
+  <table>
+    <thead><tr><th>Item</th><th>Escolha</th></tr></thead>
+    <tbody>
+      <tr><td>Linguagem</td><td>JavaScript (ES2020+)</td></tr>
+      <tr><td>Frontend</td><td>React</td></tr>
+      <tr><td>Backend</td><td>Node.js + Express</td></tr>
+      <tr><td>Banco de dados</td><td>PostgreSQL (modelo oficial). SQLite no ambiente local da demo, mesmo esquema.</td></tr>
+      <tr><td>Arquitetura</td><td>Cliente-servidor, API REST, SPA no browser</td></tr>
+      <tr><td>Autenticação</td><td>JWT</td></tr>
+      <tr><td>Ferramentas</td><td>VS Code / Cursor, Postman ou Insomnia, Chrome</td></tr>
+      <tr><td>Git</td><td>GitHub do grupo (repositório a criar)</td></tr>
+      <tr><td>Ambiente</td><td>Windows, Node.js 20+, navegador Chrome</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Escopo do MVP (Artefato 6)</h2>
+  <p>Login; cadastro com time de coração; post em texto; feed; like; comentário; ranking de torcida; resumo do dia; chatbot de jogos; cadastro de jogos pelo admin. Sem stories e sem API externa na banca.</p>
+
+  <h2>3. Status desta entrega</h2>
+  <p>O código do MVP será desenvolvido nas semanas de outubro, conforme o cronograma da disciplina. Este documento fixa a arquitetura para o grupo não divergir na implementação. Os protótipos da Entrega 4 já representam as telas que o React deve reproduzir.</p>
+
+  <h2>4. Endpoints previstos</h2>
+  <table>
+    <thead><tr><th>Método</th><th>Rota</th><th>Função</th></tr></thead>
+    <tbody>
+      <tr><td>POST</td><td>/api/cadastro</td><td>Criar usuário</td></tr>
+      <tr><td>POST</td><td>/api/login</td><td>Autenticar e devolver JWT</td></tr>
+      <tr><td>GET</td><td>/api/feed</td><td>Listar posts</td></tr>
+      <tr><td>POST</td><td>/api/posts</td><td>Publicar</td></tr>
+      <tr><td>POST</td><td>/api/posts/:id/curtir</td><td>Curtir / descurtir</td></tr>
+      <tr><td>POST</td><td>/api/posts/:id/comentar</td><td>Comentar</td></tr>
+      <tr><td>GET</td><td>/api/ranking</td><td>Ranking de torcida</td></tr>
+      <tr><td>GET</td><td>/api/resumo</td><td>Resumo do dia do time do usuário</td></tr>
+      <tr><td>POST</td><td>/api/chatbot</td><td>Pergunta sobre jogos / resumo</td></tr>
+      <tr><td>POST</td><td>/api/jogos</td><td>Admin cadastra jogo</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

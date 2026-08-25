@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega 4 — Protótipos | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 900px; padding: 36px 44px 72px; font-family: "Times New Roman", Times, serif; color: #1a1a1a; line-height: 1.45; font-size: 13pt; }
+    h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 14pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 26px; }
+    .cover { text-align: center; margin-bottom: 28px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 12pt; }
+    th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    .mock {
+      background: #0b1220; color: #eef2ff; font-family: Arial, sans-serif; border-radius: 8px;
+      padding: 14px; margin: 12px 0 20px; font-size: 11pt;
+    }
+    .mock b { color: #22c55e; }
+    @media print { body { padding: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II — Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega 4 — Protótipo das telas</h1>
+    <p><strong>Projeto Torcida</strong> · Artefato 5</p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa · 25/08/2026</p>
+  </header>
+
+  <h2>1. Objetivo</h2>
+  <p>Este artefato apresenta os wireframes navegáveis das telas principais do MVP, alinhados aos casos de uso UC01 a UC12. Os protótipos clicáveis estão na pasta <strong>entrega-4/prototipos</strong> (abrir <em>login.html</em>).</p>
+
+  <h2>2. Mapa de telas</h2>
+  <table>
+    <thead><tr><th>Tela</th><th>Arquivo</th><th>Casos de uso</th></tr></thead>
+    <tbody>
+      <tr><td>Login</td><td>login.html</td><td>UC02</td></tr>
+      <tr><td>Cadastro</td><td>cadastro.html</td><td>UC01</td></tr>
+      <tr><td>Feed + resumo do dia + post</td><td>feed.html</td><td>UC03, UC04, UC05, UC06, UC07, UC09</td></tr>
+      <tr><td>Ranking de torcida</td><td>ranking.html</td><td>UC08</td></tr>
+      <tr><td>Chatbot</td><td>chatbot.html</td><td>UC10</td></tr>
+      <tr><td>Admin — jogos</td><td>admin.html</td><td>UC11, UC12</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Tela de cadastro / login</h2>
+  <p>O cadastro exige nome, e-mail, senha e time de coração (lista pré-cadastrada). Sem time, não há envio. O login usa e-mail e senha e leva ao feed.</p>
+  <div class="mock">
+    <b>TORCIDA.</b><br><br>
+    Criar conta<br>
+    Nome · E-mail · Senha · Time de coração [Flamengo ▼]<br>
+    [Cadastrar] &nbsp; [Já tenho conta]
+  </div>
+
+  <h2>4. Feed e resumo do dia</h2>
+  <p>Após o login: card fixo “Resumo do dia” do time do usuário; campo de post com etiqueta automática; lista de posts com time, like e comentário. Imagem permanece opcional.</p>
+  <div class="mock">
+    <b>Resumo do dia — Flamengo</b><br>
+    Hoje o Flamengo enfrenta o Palmeiras às 16:00. Placar ainda não registrado.<br><br>
+    O que está acontecendo? [Publicar]<br><br>
+    <b>Flamengo</b> Cauê · Vamos Flamengo! · Curtir 8 · Comentar 2
+  </div>
+
+  <h2>5. Ranking</h2>
+  <p>Lista ordenada por número de usuários cadastrados em cada time (não por número de posts), com posição, nome e quantidade.</p>
+
+  <h2>6. Chatbot e admin</h2>
+  <p>O chatbot responde “quais jogos tem hoje?” e “resumo do meu time” com dados do banco. O admin cadastra mandante, visitante, data, horário e placar opcional, para a apresentação não depender de API externa.</p>
+
+  <h2>7. Navegação</h2>
+  <p>Feed · Ranking · Chatbot · Admin · Sair. Telas autenticadas não devem ser usadas sem login no sistema final (RF07). Neste protótipo a navegação é livre para a banca percorrer as telas.</p>
+</body>
+</html>

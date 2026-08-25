@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Feed | Torcida</title>
+  <link rel="stylesheet" href="/estilos.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">TORCIDA<span>.</span></div>
+      <nav><a href="/login.html" id="sair">Sair</a></nav>
+    </div>
+    <div class="page">
+      <div class="card">
+        <p>Olá, <strong id="nome"></strong></p>
+        <p class="muted">Time de coração: <span class="tag" id="time"></span></p>
+        <p class="muted">Cadastro e login já funcionam. Feed, ranking e chatbot vêm nas próximas tarefas do A FAZER.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const s = sessionStorage.getItem("torcida");
+    if (!s) location.href = "/login.html";
+    else {
+      const u = JSON.parse(s);
+      document.getElementById("nome").textContent = u.nome;
+      document.getElementById("time").textContent = u.time;
+    }
+    document.getElementById("sair").addEventListener("click", () => sessionStorage.removeItem("torcida"));
+  </script>
+</body>
+</html>

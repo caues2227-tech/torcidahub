@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega 1 — Proposta do tema | Torcida</title>
+  <style>
+    body { margin: 0 auto; max-width: 900px; padding: 36px 44px 72px; font-family: "Times New Roman", Times, serif; color: #1a1a1a; line-height: 1.45; font-size: 13.5pt; }
+    h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; }
+    h1 { font-size: 20pt; text-align: center; margin: 0 0 8px; }
+    h2 { font-size: 14pt; border-bottom: 1px solid #111; padding-bottom: 4px; margin-top: 28px; }
+    .cover { text-align: center; margin-bottom: 32px; }
+    .cover p { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 12pt; }
+    th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    ul { margin-top: 6px; }
+    @media print { body { padding: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+  <header class="cover">
+    <p>Análise e Projeto de Sistemas II</p>
+    <p>Prof. Silvio Rogerio de Lucia</p>
+    <h1>Entrega 1 — Proposta do tema</h1>
+    <p><strong>Projeto Torcida</strong></p>
+    <p>Cauê Souza Marinho, Bruno Souza, Erick, Kaique Souza, Guilherme Sousa</p>
+    <p>25/08/2026</p>
+  </header>
+
+  <p style="border:1.5px solid #111;padding:12px 14px;background:#f7f7f7;"><strong>Observação:</strong> este é um <strong>projeto novo</strong> da APS II. O grupo não dará continuidade ao tema da APS I.</p>
+
+  <h2>1. Nome do projeto</h2>
+  <p><strong>Torcida</strong> — rede social web de futebol, no estilo Twitter/Threads, centrada no time de coração do usuário.</p>
+
+  <h2>2. Integrantes do grupo</h2>
+  <table>
+    <thead><tr><th>Nome</th><th>Papel previsto no grupo</th></tr></thead>
+    <tbody>
+      <tr><td>Cauê Souza Marinho</td><td>Organização do Trello, documentação e integração</td></tr>
+      <tr><td>Bruno Souza</td><td>Análise, requisitos e modelagem</td></tr>
+      <tr><td>Erick</td><td>Protótipos e frontend</td></tr>
+      <tr><td>Kaique Souza</td><td>Backend, banco de dados e autenticação</td></tr>
+      <tr><td>Guilherme Sousa</td><td>Testes, ranking, resumo do dia e apresentação</td></tr>
+    </tbody>
+  </table>
+  <p>A divisão é inicial e pode ser ajustada nas avaliações 360°.</p>
+
+  <h2>3. Problema que será resolvido</h2>
+  <p>O torcedor comenta o time em redes genéricas. O conteúdo de futebol se perde no meio de outros assuntos, o sistema não sabe qual é o time de coração do usuário e não existe um ranking da torcida da própria comunidade.</p>
+
+  <h2>4. Público-alvo</h2>
+  <p>Torcedores de futebol que usam redes sociais para comentar jogos e times, com foco inicial no público brasileiro, em navegador web.</p>
+
+  <h2>5. Objetivo geral</h2>
+  <p>Criar uma plataforma web exclusiva de futebol em que cada usuário informa o time de coração no cadastro e passa a publicar, acompanhar o feed, ver o ranking de torcida e receber um resumo do dia do seu time.</p>
+
+  <h2>6. Objetivos específicos</h2>
+  <ul>
+    <li>Permitir cadastro e login com escolha obrigatória do time de coração.</li>
+    <li>Permitir posts em texto com etiqueta do time, curtida e comentário.</li>
+    <li>Exibir ranking de torcida da plataforma.</li>
+    <li>Gerar o resumo do dia e um chatbot simples sobre os jogos do dia.</li>
+    <li>Manter os dados (usuários, times, posts, jogos) no próprio banco, sem API externa na apresentação.</li>
+  </ul>
+
+  <h2>7. Solução proposta</h2>
+  <p>Uma aplicação web com feed semelhante ao Twitter/Threads, porém só de futebol. No cadastro o usuário escolhe o time. Cada post nasce com a etiqueta desse time. Há uma aba de ranking (quantidade de torcedores por clube) e um card/chatbot de “resumo do dia”, alimentado pelos jogos cadastrados no banco.</p>
+
+  <h2>8. Escopo inicial (MVP)</h2>
+  <ul>
+    <li>Cadastro, login e logout.</li>
+    <li>Post em texto com etiqueta do time (imagem opcional).</li>
+    <li>Feed, like e comentário.</li>
+    <li>Ranking de torcida.</li>
+    <li>Resumo do dia e chatbot de jogos.</li>
+    <li>Cadastro interno de times e jogos (administrador).</li>
+  </ul>
+
+  <h2>9. O que o sistema NÃO fará</h2>
+  <ul>
+    <li>Stories, chat privado, app mobile nativo, transmissão ao vivo.</li>
+    <li>Apostas, fantasy, marketplace.</li>
+    <li>Dependência de API externa de jogos no dia da banca.</li>
+  </ul>
+
+  <h2>10. Tecnologias pretendidas e justificativa</h2>
+  <table>
+    <thead><tr><th>Tecnologia</th><th>Justificativa</th></tr></thead>
+    <tbody>
+      <tr><td>React</td><td>Interface de feed com componentes reutilizáveis, adequada ao estilo da rede social.</td></tr>
+      <tr><td>Node.js + Express</td><td>API REST simples, boa integração com o frontend e com JWT.</td></tr>
+      <tr><td>PostgreSQL</td><td>Modelo relacional claro para usuário, time, post, comentário e jogo. No desenvolvimento local pode-se usar SQLite com o mesmo modelo, para a demo não depender de servidor externo.</td></tr>
+      <tr><td>JWT</td><td>Autenticação das rotas do feed, ranking e resumo.</td></tr>
+      <tr><td>Git / GitHub</td><td>Exigência da disciplina e trabalho em grupo.</td></tr>
+      <tr><td>Módulo interno de resumo/chatbot</td><td>Lê jogos e posts do banco; a IA, se usada, só redige o texto e não é ponto único de falha na apresentação.</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

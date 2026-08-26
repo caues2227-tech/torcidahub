@@ -61,8 +61,43 @@ textarea { resize: vertical; min-height: 72px; }
 .rank { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .rank:last-child { border-bottom: 0; }
 .pos { color: var(--green); font-weight: 800; width: 24px; }
-.bubble { background: #0d1526; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
-.bubble.me { border-color: var(--green-dim); }
+.chat-box {
+  min-height: 340px;
+  max-height: 52vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bubble {
+  background: #0d1526;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  max-width: 82%;
+  white-space: normal;
+  line-height: 1.4;
+}
+.bubble.bot { align-self: flex-start; }
+.bubble.user {
+  align-self: flex-end;
+  background: var(--green-dim);
+  border-color: #15803d;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.chip {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.chip:hover { border-color: var(--green); color: var(--green); }
+.composer { display: flex; gap: 10px; align-items: center; }
+.composer input { margin: 0; }
+.composer .btn { margin-top: 0; flex-shrink: 0; }
 .btn {
   display: inline-block;
   background: var(--green);

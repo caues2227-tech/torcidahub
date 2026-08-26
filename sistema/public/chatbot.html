@@ -14,15 +14,17 @@
         <a href="/feed.html">Feed</a>
         <a href="/ranking.html">Ranking</a>
         <a href="/chatbot.html">Chatbot</a>
+        <a href="/admin.html" id="linkAdmin" style="display:none">Admin</a>
         <a href="/login.html" id="sair">Sair</a>
       </nav>
     </div>
     <div class="page">
-      <h1>Jogos de hoje</h1>
-      <p class="muted">Pergunta pelos jogos ou pelo teu time. Os dados saem do nosso banco.</p>
-      <div class="card" id="chat"></div>
-      <div class="card">
-        <input id="pergunta" placeholder='quais jogos tem hoje?' />
+      <h1>Bot da Torcida</h1>
+      <p class="muted">Pergunta de jogo, do teu time, ranking ou placar. A resposta sai do nosso banco, sem API de fora.</p>
+      <div class="chips" id="chips"></div>
+      <div class="card chat-box" id="chat"></div>
+      <div class="card composer">
+        <input id="pergunta" placeholder="fala com o bot…" autocomplete="off" />
         <button class="btn" id="enviar" type="button">Enviar</button>
       </div>
     </div>
@@ -31,23 +33,66 @@
     const s = sessionStorage.getItem("torcida");
     if (!s) location.href = "/login.html";
     const eu = JSON.parse(s);
+    if (eu.papel === "admin") document.getElementById("linkAdmin").style.display = "inline";
     document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
+
     const chat = document.getElementById("chat");
+    const atalhos = [
+      "quais jogos tem hoje?",
+      "meu time joga?",
+      "quem tá na frente no ranking?",
+      "qual o placar?",
+      "ajuda"
+    ];
+
+    function esc(t) {
+      return String(t).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function bolha(texto, quem) {
+      const div = document.createElement("div");
+      div.className = "bubble " + quem;
+      div.innerHTML = esc(texto).replace(/\n/g, "<br>");
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      return div;
+    }
+
+    document.getElementById("chips").innerHTML = atalhos.map((a) =>
+      `<button type="button" class="chip">${esc(a)}</button>`
+    ).join("");
+    document.querySelectorAll(".chip").forEach((b) => {
+      b.onclick = () => {
+        document.getElementById("pergunta").value = b.textContent;
+        manda();
+      };
+    });
+
+    bolha("Fala, " + eu.nome + "! Sou o bot da Torcida. Tua torcida é " + eu.time + ". Clica num atalho ou escreve o que quiser.", "bot");
+
     async function manda() {
-      const pergunta = document.getElementById("pergunta").value.trim();
+      const inp = document.getElementById("pergunta");
+      const pergunta = inp.value.trim();
       if (!pergunta) return;
-      chat.innerHTML += `<div class="bubble">${pergunta}</div>`;
+      inp.value = "";
+      bolha(pergunta, "user");
+      const espera = bolha("digitando…", "bot");
       const r = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + eu.token },
         body: JSON.stringify({ pergunta })
       });
       const d = await r.json();
-      chat.innerHTML += `<div class="bubble me">${d.resposta}</div>`;
-      document.getElementById("pergunta").value = "";
+      espera.remove();
+      bolha(d.resposta || d.erro || "Não rolou.", "bot");
     }
+
     document.getElementById("enviar").onclick = manda;
-    document.getElementById("pergunta").addEventListener("keydown", (e) => { if (e.key === "Enter") manda(); });
+    document.getElementById("pergunta").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") manda();
+    });
   </script>
 </body>
 </html>

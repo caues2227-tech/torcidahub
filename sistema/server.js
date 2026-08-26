@@ -114,6 +114,104 @@ function readBody(req) {
   });
 }
 
+function normaliza(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function linhaJogo(j) {
+  const placar = j.placarMandante == null ? "ainda sem placar" : `${j.placarMandante} x ${j.placarVisitante}`;
+  return `${j.mandante} x ${j.visitante} — ${j.data} às ${j.horario} (${placar})`;
+}
+
+function rankingTimes(db) {
+  const contagem = {};
+  for (const t of TIMES) contagem[t] = 0;
+  for (const user of db.usuarios) contagem[user.time] = (contagem[user.time] || 0) + 1;
+  return Object.entries(contagem)
+    .map(([time, qtd]) => ({ time, qtd }))
+    .sort((a, b) => b.qtd - a.qtd || a.time.localeCompare(b.time));
+}
+
+function responderChat(pergunta, eu, db) {
+  const p = normaliza(pergunta).trim();
+  if (!p) return "Manda uma pergunta aí. Pode ser jogo de hoje, teu time, ranking ou placar.";
+
+  const jogosHoje = db.jogos.filter((j) => j.data === hoje());
+  const timeFalado = TIMES.find((t) => p.includes(normaliza(t)));
+  const meuTime = eu.time;
+  const postsTime = db.posts.filter((x) => x.time === meuTime).length;
+
+  if (/^(oi|ola|eai|e ae|fala|hey|opa|bom dia|boa tarde|boa noite)\b/.test(p) || p === "oi" || p === "ola") {
+    return `Fala, ${eu.nome}! Sou o bot da Torcida. Tua torcida é ${meuTime}. Pergunta dos jogos de hoje, se o ${meuTime} joga, do ranking ou do placar.`;
+  }
+
+  if (p.includes("ajuda") || p.includes("o que voce") || p.includes("comandos") || p.includes("pode fazer")) {
+    return [
+      "Eu leio o banco do Torcida (sem API de fora). Pode perguntar:",
+      "• quais jogos tem hoje?",
+      `• o ${meuTime} joga hoje?`,
+      "• qual o placar?",
+      "• quem tá na frente no ranking?",
+      "• quantos posts a torcida fez?"
+    ].join("\n");
+  }
+
+  if (p.includes("ranking") || p.includes("quem esta na frente") || p.includes("quem ta na frente") || p.includes("lider") || (p.includes("mais") && p.includes("torcedor"))) {
+    const rank = rankingTimes(db);
+    const top = rank.slice(0, 5).map((x, i) => `${i + 1}º ${x.time} — ${x.qtd} torcedor(es)`).join("\n");
+    const pos = rank.findIndex((x) => x.time === meuTime) + 1;
+    return `Ranking de torcida na plataforma:\n${top}\n\nO ${meuTime} está em ${pos}º.`;
+  }
+
+  if (p.includes("post") || p.includes("feed") || p.includes("torcida postou") || p.includes("quantos post")) {
+    return `A torcida do ${meuTime} já soltou ${postsTime} post(s) no feed.`;
+  }
+
+  const querPlacar = p.includes("placar") || p.includes("resultado") || p.includes("quanto ficou") || p.includes("quanto ta");
+  const querMeuTime = p.includes("meu time") || p.includes("resumo") || p.includes("a gente joga") || p.includes("nosso jogo");
+  const querHoje = p.includes("hoje") || p.includes("agora") || p.includes("rodada");
+
+  if (querMeuTime || (timeFalado === meuTime && (querHoje || querPlacar || p.includes("joga")))) {
+    const jogos = (querHoje ? jogosHoje : db.jogos).filter((j) => j.mandante === meuTime || j.visitante === meuTime);
+    if (!jogos.length) {
+      return querHoje
+        ? `Hoje o ${meuTime} não tem jogo cadastrado. Posts da torcida: ${postsTime}.`
+        : `Ainda não tem jogo do ${meuTime} no banco. O admin cadastra na tela Admin.`;
+    }
+    return `Resumo do ${meuTime}:\n` + jogos.map(linhaJogo).join("\n") + `\n\nPosts da torcida: ${postsTime}.`;
+  }
+
+  if (timeFalado) {
+    const lista = (querHoje ? jogosHoje : db.jogos).filter((j) => j.mandante === timeFalado || j.visitante === timeFalado);
+    if (!lista.length) {
+      return querHoje
+        ? `Hoje não tem ${timeFalado} no banco.`
+        : `Não achei jogo do ${timeFalado} cadastrado.`;
+    }
+    return `Jogos do ${timeFalado}:\n` + lista.map(linhaJogo).join("\n");
+  }
+
+  if (querPlacar) {
+    const comPlacar = db.jogos.filter((j) => j.placarMandante != null);
+    if (!comPlacar.length) {
+      const pendentes = (querHoje ? jogosHoje : db.jogos);
+      if (!pendentes.length) return "Não tem jogo cadastrado pra olhar placar.";
+      return "Ainda ninguém lançou placar. Jogos no banco:\n" + pendentes.map(linhaJogo).join("\n");
+    }
+    return "Placares cadastrados:\n" + comPlacar.map(linhaJogo).join("\n");
+  }
+
+  if (p.includes("jogo") || p.includes("partida") || querHoje) {
+    if (!jogosHoje.length) return "Não tem jogo cadastrado pra hoje. O admin lança mandante, visitante e horário.";
+    return "Jogos de hoje:\n" + jogosHoje.map(linhaJogo).join("\n");
+  }
+
+  return `Não peguei essa. Tenta “jogos de hoje”, “meu time”, “ranking” ou “placar”. Eu sou do ${meuTime} também.`;
+}
+
 function postPublico(db, p) {
   const autor = db.usuarios.find((u) => u.id === p.usuarioId);
   return {
@@ -257,23 +355,9 @@ const server = http.createServer(async (req, res) => {
     if (!eu) return json(res, 401, { erro: "Faça login." });
     try {
       const b = await readBody(req);
-      const pergunta = String(b.pergunta || "").toLowerCase();
+      const pergunta = String(b.pergunta || "").trim();
       const db = load();
-      const jogosHoje = db.jogos.filter((j) => j.data === hoje());
-      let resposta;
-      if (pergunta.includes("jogo") || pergunta.includes("hoje")) {
-        resposta = jogosHoje.length
-          ? "Hoje: " + jogosHoje.map((j) => `${j.mandante} x ${j.visitante} (${j.horario})`).join("; ") + "."
-          : "Não tem jogo cadastrado pra hoje.";
-      } else if (pergunta.includes("resumo") || pergunta.includes("meu time")) {
-        const jogos = jogosHoje.filter((j) => j.mandante === eu.time || j.visitante === eu.time);
-        resposta = jogos.length
-          ? `${eu.time} joga: ` + jogos.map((j) => `${j.mandante} x ${j.visitante} às ${j.horario}`).join("; ") + "."
-          : `${eu.time} não tem jogo cadastrado hoje.`;
-      } else {
-        resposta = 'Pergunta "quais jogos tem hoje?" ou "resumo do meu time".';
-      }
-      return json(res, 200, { resposta });
+      return json(res, 200, { resposta: responderChat(pergunta, eu, db) });
     } catch {
       return json(res, 400, { erro: "JSON inválido." });
     }

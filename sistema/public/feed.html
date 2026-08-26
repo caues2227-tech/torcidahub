@@ -43,7 +43,7 @@
     async function carregar() {
       const r = await fetch("/api/resumo", { headers: H });
       const d = await r.json();
-      document.getElementById("resumo").innerHTML = "<strong>Resumo do dia — " + eu.time + "</strong><p class='muted'>" + (d.texto || "") + "</p>";
+      document.getElementById("resumo").innerHTML = "<strong>Resumo do dia — " + eu.time + "</strong><p class='muted'>" + (d.texto || "") + "</p><p><a href='/chatbot.html'>Pergunta pro bot da Torcida →</a></p>";
       const f = await fetch("/api/feed", { headers: H });
       const g = await f.json();
       document.getElementById("lista").innerHTML = (g.posts || []).map((p) => `

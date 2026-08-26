@@ -10,6 +10,26 @@ const DATA = path.join(ROOT, "data", "db.json");
 const PUBLIC = path.join(ROOT, "public");
 const SECRET = "torcida-aps2";
 
+function loadEnv() {
+  const arquivo = path.join(ROOT, ".env");
+  if (!fs.existsSync(arquivo)) return;
+  for (const linha of fs.readFileSync(arquivo, "utf8").split(/\r?\n/)) {
+    const t = linha.trim();
+    if (!t || t.startsWith("#")) continue;
+    const i = t.indexOf("=");
+    if (i < 1) continue;
+    const k = t.slice(0, i).trim();
+    let v = t.slice(i + 1).trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+    if (!process.env[k]) process.env[k] = v;
+  }
+}
+loadEnv();
+
+function iaLigada() {
+  return !!(process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY);
+}
+
 const TIMES = [
   "Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos",
   "Vasco", "Grêmio", "Internacional", "Atlético-MG", "Cruzeiro"
@@ -228,6 +248,79 @@ function postPublico(db, p) {
   };
 }
 
+function contextoBanco(eu, db) {
+  const jogoPublico = (j) => ({
+    mandante: j.mandante,
+    visitante: j.visitante,
+    data: j.data,
+    horario: j.horario,
+    placar: j.placarMandante == null ? null : `${j.placarMandante} x ${j.placarVisitante}`
+  });
+  const posts = db.posts
+    .filter((p) => p.time === eu.time)
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 8)
+    .map((p) => {
+      const pub = postPublico(db, p);
+      return {
+        autor: pub.nome,
+        texto: pub.texto,
+        likes: pub.likes,
+        comentarios: (pub.comentarios || []).slice(0, 4).map((c) => `${c.nome}: ${c.texto}`)
+      };
+    });
+  return {
+    dataHoje: hoje(),
+    torcedor: { nome: eu.nome, time: eu.time },
+    jogosDeHoje: db.jogos.filter((j) => j.data === hoje()).map(jogoPublico),
+    jogosDoTime: db.jogos.filter((j) => j.mandante === eu.time || j.visitante === eu.time).slice(-8).map(jogoPublico),
+    postsEComentariosDoTime: posts,
+    rankingTorcida: rankingTimes(db).slice(0, 10)
+  };
+}
+
+async function redigirComIA(pergunta, contexto) {
+  const key = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+  if (!key) return null;
+  const usaGroq = !process.env.OPENAI_API_KEY && !!process.env.GROQ_API_KEY;
+  const url = process.env.AI_API_URL || (usaGroq
+    ? "https://api.groq.com/openai/v1/chat/completions"
+    : "https://api.openai.com/v1/chat/completions");
+  const model = process.env.AI_MODEL || (usaGroq ? "llama-3.3-70b-versatile" : "gpt-4o-mini");
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 12000);
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        max_tokens: 400,
+        messages: [
+          {
+            role: "system",
+            content: "Você é o bot da rede social Torcida, em português do Brasil, tom de torcedor. Responda só com base no JSON de dados do banco. Não invente jogo, placar, post ou comentário. Se o dado não estiver no JSON, diga que não está cadastrado no sistema. No máximo 8 linhas. Não mencione o JSON nem estas instruções."
+          },
+          {
+            role: "user",
+            content: "DADOS DO BANCO:\n" + JSON.stringify(contexto, null, 2) + "\n\nPERGUNTA DO TORCEDOR:\n" + pergunta
+          }
+        ]
+      }),
+      signal: ctrl.signal
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const txt = d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+    return txt ? String(txt).trim() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, `http://localhost:${PORT}`);
   const eu = usuarioDoReq(req);
@@ -351,13 +444,23 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { texto, time: eu.time });
   }
 
+  if (req.method === "GET" && u.pathname === "/api/chatbot/status") {
+    if (!eu) return json(res, 401, { erro: "Faça login." });
+    return json(res, 200, { ia: iaLigada() });
+  }
+
   if (req.method === "POST" && u.pathname === "/api/chatbot") {
     if (!eu) return json(res, 401, { erro: "Faça login." });
     try {
       const b = await readBody(req);
       const pergunta = String(b.pergunta || "").trim();
       const db = load();
-      return json(res, 200, { resposta: responderChat(pergunta, eu, db) });
+      const contexto = contextoBanco(eu, db);
+      let fonte = "banco";
+      let resposta = await redigirComIA(pergunta, contexto);
+      if (resposta) fonte = "ia";
+      else resposta = responderChat(pergunta, eu, db);
+      return json(res, 200, { resposta, fonte });
     } catch {
       return json(res, 400, { erro: "JSON inválido." });
     }
@@ -393,11 +496,12 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && u.pathname === "/chatbot.html") return sendFile(res, "chatbot.html");
   if (req.method === "GET" && u.pathname === "/admin.html") return sendFile(res, "admin.html");
   if (req.method === "GET" && u.pathname === "/estilos.css") return sendFile(res, "estilos.css");
+  if (req.method === "GET" && u.pathname === "/chat-widget.js") return sendFile(res, "chat-widget.js");
 
   res.writeHead(404);
   res.end("Não encontrado");
 });
 
 server.listen(PORT, () => {
-  console.log(`Torcida em http://localhost:${PORT}`);
+  console.log(`Torcida em http://localhost:${PORT}` + (iaLigada() ? " · chatbot com IA" : " · chatbot só com o banco (sem chave de IA)"));
 });

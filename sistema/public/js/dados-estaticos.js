@@ -183,11 +183,63 @@
     });
   }
 
+  function letraResultado(j, time) {
+    var Torcida = T();
+    var pm = j.placarMandante;
+    var pv = j.placarVisitante;
+    if (pm == null || pv == null) return "?";
+    var casa = Torcida.nomeBate(j.mandante, time);
+    var fora = Torcida.nomeBate(j.visitante, time);
+    if (!casa && !fora) return "?";
+    var meus = casa ? pm : pv;
+    var deles = casa ? pv : pm;
+    if (meus > deles) return "V";
+    if (meus < deles) return "D";
+    return "E";
+  }
+
+  /** Últimos resultados do clube (forma) via scoreboards ESPN dos últimos dias. */
+  function ultimosEstatico(time, diasAtras) {
+    var Torcida = T();
+    var nome = time || Torcida.eu().time;
+    var hoje = hojeSP();
+    var n = diasAtras || 45;
+    var datas = [];
+    for (var i = 1; i <= n; i++) datas.push(addDias(hoje, -i));
+    /* Em lotes de 6 para não estourar a rede */
+    var cadeia = Promise.resolve([]);
+    for (var b = 0; b < datas.length; b += 6) {
+      (function (lote) {
+        cadeia = cadeia.then(function (acc) {
+          if (acc.length >= 10) return acc;
+          return Promise.all(lote.map(function (d) {
+            return fetchScoreboard(d).catch(function () { return []; });
+          })).then(function (listas) {
+            listas.forEach(function (lista) {
+              (lista || []).forEach(function (j) {
+                if (j.status !== "encerrado") return;
+                if (j.placarMandante == null || j.placarVisitante == null) return;
+                if (!Torcida.nomeBate(j.mandante, nome) && !Torcida.nomeBate(j.visitante, nome)) return;
+                acc.push(Object.assign({}, j, { letra: letraResultado(j, nome) }));
+              });
+            });
+            return acc;
+          });
+        });
+      })(datas.slice(b, b + 6));
+    }
+    return cadeia.then(function (acc) {
+      acc.sort(function (a, b) { return String(b.data).localeCompare(String(a.data)); });
+      return acc.slice(0, 10);
+    });
+  }
+
   function instalar() {
     var Torcida = T();
     if (!Torcida || Torcida.portalEstatico) return;
     Torcida.portalEstatico = portalEstatico;
     Torcida.agendaEstatica = agendaEstatica;
+    Torcida.ultimosEstatico = ultimosEstatico;
   }
 
   if (T()) instalar();

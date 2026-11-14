@@ -46,12 +46,17 @@
 .tabela-mc .pts { font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .forma-linha {
-  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 14px;
 }
-.forma-linha span {
+.forma-linha > span {
   width: 28px; height: 28px; border-radius: 50%;
   display: grid; place-items: center;
   font-size: 11px; font-weight: 700;
+}
+.forma-linha .forma-vazia,
+.forma-linha > p {
+  width: auto; height: auto; border-radius: 0;
+  display: block; font-weight: 500; margin: 0;
 }
 .forma-linha .V { background: rgba(53,208,127,.2); color: var(--win); }
 .forma-linha .E { background: rgba(138,147,166,.2); color: var(--text-2); }

@@ -3,7 +3,7 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v3";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v4";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
@@ -54,41 +54,83 @@
     return detectarTag(titulo);
   }
 
+  function mapArticles(articles, prefix) {
+    return (articles || []).map(function (a, i) {
+      var fonte = a.source;
+      if (fonte && typeof fonte === "object") fonte = fonte.name || "Fonte";
+      var tag = detectarTagGlobal(a.title || "");
+      return {
+        id: (prefix || "gn") + (i + 1),
+        tipo: "noticia",
+        fonte: fonte || "Fonte",
+        nome: fonte || "Fonte",
+        verificado: true,
+        quando: D.tempoRelativo ? D.tempoRelativo(a.publishedAt) : "",
+        ts: a.publishedAt ? new Date(a.publishedAt).getTime() : Date.now() - i * 36e5,
+        tag: tag,
+        tagLabel: LABEL_TAG[tag] || "JOGO",
+        titulo: a.title || "",
+        resumo: a.description || "",
+        texto: a.title || "",
+        imagem: a.image || "",
+        url: a.url || "#",
+        comentarios: 20 + ((i * 17) % 180),
+        reposts: 8 + ((i * 11) % 90),
+        likes: 40 + ((i * 23) % 450),
+        secao: tag === "mercado" || tag === "rebaixamento" ? "mercado" : "jogo",
+        comentariosLista: [],
+        minhaReacao: null,
+        reatores: ["A", "B"],
+        reatoresN: 40 + ((i * 23) % 450)
+      };
+    });
+  }
+
+  async function buscarNoticiasPhp() {
+    try {
+      var res = await fetch("/noticias.php?modo=global&max=" + NOTICIAS_MAX, { credentials: "same-origin" });
+      if (!res.ok) throw new Error("noticias.php HTTP " + res.status);
+      var data = await res.json();
+      if (!data.articles || !data.articles.length) throw new Error("Sem resultados PHP");
+      return mapArticles(data.articles, "php");
+    } catch (e) {
+      console.warn("noticias.php falhou:", e && e.message ? e.message : e);
+      return null;
+    }
+  }
+
   async function buscarNoticiasGNews() {
     try {
       var res = await fetch("/api/gnews?modo=global&max=" + NOTICIAS_MAX, { credentials: "same-origin" });
       if (!res.ok) throw new Error("GNews HTTP " + res.status);
       var data = await res.json();
       if (!data.articles || !data.articles.length) throw new Error("Sem resultados");
-      return data.articles.map(function (a, i) {
-        var tag = detectarTagGlobal(a.title || "");
-        return {
-          id: "gn" + (i + 1),
-          tipo: "noticia",
-          fonte: a.source || "Fonte",
-          nome: a.source || "Fonte",
-          verificado: true,
-          quando: D.tempoRelativo ? D.tempoRelativo(a.publishedAt) : "",
-          ts: a.publishedAt ? new Date(a.publishedAt).getTime() : Date.now() - i * 36e5,
-          tag: tag,
-          tagLabel: LABEL_TAG[tag] || "JOGO",
-          titulo: a.title || "",
-          resumo: a.description || "",
-          texto: a.title || "",
-          imagem: a.image || "",
-          url: a.url || "#",
-          comentarios: 20 + ((i * 17) % 180),
-          reposts: 8 + ((i * 11) % 90),
-          likes: 40 + ((i * 23) % 450),
-          secao: tag === "mercado" || tag === "rebaixamento" ? "mercado" : "jogo",
-          comentariosLista: [],
-          minhaReacao: null,
-          reatores: ["A", "B"],
-          reatoresN: 40 + ((i * 23) % 450)
-        };
-      });
+      return mapArticles(data.articles, "gn");
     } catch (e) {
       console.warn("GNews falhou:", e && e.message ? e.message : e);
+      return null;
+    }
+  }
+
+  async function buscarNoticiasEspn() {
+    try {
+      var res = await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/news");
+      if (!res.ok) throw new Error("ESPN news HTTP " + res.status);
+      var data = await res.json();
+      var arts = (data.articles || []).map(function (a) {
+        return {
+          title: a.headline || a.description || "",
+          description: a.description || "",
+          url: (a.links && a.links.web && a.links.web.href) || "#",
+          image: (a.images && a.images[0] && a.images[0].url) || "",
+          publishedAt: a.published || new Date().toISOString(),
+          source: a.byline || "ESPN"
+        };
+      }).filter(function (a) { return a.title; });
+      if (!arts.length) throw new Error("ESPN sem artigos");
+      return mapArticles(arts, "espn");
+    } catch (e) {
+      console.warn("ESPN news falhou:", e && e.message ? e.message : e);
       return null;
     }
   }
@@ -132,11 +174,13 @@
 
   async function getNoticias() {
     var cached = lerCache(CACHE_NOTICIAS, CACHE_TTL_NOTICIAS);
-    if (cached && Array.isArray(cached) && cached.length >= 20) return cached;
+    if (cached && Array.isArray(cached) && cached.length >= 12) return cached;
 
-    var noticias = await buscarNoticiasGNews();
+    var noticias = await buscarNoticiasPhp();
+    if (!noticias || !noticias.length) noticias = await buscarNoticiasGNews();
+    if (!noticias || !noticias.length) noticias = await buscarNoticiasEspn();
     if (!noticias || !noticias.length) {
-      console.error("Falha total em notícias: GNews sem resultado");
+      console.error("Falha total em notícias: PHP/GNews/ESPN sem resultado");
       return null;
     }
 

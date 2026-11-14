@@ -27,14 +27,19 @@
   }
 
   function pintarUltimos(ult) {
-    $("mcForma").innerHTML = (ult || []).slice(0, 10).map(function (j) {
-      return '<span class="' + esc(j.letra || "") + '">' + esc(j.letra || "?") + "</span>";
-    }).join("") || '<span class="muted">Sem forma recente</span>';
-    $("mcUltimos").innerHTML = (ult || []).slice(0, 10).map(function (j) {
-      return '<a href="' + esc(T.hrefJogo(j)) + '"><span class="' + esc(j.letra) + '">' + esc(j.letra) + "</span><span>" +
-        esc(j.mandante) + " " + j.placarMandante + "–" + j.placarVisitante + " " + esc(j.visitante) +
-        "</span><small>" + esc(T.dataCurta(j.data)) + "</small></a>";
-    }).join("") || T.vazio("Ainda sem resultados recentes", "");
+    var lista = (ult || []).slice(0, 10);
+    $("mcForma").innerHTML = lista.length
+      ? lista.map(function (j) {
+          return '<span class="' + esc(j.letra || "") + '">' + esc(j.letra || "?") + "</span>";
+        }).join("")
+      : '<p class="muted pequeno forma-vazia">Sem forma recente</p>';
+    $("mcUltimos").innerHTML = lista.length
+      ? lista.map(function (j) {
+          return '<a href="' + esc(T.hrefJogo(j)) + '"><span class="' + esc(j.letra) + '">' + esc(j.letra) + "</span><span>" +
+            esc(j.mandante) + " " + j.placarMandante + "–" + j.placarVisitante + " " + esc(j.visitante) +
+            "</span><small>" + esc(T.dataCurta(j.data)) + "</small></a>";
+        }).join("")
+      : T.vazio("Ainda sem resultados recentes", "");
   }
 
   function pintarElenco(jogadores) {
@@ -74,10 +79,12 @@
     });
     return Promise.all([
       portalP,
-      T.api("/api/avatares?time=" + encodeURIComponent(e.time), { semRedirecionar: true }).catch(function () { return { jogadores: [] }; })
+      T.api("/api/avatares?time=" + encodeURIComponent(e.time), { semRedirecionar: true }).catch(function () { return { jogadores: [] }; }),
+      T.ultimosEstatico ? T.ultimosEstatico(e.time, 50).catch(function () { return []; }) : Promise.resolve([])
     ]).then(function (res) {
       var p = res[0];
       var av = res[1] || {};
+      var ultimosEspn = res[2] || [];
       if (p.tema && p.tema.cores) T.aplicarTema(p.tema.cores, e.time);
       var c = p.clube || {};
       var tab = c.tabela;
@@ -85,7 +92,8 @@
         ? tab.posicao + "º · " + tab.pontos + " pts · " + tab.jogos + " jogos"
         : "fora da Série A nesta cobertura";
       pintarTabela(p.tabela || [], e.time);
-      pintarUltimos(c.ultimos || []);
+      var ult = (c.ultimos && c.ultimos.length) ? c.ultimos : ultimosEspn;
+      pintarUltimos(ult);
       var jogs = av.jogadores || [];
       pintarElenco(jogs);
       pintarArtilharia(jogs);

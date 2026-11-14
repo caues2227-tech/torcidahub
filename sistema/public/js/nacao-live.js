@@ -3,19 +3,9 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v7";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v8";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
-  var FOTOS_STOCK = [
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fm=webp&fit=crop&w=800&q=60"
-  ];
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
   var CACHE_TTL_JOGOS = 5 * 60 * 1000;
   var ESPN_BRA1 = "https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1";
@@ -107,7 +97,7 @@
         titulo: titulo,
         resumo: resumo,
         texto: titulo,
-        imagem: a.image || FOTOS_STOCK[i % FOTOS_STOCK.length],
+        imagem: a.image || "",
         url: a.url || "#",
         comentarios: 20 + ((i * 17) % 180),
         reposts: 8 + ((i * 11) % 90),
@@ -207,32 +197,44 @@
     }
   }
 
+  function chaveTitulo(t) {
+    return String(t || "").toLowerCase().slice(0, 40);
+  }
+
+  function mesclarNoticias(listas) {
+    var vistos = {};
+    var out = [];
+    function add(lista) {
+      (lista || []).forEach(function (n) {
+        var k = chaveTitulo(n.titulo);
+        if (!k) return;
+        if (vistos[k] != null) {
+          var i = vistos[k];
+          if ((!out[i].imagem || !String(out[i].imagem).trim()) && n.imagem) out[i].imagem = n.imagem;
+          return;
+        }
+        vistos[k] = out.length;
+        out.push(n);
+      });
+    }
+    /* ESPN primeiro (tem foto real); depois RSS/outros */
+    listas.forEach(add);
+    return out;
+  }
+
   async function getNoticias() {
     var cached = lerCache(CACHE_NOTICIAS, CACHE_TTL_NOTICIAS);
     if (cached && Array.isArray(cached) && cached.length >= 12) return cached;
 
-    var noticias = await buscarNoticiasPhp();
-    if (!noticias || !noticias.length) noticias = await buscarNoticiasGNews();
-    if (!noticias || !noticias.length) noticias = await buscarNoticiasEspn();
-    if (!noticias || !noticias.length) {
+    var espn = await buscarNoticiasEspn();
+    var php = await buscarNoticiasPhp();
+    var gnews = (!php || !php.length) ? await buscarNoticiasGNews() : null;
+    var locais = await buscarNoticiasLocais();
+
+    var noticias = mesclarNoticias([espn, php, gnews, locais]);
+    if (!noticias.length) {
       console.error("Falha total em notícias: PHP/GNews/ESPN sem resultado");
       return null;
-    }
-
-    /* Completa com cobertura local se ainda couber */
-    if (noticias.length < NOTICIAS_MAX) {
-      var locais = await buscarNoticiasLocais();
-      var vistos = {};
-      noticias.forEach(function (n) {
-        vistos[String(n.titulo || "").toLowerCase().slice(0, 40)] = true;
-      });
-      (locais || []).forEach(function (n) {
-        if (noticias.length >= NOTICIAS_MAX) return;
-        var k = String(n.titulo || "").toLowerCase().slice(0, 40);
-        if (!k || vistos[k]) return;
-        vistos[k] = true;
-        noticias.push(n);
-      });
     }
 
     noticias = noticias.slice(0, NOTICIAS_MAX);

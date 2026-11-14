@@ -3,6 +3,10 @@ RewriteEngine On
 # Home → login do app
 RewriteRule ^$ sistema/public/login.html [L]
 
+# Auth PHP (Hostinger sem Node)
+RewriteRule ^api/(login|cadastro|logout|me)/?$ sistema/public/api/index.php [L,QSA]
+RewriteRule ^api/senha/(esqueci|redefinir)/?$ sistema/public/api/index.php [L,QSA]
+
 # Sempre preferir sistema/public (evita cópia antiga na raiz do repo)
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -d

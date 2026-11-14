@@ -1409,6 +1409,26 @@
     linear-gradient(135deg, #0b0f18, #1a0d0a);
 }
 
+.news-media-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 28% 30%, hsla(var(--hue, 210), 80%, 55%, .28) 0%, transparent 55%),
+    radial-gradient(ellipse at 78% 70%, hsla(calc(var(--hue, 210) + 40), 70%, 45%, .16) 0%, transparent 50%),
+    linear-gradient(145deg, #0b0f18 0%, hsl(var(--hue, 210), 30%, 10%) 100%);
+}
+.news-media-cover .cover-crest {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, .45));
+  z-index: 2;
+}
+.news-card:hover .news-media-cover .cover-crest { transform: scale(1.06); }
+
 .news-media-img {
   position: absolute;
   inset: 0;

@@ -391,6 +391,37 @@
     }
   }
 
+  function hueDoTitulo(t) {
+    var s = String(t || "");
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h + s.charCodeAt(i) * (i + 3)) % 360;
+    return h;
+  }
+
+  function clubeNoTitulo(titulo) {
+    var nomes = ["Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos", "Grêmio", "Internacional",
+      "Atlético-MG", "Atlético Mineiro", "Cruzeiro", "Botafogo", "Vasco", "Bahia", "Fluminense",
+      "Athletico-PR", "Athletico Paranaense", "Fortaleza", "Bragantino", "Mirassol", "Cuiabá", "Juventude"];
+    var t = T.normaliza ? T.normaliza(titulo) : String(titulo || "").toLowerCase();
+    for (var i = 0; i < nomes.length; i++) {
+      var n = T.normaliza ? T.normaliza(nomes[i]) : String(nomes[i]).toLowerCase();
+      if (n && t.indexOf(n) >= 0) return nomes[i];
+    }
+    return "";
+  }
+
+  /** Capa única por matéria — sem repetir banco de fotos genéricas. */
+  function capaNoticia(p, icone, labelTag) {
+    var hue = hueDoTitulo(p.titulo || p.id || "");
+    var clube = clubeNoTitulo(p.titulo || "");
+    var crest = clube && T.urlEscudo ? T.urlEscudo(clube) : "";
+    return '<div class="news-media-cover" style="--hue:' + hue + '" data-tag="' + esc(p.tag || "jogo") + '">' +
+      (crest
+        ? '<img class="cover-crest" src="' + esc(crest) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
+        : '<span class="fb-icon" aria-hidden="true">' + icone + "</span>") +
+      '<span class="fb-label">' + esc(labelTag) + "</span></div>";
+  }
+
   function newsCardHtml(p) {
     var r = reactMeta(p.minhaReacao);
     var icoLike = r ? r.emoji : "❤️";
@@ -413,12 +444,9 @@
       '<h3 class="news-title">' + esc(p.titulo || p.texto || "") + "</h3>" +
       (p.resumo ? '<p class="news-excerpt">' + esc(p.resumo) + "</p>" : "") +
       '<div class="news-media-wrap">' +
-      '<div class="news-media-fallback" data-tag="' + esc(tag) + '">' +
-      '<span class="fb-icon" aria-hidden="true">' + icone + "</span>" +
-      '<span class="fb-label">' + esc(labelTag) + "</span></div>" +
       (p.imagem
-        ? '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
-        : "") +
+        ? '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">'
+        : capaNoticia(p, icone, labelTag)) +
       '<span class="media-tag">' + (p.imagem ? "FOTO" : "CAPA") + ": " + esc(fonte) + "</span></div>" +
       '<div class="news-actions news-footer post-acoes">' +
       '<button type="button" class="action-btn news-action acao" data-comentar="' + p.id + '">💬 ' + p.comentarios + "</button>" +

@@ -236,7 +236,8 @@
 
   function instalar() {
     var Torcida = T();
-    if (!Torcida || Torcida.portalEstatico) return;
+    if (!Torcida) return;
+    /* Sempre reatribui: cache antigo pode ter instalado só portal/agenda. */
     Torcida.portalEstatico = portalEstatico;
     Torcida.agendaEstatica = agendaEstatica;
     Torcida.ultimosEstatico = ultimosEstatico;

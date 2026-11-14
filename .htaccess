@@ -7,3 +7,13 @@ RewriteRule ^$ sistema/public/login.html [L]
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -d
 RewriteRule ^(.*)$ sistema/public/$1 [L]
+
+# JS/CSS: cache curto pra deploy no Hostinger não ficar com build velho
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "\.(html|php)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

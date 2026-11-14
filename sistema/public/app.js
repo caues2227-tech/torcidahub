@@ -151,15 +151,19 @@
 
   /* Escudos ESPN CDN — hosting estático não tem /img/escudo do Node. */
   var ESPN_CREST = {
-    Santos: 2674, Flamengo: 819, Palmeiras: 2029, Corinthians: 874,
-    "São Paulo": 2026, "Grêmio": 8749, Internacional: 2028, "Atlético-MG": 7632,
-    Cruzeiro: 2022, Botafogo: 6086, Vasco: 2675, Bahia: 9967,
-    Fortaleza: 6270, "Athletico-PR": 3458, Fluminense: 8745, Bragantino: 6079,
-    "Vitória": 2671, "Cuiabá": 18469, Juventude: 6271, "Criciúma": 6272,
-    "Atlético-GO": 10357, "América-MG": 6154, Ceará: 9969, Sport: 6125,
-    Mirassol: 21977, "Red Bull Bragantino": 6079,
-    "Atlético Mineiro": 7632, "Athletico Paranaense": 3458, "Sao Paulo": 2026,
-    Gremio: 8749
+    Flamengo: 819, Palmeiras: 2029, Cruzeiro: 2022, Fluminense: 3445,
+    "Athletico-PR": 3458, "Athletico Paranaense": 3458, Bahia: 9967,
+    "Atlético-MG": 7632, "Atlético Mineiro": 7632, Bragantino: 6079,
+    "Red Bull Bragantino": 6079, Santos: 2674, "São Paulo": 2026, "Sao Paulo": 2026,
+    Botafogo: 6086, Coritiba: 3456, Vasco: 3454, "Vasco da Gama": 3454,
+    Mirassol: 9169, "Vitória": 3457, Internacional: 1936, Corinthians: 874,
+    "Grêmio": 6273, Gremio: 6273, Remo: 4936, Chapecoense: 9318,
+    Novorizontino: 18127, Juventude: 6270, "Vila Nova": 9973, Fortaleza: 6272,
+    "Criciúma": 9971, "Atlético-GO": 10357, "Atlético Goianiense": 10357,
+    CRB: 9970, "Goiás": 3395, Sport: 7635, "Operário-PR": 18187,
+    "São Bernardo": 11268, "Botafogo-SP": 10281, Athletic: 20851, "Cuiabá": 17313,
+    "Náutico": 7633, Ceará: 9969, "Avaí": 9966, Londrina: 17333,
+    "América-MG": 6154, "América Mineiro": 6154, "Ponte Preta": 3459
   };
   function urlEscudo(nome) {
     if (!nome) return "";

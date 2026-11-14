@@ -9,17 +9,22 @@
   var voltar = T.voltarUrl();
   var destino = voltar || "/portal.html";
   var clubeSelecionado = null;
-  /* Escudos ESPN CDN — funcionam sem o proxy /img/escudo (hosting estático). */
+  /* Escudos ESPN CDN — IDs da tabela bra.1 / bra.2. */
   var ESPN_CREST = {
-    Santos: 2674, Flamengo: 819, Palmeiras: 2029, Corinthians: 874,
-    "São Paulo": 2026, "Grêmio": 8749, Internacional: 2028, "Atlético-MG": 7632,
-    Cruzeiro: 2022, Botafogo: 6086, Vasco: 2675, Bahia: 9967,
-    Fortaleza: 6270, "Athletico-PR": 3458, Fluminense: 8745, Bragantino: 6079,
-    "Vitória": 2671, "Cuiabá": 18469, Juventude: 6271, "Criciúma": 6272,
-    "Atlético-GO": 10357, "América-MG": 6154, Ceará: 9969, Sport: 6125,
-    Mirassol: 21977, "Red Bull Bragantino": 6079,
-    "Atlético Mineiro": 7632, "Athletico Paranaense": 3458, "Sao Paulo": 2026,
-    Gremio: 8749, "Clube de Regatas do Flamengo": 819
+    Flamengo: 819, Palmeiras: 2029, Cruzeiro: 2022, Fluminense: 3445,
+    "Athletico-PR": 3458, "Athletico Paranaense": 3458, Bahia: 9967,
+    "Atlético-MG": 7632, "Atlético Mineiro": 7632, Bragantino: 6079,
+    "Red Bull Bragantino": 6079, Santos: 2674, "São Paulo": 2026, "Sao Paulo": 2026,
+    Botafogo: 6086, Coritiba: 3456, Vasco: 3454, "Vasco da Gama": 3454,
+    Mirassol: 9169, "Vitória": 3457, Internacional: 1936, Corinthians: 874,
+    "Grêmio": 6273, Gremio: 6273, Remo: 4936, Chapecoense: 9318,
+    Novorizontino: 18127, Juventude: 6270, "Vila Nova": 9973, Fortaleza: 6272,
+    "Criciúma": 9971, "Atlético-GO": 10357, "Atlético Goianiense": 10357,
+    CRB: 9970, "Goiás": 3395, Sport: 7635, "Operário-PR": 18187, "Operário PR": 18187,
+    "São Bernardo": 11268, "Botafogo-SP": 10281, Athletic: 20851, "Cuiabá": 17313,
+    "Náutico": 7633, Ceará: 9969, "Avaí": 9966, Londrina: 17333,
+    "América-MG": 6154, "América Mineiro": 6154, "Ponte Preta": 3459,
+    CSA: 9970, Paysandu: 6144, Guarani: 6275
   };
   function crestUrl(club) {
     var nome = club.name || club.nome || "";
@@ -33,26 +38,46 @@
     return "/img/crests/" + encodeURIComponent(nome) + ".png";
   }
   var FALLBACK = [
-    { id: "4437", name: "Santos", color: "#1e90ff" },
-    { id: "4425", name: "Flamengo", color: "#e0442f" },
-    { id: "4440", name: "Palmeiras", color: "#006437" },
-    { id: "4431", name: "Corinthians", color: "#1a1a1a" },
-    { id: "4432", name: "São Paulo", color: "#c41e3a" },
-    { id: "4434", name: "Grêmio", color: "#1e3a6e" },
-    { id: "4435", name: "Internacional", color: "#c41e3a" },
-    { id: "4436", name: "Atlético-MG", color: "#1a1a1a" },
-    { id: "4438", name: "Cruzeiro", color: "#1e5aa8" },
-    { id: "4439", name: "Botafogo", color: "#1a1a1a" },
-    { id: "4441", name: "Vasco", color: "#1a1a1a" },
-    { id: "4442", name: "Bahia", color: "#1e3a6e" },
-    { id: "4443", name: "Fortaleza", color: "#c41e3a" },
-    { id: "4444", name: "Athletico-PR", color: "#c41e3a" },
-    { id: "4445", name: "Fluminense", color: "#006437" },
-    { id: "4446", name: "Bragantino", color: "#c41e3a" },
-    { id: "4447", name: "Vitória", color: "#c41e3a" },
-    { id: "4448", name: "Cuiabá", color: "#006437" },
-    { id: "4449", name: "Juventude", color: "#006437" },
-    { id: "4450", name: "Criciúma", color: "#ffd600" }
+    { id: "fla", name: "Flamengo", color: "#e0442f" },
+    { id: "pal", name: "Palmeiras", color: "#006437" },
+    { id: "cor", name: "Corinthians", color: "#1a1a1a" },
+    { id: "sao", name: "São Paulo", color: "#c41e3a" },
+    { id: "san", name: "Santos", color: "#1e90ff" },
+    { id: "flu", name: "Fluminense", color: "#006437" },
+    { id: "bot", name: "Botafogo", color: "#1a1a1a" },
+    { id: "vas", name: "Vasco", color: "#1a1a1a" },
+    { id: "gre", name: "Grêmio", color: "#1e3a6e" },
+    { id: "int", name: "Internacional", color: "#c41e3a" },
+    { id: "cam", name: "Atlético-MG", color: "#1a1a1a" },
+    { id: "cru", name: "Cruzeiro", color: "#1e5aa8" },
+    { id: "bah", name: "Bahia", color: "#1e3a6e" },
+    { id: "vit", name: "Vitória", color: "#c41e3a" },
+    { id: "cap", name: "Athletico-PR", color: "#c41e3a" },
+    { id: "cfc", name: "Coritiba", color: "#006437" },
+    { id: "rbb", name: "Bragantino", color: "#c41e3a" },
+    { id: "mir", name: "Mirassol", color: "#ffd600" },
+    { id: "rem", name: "Remo", color: "#1e3a6e" },
+    { id: "cha", name: "Chapecoense", color: "#006437" },
+    { id: "for", name: "Fortaleza", color: "#c41e3a" },
+    { id: "cea", name: "Ceará", color: "#1a1a1a" },
+    { id: "spo", name: "Sport", color: "#c41e3a" },
+    { id: "goi", name: "Goiás", color: "#006437" },
+    { id: "acg", name: "Atlético-GO", color: "#c41e3a" },
+    { id: "amg", name: "América-MG", color: "#006437" },
+    { id: "cui", name: "Cuiabá", color: "#006437" },
+    { id: "juv", name: "Juventude", color: "#006437" },
+    { id: "cri", name: "Criciúma", color: "#ffd600" },
+    { id: "ava", name: "Avaí", color: "#1e5aa8" },
+    { id: "nau", name: "Náutico", color: "#c41e3a" },
+    { id: "crb", name: "CRB", color: "#c41e3a" },
+    { id: "ope", name: "Operário-PR", color: "#1a1a1a" },
+    { id: "nov", name: "Novorizontino", color: "#ffd600" },
+    { id: "vno", name: "Vila Nova", color: "#c41e3a" },
+    { id: "sbe", name: "São Bernardo", color: "#ffd600" },
+    { id: "bsp", name: "Botafogo-SP", color: "#c41e3a" },
+    { id: "ppt", name: "Ponte Preta", color: "#1a1a1a" },
+    { id: "lon", name: "Londrina", color: "#1e5aa8" },
+    { id: "ath", name: "Athletic", color: "#1a1a1a" }
   ];
 
   function hexToRgb(hex) {
@@ -187,52 +212,41 @@
     return btn;
   }
 
-  function carregarClubesFallback() {
+  function pintarGradeClubes(lista) {
     var grid = $("club-grid");
     if (!grid) return;
+    var ordenada = (lista || []).slice().sort(function (a, b) {
+      return String(a.name || a.nome || "").localeCompare(String(b.name || b.nome || ""), "pt-BR");
+    });
     grid.innerHTML = "";
-    FALLBACK.forEach(function (club) { grid.appendChild(criarBotaoClube(club)); });
+    ordenada.forEach(function (club) { grid.appendChild(criarBotaoClube(club)); });
+    grid.setAttribute("data-qtd", String(ordenada.length));
+  }
+
+  function carregarClubesFallback() {
+    pintarGradeClubes(FALLBACK);
+  }
+
+  function filtrarClubes(q) {
+    var termo = T.normaliza ? T.normaliza(q) : String(q || "").toLowerCase();
+    var lista = FALLBACK;
+    if (termo) {
+      lista = FALLBACK.filter(function (c) {
+        var n = T.normaliza ? T.normaliza(c.name) : String(c.name).toLowerCase();
+        return n.indexOf(termo) >= 0;
+      });
+    }
+    pintarGradeClubes(lista);
   }
 
   function carregarClubes() {
-    var grid = $("club-grid");
-    if (!grid) return;
-    T.api("/api/clubes?pais=Brasil", { semRedirecionar: true }).then(function (d) {
-      var lista = (d.clubes || []).slice(0, 20);
-      if (!lista.length) throw new Error("vazio");
-      grid.innerHTML = "";
-      lista.forEach(function (c) {
-        grid.appendChild(criarBotaoClube({
-          id: String(c.id || c.nome),
-          name: c.nome,
-          color: (c.cores && c.cores.accent) || "#1e90ff",
-          badge: c.escudo
-        }));
-      });
-    }).catch(function () {
-      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 5000);
-      fetch("https://www.thesportsdb.com/api/v1/json/123/search_all_teams.php?l=Brazilian%20Serie%20A", {
-        signal: ctrl ? ctrl.signal : undefined
-      }).then(function (res) { return res.json(); }).then(function (data) {
-        clearTimeout(timer);
-        var teams = data.teams || data.results || [];
-        if (!teams.length) throw new Error("tsdb vazio");
-        grid.innerHTML = "";
-        teams.slice(0, 20).forEach(function (team) {
-          grid.appendChild(criarBotaoClube({
-            id: team.idTeam,
-            name: team.strTeam,
-            color: "#1e90ff",
-            badge: team.strBadge
-          }));
-        });
-      }).catch(function () {
-        clearTimeout(timer);
-        console.warn("TheSportsDB falhou, usando fallback local");
-        carregarClubesFallback();
-      });
-    });
+    /* Lista local completa (Série A + B) — não depende de API externa curta. */
+    carregarClubesFallback();
+    var busca = $("club-busca");
+    if (busca && !busca._wire) {
+      busca._wire = true;
+      busca.addEventListener("input", function () { filtrarClubes(busca.value); });
+    }
   }
 
   function initParticulas() {

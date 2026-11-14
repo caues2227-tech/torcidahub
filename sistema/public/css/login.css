@@ -590,11 +590,27 @@
   color: #f4f6fb;
 }
 
+.club-busca {
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f4f6fb;
+  font-size: 13px;
+}
+.club-busca::placeholder { color: #8a93a6; }
+.club-busca:focus {
+  outline: none;
+  border-color: rgba(var(--accent-rgb), 0.55);
+}
+
 .club-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
-  max-height: 200px;
+  max-height: 280px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -946,8 +962,8 @@
   .badge { margin-bottom: 10px; }
 
   .club-grid {
-    grid-template-columns: repeat(3, 1fr);
-    max-height: 160px;
+    grid-template-columns: repeat(4, 1fr);
+    max-height: 240px;
   }
 
   .spotlight,

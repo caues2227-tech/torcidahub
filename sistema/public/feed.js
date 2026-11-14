@@ -254,7 +254,11 @@
     var btn = document.getElementById("retryNoticias");
     if (btn) {
       btn.addEventListener("click", function () {
-        try { localStorage.removeItem("torcida_noticias"); } catch (e) { /* */ }
+        try {
+          Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf("torcida_noticias") === 0) localStorage.removeItem(k);
+          });
+        } catch (e) { /* */ }
         bootNoticias();
       });
     }
@@ -750,7 +754,7 @@
 
     var env = t.closest("[data-cmt-enviar]");
     if (env) {
-      if (precisaConta("comentar")) return;
+    if (precisaConta("comentar")) return;
       var cid = env.getAttribute("data-cmt-enviar");
       var inp = document.querySelector('[data-cmt-input="' + cid + '"]');
       var txt = (inp && inp.value || "").trim();

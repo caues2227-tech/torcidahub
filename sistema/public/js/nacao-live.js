@@ -3,7 +3,7 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v4";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v5";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";

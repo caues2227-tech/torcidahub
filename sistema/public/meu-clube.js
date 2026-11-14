@@ -77,14 +77,10 @@
     var portalP = T.api("/api/portal", { semRedirecionar: true }).catch(function () {
       return T.portalEstatico ? T.portalEstatico() : Promise.reject(new Error("Sem dados do portal"));
     });
-    return Promise.all([
-      portalP,
-      T.api("/api/avatares?time=" + encodeURIComponent(e.time), { semRedirecionar: true }).catch(function () { return { jogadores: [] }; }),
-      T.ultimosEstatico ? T.ultimosEstatico(e.time, 50).catch(function () { return []; }) : Promise.resolve([])
-    ]).then(function (res) {
-      var p = res[0];
-      var av = res[1] || {};
-      var ultimosEspn = res[2] || [];
+    var avataresP = T.api("/api/avatares?time=" + encodeURIComponent(e.time), { semRedirecionar: true })
+      .catch(function () { return { jogadores: [] }; });
+
+    return portalP.then(function (p) {
       if (p.tema && p.tema.cores) T.aplicarTema(p.tema.cores, e.time);
       var c = p.clube || {};
       var tab = c.tabela;
@@ -92,11 +88,20 @@
         ? tab.posicao + "º · " + tab.pontos + " pts · " + tab.jogos + " jogos"
         : "fora da Série A nesta cobertura";
       pintarTabela(p.tabela || [], e.time);
-      var ult = (c.ultimos && c.ultimos.length) ? c.ultimos : ultimosEspn;
-      pintarUltimos(ult);
-      var jogs = av.jogadores || [];
-      pintarElenco(jogs);
-      pintarArtilharia(jogs);
+
+      if (c.ultimos && c.ultimos.length) pintarUltimos(c.ultimos);
+      else if (T.ultimosEstatico) {
+        $("mcForma").innerHTML = '<p class="muted pequeno forma-vazia">Buscando forma…</p>';
+        T.ultimosEstatico(e.time, 60).then(pintarUltimos).catch(function () { pintarUltimos([]); });
+      } else {
+        pintarUltimos([]);
+      }
+
+      return avataresP.then(function (av) {
+        var jogs = (av && av.jogadores) || [];
+        pintarElenco(jogs);
+        pintarArtilharia(jogs);
+      });
     }, function (err) {
       $("mcTabela").innerHTML = T.erroBloco(err.message, "tentarMc");
       var b = $("tentarMc");

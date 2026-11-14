@@ -18,8 +18,9 @@
     return d.toISOString().slice(0, 10);
   }
   function statusEspn(state) {
-    if (state === "IN") return "ao vivo";
-    if (state === "POST") return "encerrado";
+    var s = String(state || "").toUpperCase();
+    if (s === "IN") return "ao vivo";
+    if (s === "POST") return "encerrado";
     return "agendado";
   }
   function eventoParaJogo(ev) {
@@ -58,8 +59,8 @@
       data: data,
       horario: horario,
       status: statusEspn(state),
-      placarMandante: state === "PRE" ? null : scoreCasa,
-      placarVisitante: state === "PRE" ? null : scoreFora,
+      placarMandante: String(state || "").toUpperCase() === "PRE" ? null : scoreCasa,
+      placarVisitante: String(state || "").toUpperCase() === "PRE" ? null : scoreFora,
       minuto: (ev.status && ev.status.type && ev.status.type.shortDetail) || "",
       quente: quente,
       grupo: "bra1"

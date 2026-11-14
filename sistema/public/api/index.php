@@ -13,7 +13,8 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
   exit;
 }
 
-$DATA_DIR = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . "data";
+/* Pasta dentro de public/api pra existir no deploy Git; .htaccess bloqueia HTTP. */
+$DATA_DIR = __DIR__ . DIRECTORY_SEPARATOR . "_store";
 $DB_FILE = $DATA_DIR . DIRECTORY_SEPARATOR . "usuarios.json";
 
 function responder($codigo, $corpo) {

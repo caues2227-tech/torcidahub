@@ -460,10 +460,16 @@
     location.href = destino;
   }
 
-  $("btn-visitor").addEventListener("click", function (e) {
-    e.preventDefault();
-    abrirModalVisitante();
-  });
+  function wireVisitante(id) {
+    var btn = $(id);
+    if (!btn) return;
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      abrirModalVisitante();
+    });
+  }
+  wireVisitante("btn-visitor");
+  wireVisitante("btn-visitor-login");
 
   $("btn-forgot").addEventListener("click", function () {
     $("esqueci-email").value = $("login-email").value.trim();
@@ -512,7 +518,7 @@
     return !!(err && (err.offline || err.status === 404 || err.status === 502 || err.status === 503));
   }
   function msgContaOffline() {
-    return "Conta (login, cadastro e senha) precisa do servidor Torcida. Neste site estático use Visitante — ou rode o app local (porta 3000).";
+    return "Login e cadastro ainda não estão disponíveis aqui. Use Visitante pra explorar o site.";
   }
 
   $("form-esqueci").addEventListener("submit", function (ev) {

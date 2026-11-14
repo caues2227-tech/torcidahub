@@ -52,9 +52,10 @@ function parse_rss($xml) {
   $feed = @simplexml_load_string($xml);
   if (!$feed || !isset($feed->channel->item)) return $out;
   foreach ($feed->channel->item as $item) {
-    $titulo = trim((string) $item->title);
+    $titulo = html_entity_decode(trim((string) $item->title), ENT_QUOTES | ENT_HTML5, "UTF-8");
     $link = trim((string) $item->link);
-    $desc = trim(strip_tags((string) $item->description));
+    $desc = html_entity_decode(trim(strip_tags((string) $item->description)), ENT_QUOTES | ENT_HTML5, "UTF-8");
+    $desc = preg_replace('/\s+/u', " ", $desc);
     $fonte = "";
     if (isset($item->source)) $fonte = trim((string) $item->source);
     if (!$fonte && isset($item->children("http://purl.org/dc/elements/1.1/")->publisher)) {
@@ -64,6 +65,7 @@ function parse_rss($xml) {
       $fonte = trim($m[1]);
       $titulo = trim(preg_replace('/\s-\s[^-]+$/u', "", $titulo));
     }
+    $titulo = preg_replace('/\s+/u', " ", $titulo);
     $pub = trim((string) $item->pubDate);
     $iso = $pub ? date("c", strtotime($pub)) : date("c");
     if ($titulo === "") continue;

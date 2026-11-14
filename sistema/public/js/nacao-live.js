@@ -3,7 +3,7 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v5";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v6";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
@@ -54,11 +54,36 @@
     return detectarTag(titulo);
   }
 
+  function limparTexto(s) {
+    var t = String(s == null ? "" : s);
+    if (!t) return "";
+    if (/[&<]/.test(t)) {
+      try {
+        var el = document.createElement("textarea");
+        el.innerHTML = t;
+        t = el.value;
+      } catch (e) { /* ignore */ }
+    }
+    return t
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&#160;/g, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&quot;/gi, "\"")
+      .replace(/&#39;|&apos;/gi, "'")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function mapArticles(articles, prefix) {
     return (articles || []).map(function (a, i) {
       var fonte = a.source;
       if (fonte && typeof fonte === "object") fonte = fonte.name || "Fonte";
-      var tag = detectarTagGlobal(a.title || "");
+      fonte = limparTexto(fonte);
+      var titulo = limparTexto(a.title || "");
+      var resumo = limparTexto(a.description || "");
+      var tag = detectarTagGlobal(titulo);
       return {
         id: (prefix || "gn") + (i + 1),
         tipo: "noticia",
@@ -69,9 +94,9 @@
         ts: a.publishedAt ? new Date(a.publishedAt).getTime() : Date.now() - i * 36e5,
         tag: tag,
         tagLabel: LABEL_TAG[tag] || "JOGO",
-        titulo: a.title || "",
-        resumo: a.description || "",
-        texto: a.title || "",
+        titulo: titulo,
+        resumo: resumo,
+        texto: titulo,
         imagem: a.image || "",
         url: a.url || "#",
         comentarios: 20 + ((i * 17) % 180),

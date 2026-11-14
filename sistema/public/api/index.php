@@ -224,18 +224,91 @@ if ($acao === "senha/esqueci" && $method === "POST") {
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     responder(400, ["erro" => "Informe um e-mail válido.", "codigo" => "invalido", "campo" => "email"]);
   }
-  /* Sem SMTP neste hosting: não envia e-mail, mas não revela se o e-mail existe. */
-  responder(200, [
+
+  $idx = -1;
+  foreach ($db["usuarios"] as $i => $x) {
+    if (isset($x["email"]) && strtolower($x["email"]) === $email && !empty($x["senhaHash"])) {
+      $idx = $i;
+      break;
+    }
+  }
+
+  $resp = [
     "ok" => true,
-    "mensagem" => "Se este e-mail estiver cadastrado, use a senha que você criou. Recuperação por e-mail ainda não está ligada neste site."
-  ]);
+    "mensagem" => "Se este e-mail estiver cadastrado, enviamos um link para redefinir a senha."
+  ];
+
+  if ($idx >= 0) {
+    $reset = bin2hex(random_bytes(24));
+    $db["usuarios"][$idx]["resetToken"] = $reset;
+    $db["usuarios"][$idx]["resetExp"] = time() + 3600;
+    db_save($DB_FILE, $DATA_DIR, $db);
+
+    $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
+      || (isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) && $_SERVER["HTTP_X_FORWARDED_PROTO"] === "https");
+    $host = $_SERVER["HTTP_X_FORWARDED_HOST"] ?? $_SERVER["HTTP_HOST"] ?? "localhost";
+    $host = trim(explode(",", (string) $host)[0]);
+    $base = ($https ? "https" : "http") . "://" . $host;
+    $link = $base . "/redefinir.html?token=" . rawurlencode($reset);
+
+    $nome = $db["usuarios"][$idx]["nome"] ?? "";
+    $assunto = "Redefinir senha · Torcida";
+    $texto =
+      "Olá" . ($nome ? ", " . $nome : "") . ".\n\n" .
+      "Recebemos um pedido para redefinir sua senha no Torcida.\n" .
+      "Abra o link (válido por 1 hora):\n\n" . $link . "\n\n" .
+      "Se você não pediu, ignore este e-mail.\n";
+    $headers = "MIME-Version: 1.0\r\n" .
+      "Content-Type: text/plain; charset=UTF-8\r\n" .
+      "From: Torcida <noreply@" . preg_replace('/:\d+$/', "", $host) . ">\r\n";
+    $enviou = @mail($email, "=?UTF-8?B?" . base64_encode($assunto) . "?=", $texto, $headers);
+
+    /* Hostinger muitas vezes bloqueia mail(): devolve o link na resposta pra a pessoa concluir. */
+    if (!$enviou) {
+      $resp["mensagem"] = "Não deu para enviar o e-mail daqui. Use o link abaixo (vale por 1 hora).";
+      $resp["link"] = $link;
+      $resp["emailEnviado"] = false;
+    } else {
+      $resp["emailEnviado"] = true;
+      /* Também devolve o link: no preview Hostinger o e-mail pode cair em spam. */
+      $resp["link"] = $link;
+    }
+  }
+
+  responder(200, $resp);
 }
 
 if ($acao === "senha/redefinir" && $method === "POST") {
-  responder(400, [
-    "erro" => "Recuperação por e-mail ainda não está ligada neste site. Entre com sua senha ou crie outra conta.",
-    "codigo" => "token_invalido"
-  ]);
+  $b = ler_json();
+  $token = texto($b["token"] ?? "", 200);
+  $senha = (string) ($b["senha"] ?? "");
+  if ($token === "") {
+    responder(400, ["erro" => "Link inválido ou expirado.", "codigo" => "token_invalido", "campo" => "token"]);
+  }
+  if (strlen($senha) < 6) {
+    responder(400, ["erro" => "A senha precisa ter no mínimo 6 caracteres.", "codigo" => "invalido", "campo" => "senha"]);
+  }
+  if (strlen($senha) > 128) {
+    responder(400, ["erro" => "A senha pode ter no máximo 128 caracteres.", "codigo" => "invalido", "campo" => "senha"]);
+  }
+
+  $idx = -1;
+  foreach ($db["usuarios"] as $i => $x) {
+    if (!empty($x["resetToken"]) && hash_equals((string) $x["resetToken"], $token)) {
+      $idx = $i;
+      break;
+    }
+  }
+  if ($idx < 0 || empty($db["usuarios"][$idx]["resetExp"]) || time() > (int) $db["usuarios"][$idx]["resetExp"]) {
+    responder(400, ["erro" => "Este link expirou ou já foi usado. Peça um novo.", "codigo" => "token_invalido"]);
+  }
+
+  $db["usuarios"][$idx]["senhaHash"] = password_hash($senha, PASSWORD_DEFAULT);
+  unset($db["usuarios"][$idx]["resetToken"], $db["usuarios"][$idx]["resetExp"]);
+  $db["usuarios"][$idx]["token"] = "";
+  $db["usuarios"][$idx]["tokenExp"] = 0;
+  db_save($DB_FILE, $DATA_DIR, $db);
+  responder(200, ["ok" => true, "mensagem" => "Senha atualizada. Você já pode entrar."]);
 }
 
 responder(405, ["erro" => "Método não permitido.", "codigo" => "metodo"]);

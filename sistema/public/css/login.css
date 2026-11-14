@@ -730,7 +730,16 @@
   margin: 0 0 10px;
   font-size: 12px;
   color: #e0442f;
+  line-height: 1.45;
 }
+.erro-auth .link-reset {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--accent-text, #1e90ff);
+  font-weight: 600;
+  text-decoration: none;
+}
+.erro-auth .link-reset:hover { text-decoration: underline; }
 
 .auth-session {
   background: rgba(var(--accent-rgb), 0.05);

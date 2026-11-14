@@ -554,7 +554,13 @@
     loading(btn, true);
     T.api("/api/senha/esqueci", { metodo: "POST", corpo: { email: email }, semRedirecionar: true }).then(function (d) {
       $("erro-esqueci").style.color = "#8a93a6";
-      $("erro-esqueci").textContent = (d && d.mensagem) || "Se este e-mail estiver cadastrado, enviamos um link.";
+      var msg = (d && d.mensagem) || "Se este e-mail estiver cadastrado, enviamos um link.";
+      if (d && d.link) {
+        $("erro-esqueci").innerHTML = T.esc(msg) +
+          '<br><a class="link-reset" href="' + T.esc(d.link) + '">Abrir link pra redefinir senha →</a>';
+      } else {
+        $("erro-esqueci").textContent = msg;
+      }
       loading(btn, false);
     }).catch(function (err) {
       $("erro-esqueci").style.color = "";

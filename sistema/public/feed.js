@@ -19,7 +19,7 @@
     { id: "fe", emoji: "🙏", nome: "Fé", cor: "#ffd600" },
     { id: "amor", emoji: "💚", nome: "Amor", cor: "#69f0ae" }
   ];
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduced = !(window.TorcidaQuerMotion ? window.TorcidaQuerMotion() : !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   var filtro = "todas";
   var estado = null;
   var pressTimer = null;

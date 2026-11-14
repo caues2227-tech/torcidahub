@@ -224,7 +224,7 @@
   function rodarIntro() {
     if (!intro || !ball) return;
 
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!(window.TorcidaQuerMotion ? window.TorcidaQuerMotion() : !matchMedia("(prefers-reduced-motion: reduce)").matches)) {
       intro.hidden = true;
       intro.style.display = "none";
       introDone = true;

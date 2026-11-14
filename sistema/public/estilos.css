@@ -290,7 +290,14 @@ textarea { resize: vertical; min-height: 96px; }
 @media (min-width: 861px) { .toasts { bottom: 24px; } }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  html:not(.torcida-force-motion) *,
+  html:not(.torcida-force-motion) *::before,
+  html:not(.torcida-force-motion) *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ==========================================================================

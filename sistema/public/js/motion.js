@@ -1,7 +1,7 @@
 /* Lenis + GSAP: scroll suave, máscaras de texto, parallax, barra de progresso. */
 (function () {
   "use strict";
-  var reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduzido = !(window.TorcidaQuerMotion ? window.TorcidaQuerMotion() : !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   function barra() {
     var el = document.getElementById("barraScroll");

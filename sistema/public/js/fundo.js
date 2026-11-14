@@ -3,13 +3,13 @@
   "use strict";
 
   var FOTO = "/img/estadio-torcida.jpg";
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduced = !(window.TorcidaQuerMotion ? window.TorcidaQuerMotion() : !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   function ensureCss() {
-    if (document.querySelector('link[href="/css/fundo.css"]')) return;
+    if (document.querySelector('link[href*="fundo.css"]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/css/fundo.css";
+    link.href = "/css/fundo.css?v=13";
     document.head.appendChild(link);
   }
 

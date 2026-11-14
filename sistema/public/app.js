@@ -693,7 +693,7 @@
     garantirTema();
     if (!document.body.classList.contains("auth-page") && !w.TorcidaFundo) {
       var s = document.createElement("script");
-      s.src = "/js/fundo.js";
+      s.src = "/js/fundo.js?v=13";
       s.defer = true;
       document.head.appendChild(s);
     }

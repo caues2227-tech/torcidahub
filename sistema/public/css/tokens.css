@@ -76,7 +76,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  html:not(.torcida-force-motion) *,
+  html:not(.torcida-force-motion) *::before,
+  html:not(.torcida-force-motion) *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;

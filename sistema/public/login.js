@@ -3,7 +3,7 @@
   "use strict";
   var T = window.Torcida;
   var $ = function (id) { return document.getElementById(id); };
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduced = !(window.TorcidaQuerMotion ? window.TorcidaQuerMotion() : !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   var touch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
   var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   var voltar = T.voltarUrl();

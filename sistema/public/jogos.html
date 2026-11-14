@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#05070c" />
+  <title>Jogos | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/estilos.css" />
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <script src="/tema.js"></script>
+</head>
+<body class="pagina-jogos">
+  <a class="pular" href="#principal">Ir para o conteúdo</a>
+  <header class="topo" id="topo"></header>
+
+  <main id="principal" class="conteudo">
+    <header class="cabeca-pagina">
+      <span class="rotulo">Agenda</span>
+      <h1 class="titulo-display" style="font-size:clamp(28px,5vw,48px)">Todos os jogos</h1>
+      <p class="muted" id="quando">Ao vivo e próximos jogos do Brasil, da América do Sul e da Europa.</p>
+    </header>
+    <div class="chips chips-rolagem filtros" id="filtros" role="group" aria-label="Filtrar jogos"></div>
+    <p class="muted pequeno" id="contagem" aria-live="polite"></p>
+    <div id="agenda"><div class="esqueleto esqueleto-card"></div><div class="esqueleto esqueleto-card" style="margin-top:12px"></div></div>
+    <div class="mais-dias"><button type="button" class="btn btn-ghost" id="maisDias" hidden>Mostrar mais dias</button></div>
+  </main>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/motion.js"></script>
+  <script src="/jogos.js"></script>
+  <script src="/chat.js"></script>
+</body>
+</html>

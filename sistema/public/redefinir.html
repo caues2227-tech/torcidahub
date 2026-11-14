@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#05070c" />
+  <title>Nova senha | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/estilos.css" />
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <script src="/tema.js"></script>
+</head>
+<body class="pagina-entrada">
+  <main class="entrada" style="grid-template-columns:1fr;max-width:480px;margin:0 auto;padding:48px 20px">
+    <section class="login-form-lado" style="border-radius:14px;border:1px solid var(--border)">
+      <a class="marca" href="/portal.html" style="margin-bottom:24px"><span class="marca-logo">T</span><span class="marca-nome">TORCIDA<i>.</i></span></a>
+      <h1 class="titulo-display" style="font-size:28px;margin-bottom:8px">Nova senha</h1>
+      <p class="muted" style="margin-bottom:20px;font-size:14px">Escolha uma senha nova para entrar na nação.</p>
+      <form id="form" novalidate>
+        <div class="senha-wrap-pill">
+          <input class="campo-pill" id="senha" type="password" minlength="6" autocomplete="new-password" placeholder="Nova senha" maxlength="128" required>
+          <button type="button" class="senha-ver" id="ver">mostrar</button>
+        </div>
+        <input class="campo-pill" id="senha2" type="password" minlength="6" autocomplete="new-password" placeholder="Confirmar senha" maxlength="128" required>
+        <p class="erro-login" id="erro" role="alert"></p>
+        <button class="btn-nacao" type="submit" id="salvar">Salvar senha</button>
+      </form>
+      <p class="login-olhar"><a class="com-ponto" href="/login.html">Voltar ao login</a></p>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/redefinir.js"></script>
+</body>
+</html>

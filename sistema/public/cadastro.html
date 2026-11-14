@@ -3,54 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cadastro | Torcida</title>
-  <link rel="stylesheet" href="/estilos.css" />
-</head>
-<body>
-  <div class="wrap">
-    <div class="top"><div class="brand">TORCIDA<span>.</span></div></div>
-    <div class="page auth">
-      <h1>Criar conta</h1>
-      <p class="muted">O time de coração é obrigatório.</p>
-      <form id="form">
-        <label>Nome</label>
-        <input id="nome" type="text" required />
-        <label>E-mail</label>
-        <input id="email" type="email" required />
-        <label>Senha</label>
-        <input id="senha" type="password" required minlength="6" />
-        <label>Time de coração</label>
-        <select id="time" required></select>
-        <button class="btn" type="submit">Cadastrar</button>
-        <a class="btn ghost" href="/login.html">Já tenho conta</a>
-        <p class="erro" id="erro"></p>
-      </form>
-    </div>
-  </div>
+  <meta name="theme-color" content="#05070c" />
+  <title>Criar conta | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script>
-    fetch("/api/times").then((r) => r.json()).then((d) => {
-      const sel = document.getElementById("time");
-      sel.innerHTML = '<option value="">Selecione o time</option>' +
-        d.times.map((t) => `<option value="${t}">${t}</option>`).join("");
-    });
-    document.getElementById("form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const erro = document.getElementById("erro");
-      erro.textContent = "";
-      const r = await fetch("/api/cadastro", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: document.getElementById("nome").value,
-          email: document.getElementById("email").value,
-          senha: document.getElementById("senha").value,
-          time: document.getElementById("time").value
-        })
-      });
-      const d = await r.json();
-      if (!r.ok) { erro.textContent = d.erro || "Falha no cadastro"; return; }
-      location.href = "/login.html";
-    });
+    (function () {
+      var q = location.search || "";
+      location.replace("/login.html" + q + (q ? "&" : "?") + "aba=criar#criar");
+    })();
   </script>
+</head>
+<body class="pagina-entrada">
+  <p style="padding:24px;font-family:system-ui,sans-serif">
+    <a href="/login.html#criar">Criar conta</a>
+  </p>
 </body>
 </html>

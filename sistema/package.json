@@ -1,10 +1,14 @@
 {
   "name": "torcida",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "MVP Torcida — cadastro e login com time de coração",
+  "description": "Torcida: rede social e portal de futebol com time de coração, ranking, resumo do dia e chatbot.",
   "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   }
 }

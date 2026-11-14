@@ -3,44 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login | Torcida</title>
+  <meta name="theme-color" content="#05070c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Entrar | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.thesportsdb.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/estilos.css" />
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/login.css?v=8" />
+  <link rel="stylesheet" href="/css/intro.css?v=6" />
+  <script src="/tema.js"></script>
 </head>
-<body>
-  <div class="wrap">
-    <div class="top"><div class="brand">TORCIDA<span>.</span></div></div>
-    <div class="page auth">
-      <h1>Entrar</h1>
-      <p class="muted">Rede social só de futebol. Projeto novo da APS II.</p>
-      <form id="form">
-        <label>E-mail</label>
-        <input id="email" type="email" required />
-        <label>Senha</label>
-        <input id="senha" type="password" required minlength="6" />
-        <button class="btn" type="submit">Entrar</button>
-        <a class="btn ghost" href="/cadastro.html">Criar conta</a>
-        <p class="erro" id="erro"></p>
+<body class="pagina-entrada auth-page">
+  <div class="intro" id="intro" hidden>
+    <div class="intro-bg" aria-hidden="true">
+      <div class="intro-rays"></div>
+      <div class="intro-vignette"></div>
+      <div class="intro-noise"></div>
+    </div>
+    <div class="intro-flash" id="introFlash" aria-hidden="true"></div>
+    <div class="intro-stage">
+      <div class="intro-ball" id="pixelBall" aria-hidden="true">
+        <div class="ball-glow"></div>
+        <img class="ball-photo" src="/img/bola-futebol.png" alt="" width="360" height="360" decoding="async" fetchpriority="high">
+        <div class="ball-shine"></div>
+      </div>
+      <div class="ball-shadow" id="ballShadow"></div>
+      <div class="intro-ground" id="introGround"></div>
+      <div class="intro-ring" id="introRing"></div>
+      <div class="intro-particles" id="introParticles"></div>
+      <div class="intro-dust" id="introDust" aria-hidden="true"></div>
+    </div>
+    <div class="intro-logo" id="introLogo">
+      <span class="logo-emblem" aria-hidden="true">
+        <img src="/img/bola-futebol.png" alt="" width="64" height="64" decoding="async">
+      </span>
+      <span class="logo-text" id="introLogoText"></span>
+    </div>
+    <p class="intro-tag" id="introTag">sua nação começa aqui</p>
+    <button type="button" class="intro-skip" id="introSkip">PULAR →</button>
+  </div>
+
+  <div class="auth-layout">
+    <div class="auth-visual">
+      <div class="bg-parallax" id="bgParallax" aria-hidden="true">
+        <img class="bg-image" id="bgImage" src="/img/estadio-noite.webp" alt="" width="1600" height="900" decoding="async" fetchpriority="high">
+      </div>
+      <div class="auth-tint" id="authTint" aria-hidden="true"></div>
+      <div class="auth-tint-color" id="authTintColor" aria-hidden="true"></div>
+      <div class="floodlight fl-1" aria-hidden="true"></div>
+      <div class="floodlight fl-2" aria-hidden="true"></div>
+      <div class="floodlight fl-3" aria-hidden="true"></div>
+      <div class="auth-grid" aria-hidden="true"></div>
+      <div class="ground-glow" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+      <div class="particles" id="particles" aria-hidden="true"></div>
+      <div class="spotlight" id="spotlight" aria-hidden="true"></div>
+
+      <div class="auth-content">
+        <div class="logo-row">
+          <span class="logo-emblem" aria-hidden="true">
+            <img src="/img/bola-futebol.png" alt="" width="40" height="40" decoding="async">
+          </span>
+          <span class="logo-text">TORCIDA<span class="dot">.</span></span>
+        </div>
+
+        <span class="badge">PERFIL RÁPIDO</span>
+
+        <h1 class="auth-title">MONTE SUA NAÇÃO<br>EM 2 TÔQUES.</h1>
+
+        <p class="auth-subtitle">Seu nome e o clube do coração. O resto a gente cuida.</p>
+
+        <div class="example-crests" id="exampleCrests">
+          <button type="button" class="ex-crest" data-club="Santos" data-club-color="#1e90ff" title="Santos" aria-label="Santos">
+            <img src="/img/crests/Santos.png" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" class="ex-crest" data-club="Flamengo" data-club-color="#e30613" title="Flamengo" aria-label="Flamengo">
+            <img src="/img/crests/Flamengo.png" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" class="ex-crest" data-club="Palmeiras" data-club-color="#006437" title="Palmeiras" aria-label="Palmeiras">
+            <img src="/img/crests/Palmeiras.png" alt="" loading="lazy" decoding="async">
+          </button>
+        </div>
+
+        <p class="auth-hint">Jogue pelo seu time</p>
+      </div>
+    </div>
+
+    <div class="auth-form">
+      <nav class="auth-tabs" role="tablist" aria-label="Conta">
+        <button type="button" class="tab active" data-tab="entrar" role="tab" aria-selected="true" id="tab-entrar">Entrar</button>
+        <button type="button" class="tab" data-tab="criar" role="tab" aria-selected="false" id="tab-criar">Criar conta</button>
+      </nav>
+
+      <div class="auth-session" id="auth-session" hidden>
+        <p>Você já entrou como <strong id="session-name"></strong> · <span id="session-club"></span>.</p>
+        <div class="session-actions">
+          <button type="button" class="btn-primary" id="btn-continue">Continuar</button>
+          <button type="button" class="btn-ghost" id="btn-switch">Trocar conta</button>
+        </div>
+      </div>
+
+      <form class="auth-fields" id="form-login" novalidate>
+        <div class="field">
+          <label for="login-email">E-MAIL</label>
+          <input id="login-email" type="email" name="email" placeholder="voce@email.com" required autocomplete="email" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="login-senha">SENHA</label>
+          <div class="password-wrap">
+            <input id="login-senha" type="password" name="senha" placeholder="Sua senha" required minlength="6" autocomplete="current-password" maxlength="128">
+            <button type="button" class="toggle-pass" aria-label="Mostrar senha" aria-pressed="false">mostrar</button>
+          </div>
+        </div>
+        <p class="erro-auth" id="erro-login" role="alert"></p>
+        <button type="submit" class="btn-primary btn-full" id="btn-login">Entrar</button>
+        <button type="button" class="link-forgot" id="btn-forgot">Esqueci minha senha</button>
+      </form>
+
+      <form class="auth-fields" id="form-esqueci" hidden novalidate>
+        <p class="auth-help">Digite o e-mail da conta. Se estiver cadastrado, mandamos um link para criar uma senha nova.</p>
+        <div class="field">
+          <label for="esqueci-email">E-MAIL</label>
+          <input id="esqueci-email" type="email" name="email" required autocomplete="email" maxlength="120">
+        </div>
+        <p class="erro-auth" id="erro-esqueci" role="alert"></p>
+        <button type="submit" class="btn-primary btn-full" id="btn-esqueci">Enviar link</button>
+        <button type="button" class="link-forgot" id="btn-voltar-login">Voltar ao login</button>
+      </form>
+
+      <form class="auth-fields" id="form-cadastro" hidden novalidate>
+        <div class="field">
+          <label for="cad-nome">SEU NOME</label>
+          <input id="cad-nome" type="text" name="nome" placeholder="Como vai te chamar na nação" required autocomplete="name" maxlength="40">
+        </div>
+        <div class="field">
+          <label for="cad-email">E-MAIL</label>
+          <input id="cad-email" type="email" name="email" placeholder="voce@email.com" required autocomplete="email" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="cad-senha">SENHA</label>
+          <div class="password-wrap">
+            <input id="cad-senha" type="password" name="senha" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password" maxlength="128">
+            <button type="button" class="toggle-pass" aria-label="Mostrar senha" aria-pressed="false">mostrar</button>
+          </div>
+        </div>
+
+        <div class="club-select">
+          <label id="club-label">ESCOLHA SEU CLUBE</label>
+          <p class="clube-escolhido" id="clube-escolhido" hidden></p>
+          <div class="club-grid" id="club-grid" role="listbox" aria-labelledby="club-label"></div>
+        </div>
+
+        <p class="erro-auth" id="erro-cadastro" role="alert"></p>
+        <button type="submit" class="btn-primary btn-full" id="btn-cadastro">Entrar pra nação</button>
+
+        <p class="terms">Ao criar sua conta você concorda com os <a href="/portal.html">Termos</a>.</p>
+        <a href="/portal.html" class="link-jogos">Ver jogos agora →</a>
+        <a href="#" class="link-visitor" id="btn-visitor">Só quer olhar? Continue sem conta</a>
       </form>
     </div>
   </div>
-  <script>
-    document.getElementById("form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const erro = document.getElementById("erro");
-      erro.textContent = "";
-      const r = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: document.getElementById("email").value,
-          senha: document.getElementById("senha").value
-        })
-      });
-      const d = await r.json();
-      if (!r.ok) { erro.textContent = d.erro || "Falha no login"; return; }
-      sessionStorage.setItem("torcida", JSON.stringify(d));
-      location.href = "/feed.html";
-    });
-  </script>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="/js/intro.js?v=6"></script>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/login.js"></script>
 </body>
 </html>

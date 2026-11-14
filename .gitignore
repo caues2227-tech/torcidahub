@@ -1,8 +1,24 @@
-sistema/data/
-sistema/node_modules/
-sistema/.env
+# Segredos: nunca versionar
 .env
+.env.*
+!.env.example
+sistema/.env
+sistema/.env.*
+!sistema/.env.example
+sistema/data/.segredo
+sistema/data/mail-outbox.json
+
+# Dados gerados pelo servidor (banco, caches, uploads, backups)
+sistema/data/
+!sistema/data/.gitkeep
+
+# Pacotes de upload manual (não versionar)
+PARA-SUBIR/
+torcida-hostinger.zip
+*.zip
+
+# Dependências e sistema
 node_modules/
+*.log
 .DS_Store
 Thumbs.db
-*.log

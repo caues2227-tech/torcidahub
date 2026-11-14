@@ -1,93 +1,64 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Feed | Torcida</title>
+  <meta name="theme-color" content="#05070c" />
+  <title>Nação | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/estilos.css" />
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/nacao.css" />
+  <script src="/tema.js"></script>
 </head>
-<body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">TORCIDA<span>.</span></div>
-      <nav>
-        <a href="/feed.html">Feed</a>
-        <a href="/ranking.html">Ranking</a>
-        <a href="/chatbot.html">Chatbot</a>
-        <a href="/admin.html" id="linkAdmin" style="display:none">Admin</a>
-        <a href="/login.html" id="sair">Sair</a>
-      </nav>
-    </div>
-    <div class="page">
-      <div class="card" id="resumo"></div>
-      <div class="card">
-        <label>O que tá rolando?</label>
-        <textarea id="texto" maxlength="280" rows="3"></textarea>
-        <div class="muted">Vai com a etiqueta do seu time · <span id="rest">280</span></div>
-        <button class="btn" id="btnPost" type="button">Publicar</button>
-        <p class="erro" id="erro"></p>
+<body class="pagina-nacao">
+  <a class="pular" href="#principal">Ir para o conteúdo</a>
+  <header class="topo" id="topo"></header>
+
+  <main id="principal" class="conteudo nacao-social">
+    <aside class="nacao-col nacao-esq" id="colEsq"></aside>
+
+    <section class="nacao-col nacao-centro" aria-label="Feed da nação">
+      <div class="chips-fade" id="filtros" role="tablist" aria-label="Filtros"></div>
+      <div class="marquee-nacao" aria-hidden="true"><div class="marquee-pista" id="marquee"></div></div>
+      <div class="composer" id="composer"></div>
+      <div class="feed-lista" id="feed-noticias" aria-live="polite">
+        <div class="esqueleto esqueleto-card"></div>
+        <div class="esqueleto esqueleto-card"></div>
       </div>
-      <div id="lista"></div>
-    </div>
-  </div>
-  <script>
-    const s = sessionStorage.getItem("torcida");
-    if (!s) location.href = "/login.html";
-    const eu = JSON.parse(s);
-    if (eu.papel === "admin") document.getElementById("linkAdmin").style.display = "inline";
-    const H = { "Content-Type": "application/json", Authorization: "Bearer " + eu.token };
-    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
-    const ta = document.getElementById("texto");
-    ta.oninput = () => document.getElementById("rest").textContent = 280 - ta.value.length;
+    </section>
 
-    async function carregar() {
-      const r = await fetch("/api/resumo", { headers: H });
-      const d = await r.json();
-      document.getElementById("resumo").innerHTML = "<strong>Resumo do dia — " + eu.time + "</strong><p class='muted'>" + (d.texto || "") + "</p><p class='muted'>O bot tá no canto da tela — pergunta em linguagem natural.</p>";
-      const f = await fetch("/api/feed", { headers: H });
-      const g = await f.json();
-      document.getElementById("lista").innerHTML = (g.posts || []).map((p) => `
-        <div class="card">
-          <div><span class="tag">${p.time}</span> <strong>${p.nome}</strong></div>
-          <div class="muted">${new Date(p.criadoEm).toLocaleString("pt-BR")}</div>
-          <p>${p.texto}</p>
-          <div class="acoes">
-            <button type="button" data-like="${p.id}">Curtir ${p.likes}</button>
-          </div>
-          ${(p.comentarios || []).map((c) => `<p class="muted">${c.nome}: ${c.texto}</p>`).join("")}
-          <input data-com="${p.id}" placeholder="Comentar" />
-        </div>
-      `).join("");
-      document.querySelectorAll("[data-like]").forEach((b) => b.onclick = async () => {
-        await fetch("/api/posts/" + b.dataset.like + "/curtir", { method: "POST", headers: H });
-        carregar();
-      });
-      document.querySelectorAll("[data-com]").forEach((inp) => {
-        inp.addEventListener("keydown", async (e) => {
-          if (e.key !== "Enter") return;
-          const texto = inp.value.trim();
-          if (!texto) return;
-          await fetch("/api/posts/" + inp.dataset.com + "/comentar", {
-            method: "POST", headers: H, body: JSON.stringify({ texto })
-          });
-          carregar();
-        });
-      });
-    }
+    <aside class="nacao-col nacao-dir" id="colDir"></aside>
+  </main>
 
-    document.getElementById("btnPost").onclick = async () => {
-      const erro = document.getElementById("erro");
-      erro.textContent = "";
-      const r = await fetch("/api/posts", {
-        method: "POST", headers: H, body: JSON.stringify({ texto: ta.value })
-      });
-      const d = await r.json();
-      if (!r.ok) { erro.textContent = d.erro; return; }
-      ta.value = "";
-      carregar();
-    };
-    carregar();
-  </script>
-  <script src="/chat-widget.js"></script>
+  <aside class="notif-drawer" id="notifDrawer" hidden aria-label="Notificações">
+    <header>
+      <h2>Notificações</h2>
+      <button type="button" class="notif-fechar" id="notifFechar" aria-label="Fechar">×</button>
+    </header>
+    <ul id="notifLista"></ul>
+    <footer>
+      <button type="button" id="notifLerTodas">Marcar todas como lidas</button>
+    </footer>
+  </aside>
+  <div class="notif-backdrop" id="notifBackdrop" hidden></div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/motion.js"></script>
+  <script src="/js/data.js"></script>
+  <script src="/js/nacao-live.js"></script>
+  <script src="/js/notif.js"></script>
+  <script src="/feed.js"></script>
+  <script src="/chat.js"></script>
 </body>
 </html>

@@ -1,36 +1,38 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chatbot | Torcida</title>
+  <meta name="theme-color" content="#05070c" />
+  <title>Bot | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/estilos.css" />
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <script src="/tema.js"></script>
 </head>
-<body class="chat-page">
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">TORCIDA<span>.</span></div>
-      <nav>
-        <a href="/feed.html">Feed</a>
-        <a href="/ranking.html">Ranking</a>
-        <a href="/chatbot.html">Chatbot</a>
-        <a href="/admin.html" id="linkAdmin" style="display:none">Admin</a>
-        <a href="/login.html" id="sair">Sair</a>
-      </nav>
-    </div>
-    <div class="page">
-      <h1>Bot da Torcida</h1>
-      <p class="muted">Pergunta em linguagem natural. O backend busca jogos, posts e ranking no banco; a IA só organiza o texto. Sem chave de IA, a resposta sai direto dos dados.</p>
-      <div id="chat-root"></div>
-    </div>
-  </div>
-  <script>
-    const s = sessionStorage.getItem("torcida");
-    if (!s) location.href = "/login.html";
-    const eu = JSON.parse(s);
-    if (eu.papel === "admin") document.getElementById("linkAdmin").style.display = "inline";
-    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
-  </script>
-  <script src="/chat-widget.js"></script>
+<body class="pagina-chat">
+  <a class="pular" href="#principal">Ir para o conteúdo</a>
+  <header class="topo" id="topo"></header>
+  <main id="principal" class="conteudo" style="max-width:760px">
+    <header class="cabeca-pagina">
+      <span class="rotulo">Bot</span>
+      <h1 class="titulo-display" style="font-size:clamp(28px,5vw,48px)">Bot da Torcida</h1>
+      <p class="muted">Previsão e análise: tabela, próximos jogos, último resultado e palpites.</p>
+    </header>
+    <div id="chat-root"></div>
+  </main>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/motion.js"></script>
+  <script src="/chat.js"></script>
 </body>
 </html>

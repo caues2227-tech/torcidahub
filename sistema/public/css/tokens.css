@@ -1,0 +1,85 @@
+/* Torcida Akari — tokens. --accent vem do clube (fallback Santos). */
+:root {
+  --bg: #05070c;
+  --bg-elev: #080b12;
+  --surface: #0b0f18;
+  --card: #0b0f18;
+  --card-2: #101522;
+  --card-3: #151b2a;
+  --border: rgba(255, 255, 255, .06);
+  --line: rgba(255, 255, 255, .06);
+  --line-forte: rgba(255, 255, 255, .12);
+
+  --text: #f4f6fb;
+  --text-1: #f4f6fb;
+  --text-2: #8a93a6;
+  --text-3: #5b6478;
+  --muted: #8a93a6;
+
+  --accent: #1e90ff;
+  --accent-rgb: 30, 144, 255;
+  --on-accent: #05070c;
+  --accent-text: #4aa8ff;
+  --accent-dim: rgba(30, 144, 255, .18);
+  --accent-glow: rgba(30, 144, 255, .28);
+  --accent-wash: rgba(30, 144, 255, .10);
+  --accent-line: rgba(30, 144, 255, .38);
+  --accent-soft: rgba(30, 144, 255, .15);
+
+  --error: #e0442f;
+  --live: #e0442f;
+  --win: #35d07f;
+  --draw: #8a93a6;
+  --loss: #e0442f;
+  --gold: #e8b84a;
+
+  --radius-sm: 10px;
+  --radius-inner: 10px;
+  --radius: 14px;
+  --radius-card: 14px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font: "Archivo", system-ui, sans-serif;
+  --font-hud: "Archivo", system-ui, sans-serif;
+
+  --topbar-h: 64px;
+  --dock-h: 68px;
+  --sombra: 0 20px 60px rgba(0, 0, 0, .5);
+}
+
+body {
+  background: #070b14;
+  color: var(--text-1);
+  transition: background-color .8s ease;
+}
+
+.team-monogram {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), .15);
+  color: var(--accent);
+  font-family: var(--font-display, "Archivo", sans-serif);
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.team-badge {
+  object-fit: contain;
+  background: rgba(255, 255, 255, .03);
+  border-radius: 50%;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

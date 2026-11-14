@@ -1,0 +1,15 @@
+{
+  "name": "Torcida",
+  "short_name": "Torcida",
+  "description": "Portal e nação do seu clube: placares ao vivo, tabela, ranking de torcida e bot.",
+  "lang": "pt-BR",
+  "start_url": "/portal.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0b0d",
+  "theme_color": "#0b0b0d",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

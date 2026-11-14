@@ -1,0 +1,192 @@
+/* Fundo vivo — foto presente + tint do clube + floodlights */
+
+body:not(.auth-page) {
+  background: #05070c !important;
+  background-attachment: fixed !important;
+}
+
+.page-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fundo-foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+  filter: brightness(0.9) saturate(1.1) contrast(1.05);
+  transform: scale(1.08);
+  animation: fundo-kenburns 40s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes fundo-kenburns {
+  from { transform: scale(1.08) translate(0, 0); }
+  to { transform: scale(1.16) translate(-1%, -1%); }
+}
+
+.fundo-escurece {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(5, 7, 12, 0.55) 0%,
+    rgba(5, 7, 12, 0.35) 40%,
+    rgba(5, 7, 12, 0.7) 100%);
+}
+
+.fundo-tint {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%,
+      rgba(var(--accent-rgb, 30, 144, 255), 0.28) 0%, transparent 58%),
+    linear-gradient(to top, rgba(var(--accent-rgb, 30, 144, 255), 0.18) 0%, transparent 45%);
+  mix-blend-mode: soft-light;
+  transition: background 0.7s ease;
+}
+
+.fundo-tint-color {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--accent-rgb, 30, 144, 255), 0.22);
+  mix-blend-mode: color;
+  opacity: 0.55;
+  transition: background 0.7s ease;
+}
+
+.fundo-nebulosa {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 45% at 20% 10%, rgba(var(--accent-rgb, 30, 144, 255), 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(var(--accent-rgb, 30, 144, 255), 0.08) 0%, transparent 55%);
+  animation: nebulosa-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes nebulosa-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-1.5%, 1%) scale(1.03); }
+  100% { transform: translate(1.5%, -1%) scale(1); }
+}
+
+.fundo-floodlights {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 40%, rgba(var(--accent-rgb, 30, 144, 255), 0.06) 45%, transparent 50%),
+    linear-gradient(245deg, transparent 40%, rgba(var(--accent-rgb, 30, 144, 255), 0.05) 45%, transparent 50%);
+  background-size: 200% 200%;
+  animation: floodlight-varrer 12s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+}
+
+@keyframes floodlight-varrer {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+.fundo-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%);
+}
+
+.fundo-particulas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.particula {
+  position: absolute;
+  bottom: -10px;
+  border-radius: 50%;
+  animation: particula-subir linear infinite;
+}
+
+@keyframes particula-subir {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 0.3; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+}
+
+.fundo-spotlight {
+  position: fixed;
+  width: 750px;
+  height: 750px;
+  background: radial-gradient(circle,
+    rgba(var(--accent-rgb, 30, 144, 255), 0.12) 0%,
+    rgba(var(--accent-rgb, 30, 144, 255), 0.04) 40%,
+    transparent 70%);
+  mix-blend-mode: overlay;
+  transform: translate(-50%, -50%);
+  will-change: left, top;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+
+.fundo-vinheta {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at top left, rgba(5, 7, 12, 0.5) 0%, transparent 45%),
+    radial-gradient(ellipse at top right, rgba(5, 7, 12, 0.5) 0%, transparent 45%),
+    radial-gradient(ellipse at bottom left, rgba(5, 7, 12, 0.5) 0%, transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(5, 7, 12, 0.5) 0%, transparent 45%);
+}
+
+/* Conteúdo acima do fundo */
+body:not(.auth-page) > .conteudo,
+body:not(.auth-page) > main,
+body:not(.auth-page) > .rodape,
+body:not(.auth-page) > .rodape-akari,
+body:not(.auth-page) > .toasts,
+body:not(.auth-page) > .notif-backdrop,
+body:not(.auth-page) > .menu-mobile,
+body:not(.auth-page) > .pular,
+body:not(.auth-page) > .modal-bg,
+body:not(.auth-page) .app-content {
+  position: relative;
+  z-index: 10;
+}
+
+body:not(.auth-page) > .marca-dagua { z-index: 0; opacity: 0.35; }
+body:not(.auth-page) > .topo { z-index: 70; }
+body:not(.auth-page) > .dock { z-index: 80; }
+body:not(.auth-page) > .notif-drawer { z-index: 90; }
+body:not(.auth-page) > .chat-fab,
+body:not(.auth-page) > .voltar-topo,
+body:not(.auth-page) > .barra-scroll { z-index: 70; }
+
+.rodape-akari {
+  background: transparent !important;
+  background-image:
+    linear-gradient(to top, rgba(5, 7, 12, 0.65) 0%, transparent 100%) !important;
+}
+
+@media (max-width: 640px) {
+  .fundo-spotlight { display: none !important; }
+  .fundo-foto { object-position: center 35%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fundo-foto,
+  .fundo-nebulosa,
+  .fundo-floodlights { animation: none !important; }
+  .fundo-foto { transform: scale(1.06) !important; }
+  .particula,
+  .fundo-spotlight { display: none !important; }
+}

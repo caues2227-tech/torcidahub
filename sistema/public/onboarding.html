@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0b0d" />
+  <title>Escolha seu clube | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/estilos.css" />
+  <script src="/tema.js"></script>
+</head>
+<body class="pagina-entrada">
+  <main class="entrada" id="principal">
+    <section class="entrada-texto">
+      <a class="marca" href="/portal.html" aria-label="Torcida, ir ao portal"><span class="marca-logo" aria-hidden="true">T</span><span class="marca-nome">TORCIDA<i>.</i></span></a>
+      <span class="selo-pagina" style="margin-top:22px" id="selo">perfil rápido</span>
+      <h1>monte sua nação em 2 toques.</h1>
+      <p class="lead">Seu nome e o clube do coração. O escudo do time vira a sua marca e o site ganha as cores dele.</p>
+    </section>
+
+    <section class="vidro" aria-labelledby="tituloOn">
+      <div class="passos" aria-hidden="true"><i class="on" id="p1i"></i><i id="p2i"></i></div>
+      <h2 id="tituloOn">escolha seu clube</h2>
+      <label for="nome">Como te chamam</label>
+      <input id="nome" name="nome" autocomplete="nickname" maxlength="40" placeholder="Seu nome ou apelido">
+
+      <div id="passo1">
+        <p class="muted" style="margin:14px 0 4px">Time do coração:</p>
+        <div id="pickCoracao"></div>
+        <p class="campo-erro" id="erro1" role="alert"></p>
+        <button class="btn" type="button" id="prox">Próximo</button>
+      </div>
+
+      <div id="passo2" hidden>
+        <p class="muted" style="margin:14px 0 4px">Quer ver mais de outro clube? É opcional.</p>
+        <div class="resumo-escolha">
+          <div><small>coração</small><strong id="selCoracao">—</strong></div>
+          <div><small>feed extra</small><strong id="selFeed">—</strong></div>
+        </div>
+        <div id="pickFeed"></div>
+        <p class="campo-erro" id="erro2" role="alert"></p>
+        <button class="btn" type="button" id="pronto">Entrar na Torcida</button>
+        <div class="btn-grupo"><button class="btn btn-ghost" type="button" id="mesmo">Usar o mesmo clube</button><button class="btn btn-ghost" type="button" id="volta">Trocar o coração</button></div>
+      </div>
+
+      <p class="links"><a href="/cadastro.html" id="irCadastro">Criar conta com e-mail e senha</a> · <a href="/login.html" id="irLogin">já tenho conta</a></p>
+    </section>
+  </main>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/picker.js"></script>
+  <script src="/onboarding.js"></script>
+</body>
+</html>

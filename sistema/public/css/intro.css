@@ -1,0 +1,361 @@
+/* Intro — bolinha pixel cinematográfica (todo reload) */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #03050a;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.intro[hidden] {
+  display: none !important;
+}
+
+.intro-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 28%, rgba(var(--accent-rgb), 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 70% at 50% 100%, rgba(var(--accent-rgb), 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at center, #0a101c 0%, #03050a 72%);
+}
+
+.intro-rays {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(
+    from 200deg at 50% 40%,
+    transparent 0deg,
+    rgba(var(--accent-rgb), 0.04) 18deg,
+    transparent 36deg,
+    transparent 120deg,
+    rgba(255, 255, 255, 0.02) 140deg,
+    transparent 160deg,
+    transparent 360deg
+  );
+  animation: intro-rays 8s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes intro-rays {
+  to { transform: rotate(360deg); }
+}
+
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.72) 100%);
+  pointer-events: none;
+}
+
+.intro-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+.intro-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 62%, rgba(255, 255, 255, 0.55) 0%, rgba(var(--accent-rgb), 0.25) 28%, transparent 62%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.intro-stage {
+  position: relative;
+  width: min(360px, 88vw);
+  height: min(360px, 88vw);
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.intro-ground {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0.4);
+  width: 200px;
+  height: 3px;
+  background: linear-gradient(to right, transparent, rgba(var(--accent-rgb), 0.55), transparent);
+  border-radius: 999px;
+  box-shadow:
+    0 0 24px rgba(var(--accent-rgb), 0.35),
+    0 0 48px rgba(var(--accent-rgb), 0.15);
+  opacity: 0.35;
+  transform-origin: center;
+}
+
+.intro-ring {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  border: 2px solid rgba(var(--accent-rgb), 0.8);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.4);
+}
+
+.ball-shadow {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  width: 72px;
+  height: 12px;
+  margin-left: -36px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scaleX(0.4);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.intro-ball {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 112px;
+  height: 112px;
+  margin-left: -56px;
+  will-change: transform, filter;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(var(--accent-rgb), 0.35));
+  z-index: 3;
+  transform-style: preserve-3d;
+}
+
+.intro-ball .ball-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  user-select: none;
+  pointer-events: none;
+}
+
+.ball-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, transparent 42%, transparent 58%, rgba(0, 0, 0, 0.12) 100%);
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+
+.ball-glow {
+  position: absolute;
+  inset: -28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.5) 0%, transparent 70%);
+  z-index: -1;
+  animation: ball-glow 1.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes ball-glow {
+  from { opacity: 0.4; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+.intro-particles,
+.intro-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.pixel-part {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  image-rendering: pixelated;
+  will-change: transform, opacity;
+  border-radius: 1px;
+}
+
+.pixel-part.spark {
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.pixel-part.trail {
+  width: 4px;
+  height: 4px;
+  opacity: 0.7;
+}
+
+.dust-mote {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
+  opacity: 0;
+}
+
+.intro-logo {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  transform: scale(0.86) translateY(12px);
+  z-index: 4;
+  filter: blur(8px);
+}
+
+.intro-logo.on {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  filter: blur(0);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.55s ease;
+}
+
+.intro-logo .logo-emblem {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--accent-rgb));
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.22),
+    0 0 28px rgba(var(--accent-rgb), 0.55),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.intro-logo .logo-emblem img {
+  width: 78%;
+  height: 78%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.intro-logo .logo-text {
+  font-family: "Archivo", "Archivo Variable", sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 8vw, 44px);
+  letter-spacing: 0.05em;
+  color: #f4f6fb;
+  display: inline-flex;
+}
+
+.intro-logo .logo-text .ch {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.intro-logo .logo-text .ch.dot {
+  color: var(--accent);
+}
+
+.intro-logo.glitch .logo-text {
+  animation: intro-glitch 0.55s steps(2) 3;
+}
+
+@keyframes intro-glitch {
+  0% { text-shadow: 3px 0 #e0442f, -3px 0 #06b6d4; transform: translate(0); }
+  20% { text-shadow: -3px 0 #e0442f, 3px 0 #06b6d4; transform: translate(-3px, 1px); }
+  40% { text-shadow: 2px 0 #06b6d4, -2px 0 #e0442f; transform: translate(3px, -1px); }
+  60% { text-shadow: -2px 0 #e0442f, 2px 0 #06b6d4; transform: translate(-2px, 0); }
+  80% { text-shadow: 1px 0 #e0442f, -1px 0 #06b6d4; transform: translate(1px, 1px); }
+  100% { text-shadow: none; transform: translate(0); }
+}
+
+.intro-tag {
+  position: absolute;
+  top: calc(50% + 52px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  margin: 0;
+  font-family: "Archivo", "Archivo Variable", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(244, 246, 251, 0.45);
+  opacity: 0;
+  z-index: 4;
+}
+
+.intro-tag.on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity 0.6s ease 0.15s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+
+.intro-skip {
+  position: absolute;
+  bottom: 32px;
+  right: 32px;
+  background: rgba(5, 7, 12, 0.35);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #8a93a6;
+  font-family: "Archivo", "Archivo Variable", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 10px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  z-index: 5;
+}
+
+.intro-skip:hover {
+  color: #f4f6fb;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(5, 7, 12, 0.55);
+}
+
+.intro.fade-out {
+  animation: intro-fade 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes intro-fade {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    filter: blur(6px);
+  }
+}
+
+@media (max-width: 520px) {
+  .intro-skip {
+    bottom: 20px;
+    right: 16px;
+    left: 16px;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none !important;
+  }
+}

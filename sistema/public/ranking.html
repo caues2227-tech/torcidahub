@@ -1,41 +1,31 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#04050a" />
   <title>Ranking | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/estilos.css" />
+  <script src="/tema.js"></script>
 </head>
-<body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">TORCIDA<span>.</span></div>
-      <nav>
-        <a href="/feed.html">Feed</a>
-        <a href="/ranking.html">Ranking</a>
-        <a href="/chatbot.html">Chatbot</a>
-        <a href="/login.html" id="sair">Sair</a>
-      </nav>
-    </div>
-    <div class="page">
+<body class="pagina-ranking">
+  <a class="pular" href="#principal">Ir para o conteúdo</a>
+  <header class="topo" id="topo"></header>
+  <main id="principal" class="conteudo" style="max-width:760px">
+    <header class="cabeca-pagina">
+      <span class="selo-pagina">leaderboard</span>
       <h1>Ranking de torcida</h1>
-      <p class="muted">Quem tem mais gente cadastrada no site.</p>
-      <div class="card" id="lista"></div>
-    </div>
-  </div>
-  <script>
-    const s = sessionStorage.getItem("torcida");
-    if (!s) location.href = "/login.html";
-    const eu = JSON.parse(s);
-    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
-    fetch("/api/ranking", { headers: { Authorization: "Bearer " + eu.token } })
-      .then((r) => r.json())
-      .then((d) => {
-        document.getElementById("lista").innerHTML = (d.ranking || []).map((x, i) =>
-          `<div class="rank"><span class="pos">${i + 1}</span> ${x.time}<span style="margin-left:auto">${x.qtd} torcedor(es)</span></div>`
-        ).join("");
-      });
-  </script>
-  <script src="/chat-widget.js"></script>
+      <p class="muted">Pódio da arquibancada digital. Empate? Quem posta mais sobe.</p>
+    </header>
+    <section class="card" id="lista" aria-live="polite"><div class="esqueleto esqueleto-card"></div></section>
+    <p class="muted pequeno" id="rodape"></p>
+  </main>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/ranking.js"></script>
+  <script src="/chat.js"></script>
 </body>
 </html>

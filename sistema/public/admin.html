@@ -1,67 +1,78 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin | Torcida</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#0b0b0d" />
+  <title>Painel | Torcida</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/estilos.css" />
+  <script src="/tema.js"></script>
 </head>
-<body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">TORCIDA<span>.</span></div>
-      <nav>
-        <a href="/feed.html">Feed</a>
-        <a href="/ranking.html">Ranking</a>
-        <a href="/chatbot.html">Chatbot</a>
-        <a href="/login.html" id="sair">Sair</a>
-      </nav>
-    </div>
-    <div class="page">
-      <h1>Cadastrar jogo</h1>
-      <p class="muted">Primeiro cadastro do site vira admin.</p>
-      <div class="card">
-        <label>Mandante</label>
-        <select id="mandante"></select>
-        <label>Visitante</label>
-        <select id="visitante"></select>
-        <label>Data</label>
-        <input id="data" type="date" />
-        <label>Horário</label>
-        <input id="horario" value="16:00" />
-        <button class="btn" id="salvar" type="button">Salvar</button>
-        <p class="erro" id="erro"></p>
-      </div>
-    </div>
-  </div>
-  <script>
-    const s = sessionStorage.getItem("torcida");
-    if (!s) location.href = "/login.html";
-    const eu = JSON.parse(s);
-    document.getElementById("sair").onclick = () => sessionStorage.removeItem("torcida");
-    document.getElementById("data").value = new Date().toISOString().slice(0, 10);
-    fetch("/api/times").then((r) => r.json()).then((d) => {
-      const o = d.times.map((t) => `<option>${t}</option>`).join("");
-      document.getElementById("mandante").innerHTML = o;
-      document.getElementById("visitante").innerHTML = o;
-    });
-    document.getElementById("salvar").onclick = async () => {
-      const erro = document.getElementById("erro");
-      erro.textContent = "";
-      const r = await fetch("/api/jogos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + eu.token },
-        body: JSON.stringify({
-          mandante: document.getElementById("mandante").value,
-          visitante: document.getElementById("visitante").value,
-          data: document.getElementById("data").value,
-          horario: document.getElementById("horario").value
-        })
-      });
-      const d = await r.json();
-      erro.textContent = r.ok ? "Jogo salvo." : (d.erro || "Não rolou");
-    };
-  </script>
-  <script src="/chat-widget.js"></script>
+<body class="pagina-admin">
+  <a class="pular" href="#principal">Ir para o conteúdo</a>
+  <header class="topo" id="topo"></header>
+
+  <main id="principal" class="conteudo">
+    <header class="cabeca-pagina">
+      <span class="selo-pagina">painel interno</span>
+      <h1>Administração</h1>
+      <p class="muted">Cadastre jogos e times, acompanhe a saúde das integrações e force a atualização da cobertura. Os dados cadastrados aqui alimentam o resumo do dia e o chatbot, mesmo sem internet.</p>
+    </header>
+
+    <p class="aviso" id="avisoChave" hidden>Chave de administração ausente ou inválida. Abra esta página com <code>/admin.html?k=SUA_CHAVE</code> (a chave está em <code>ADMIN_CHAVE</code> no arquivo .env).</p>
+
+    <section class="card" aria-labelledby="hStatus">
+      <div class="secao-cab" style="margin-top:0"><h2 class="secao-titulo" id="hStatus">Status</h2><button type="button" class="btn btn-ghost btn-pequeno" id="atualizarStatus">Atualizar status</button></div>
+      <div class="admin-grade" id="status"><div class="esqueleto esqueleto-card"></div></div>
+      <div class="btn-grupo"><button type="button" class="btn" id="sincronizar">Sincronizar cobertura agora</button></div>
+      <p class="campo-erro" id="msgSync" role="status"></p>
+    </section>
+
+    <section class="card" aria-labelledby="hJogo">
+      <h2 class="secao-titulo" id="hJogo">Cadastrar jogo</h2>
+      <form id="formJogo" novalidate>
+        <div class="form-linha">
+          <div><label for="jMandante">Mandante</label><input id="jMandante" list="listaClubes" required autocomplete="off"></div>
+          <div><label for="jVisitante">Visitante</label><input id="jVisitante" list="listaClubes" required autocomplete="off"></div>
+          <div><label for="jData">Data</label><input id="jData" type="date" required></div>
+          <div><label for="jHorario">Horário</label><input id="jHorario" type="time" required value="20:00"></div>
+        </div>
+        <div class="form-linha">
+          <div><label for="jComp">Competição</label><input id="jComp" placeholder="Amistoso, Brasileirão…" maxlength="80"></div>
+          <div><label for="jLocal">Local</label><input id="jLocal" placeholder="Estádio (opcional)" maxlength="80"></div>
+          <div><label for="jPm">Placar mandante</label><input id="jPm" type="number" min="0" max="99" inputmode="numeric" placeholder="opcional"></div>
+          <div><label for="jPv">Placar visitante</label><input id="jPv" type="number" min="0" max="99" inputmode="numeric" placeholder="opcional"></div>
+        </div>
+        <datalist id="listaClubes"></datalist>
+        <p class="campo-erro" id="erroJogo" role="alert"></p>
+        <button class="btn" type="submit" id="salvarJogo">Cadastrar jogo</button>
+      </form>
+      <div class="secao-cab"><h3 class="secao-titulo" style="font-size:22px">Jogos cadastrados</h3></div>
+      <div style="overflow-x:auto"><table class="admin-lista"><thead><tr><th>Data</th><th>Jogo</th><th>Placar</th><th></th></tr></thead><tbody id="listaJogos"></tbody></table></div>
+    </section>
+
+    <section class="card" aria-labelledby="hTime">
+      <h2 class="secao-titulo" id="hTime">Cadastrar time</h2>
+      <form id="formTime" novalidate>
+        <div class="form-linha">
+          <div><label for="tNome">Nome</label><input id="tNome" required maxlength="60"></div>
+          <div><label for="tSigla">Sigla</label><input id="tSigla" required maxlength="6" placeholder="ex.: FLA"></div>
+          <div><label for="tPais">País</label><input id="tPais" value="Brasil" maxlength="60"></div>
+          <div><label for="tLiga">Liga</label><input id="tLiga" placeholder="opcional" maxlength="60"></div>
+        </div>
+        <p class="campo-erro" id="erroTime" role="alert"></p>
+        <button class="btn" type="submit">Cadastrar time</button>
+      </form>
+      <div class="secao-cab"><h3 class="secao-titulo" style="font-size:22px">Times cadastrados</h3></div>
+      <div style="overflow-x:auto"><table class="admin-lista"><thead><tr><th>Nome</th><th>Sigla</th><th>País</th><th></th></tr></thead><tbody id="listaTimes"></tbody></table></div>
+    </section>
+  </main>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/app.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/admin.js"></script>
 </body>
 </html>

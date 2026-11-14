@@ -157,7 +157,9 @@
     Fortaleza: 6270, "Athletico-PR": 3458, Fluminense: 8745, Bragantino: 6079,
     "Vitória": 2671, "Cuiabá": 18469, Juventude: 6271, "Criciúma": 6272,
     "Atlético-GO": 10357, "América-MG": 6154, Ceará: 9969, Sport: 6125,
-    "Mirassol": 21977, "Red Bull Bragantino": 6079
+    Mirassol: 21977, "Red Bull Bragantino": 6079,
+    "Atlético Mineiro": 7632, "Athletico Paranaense": 3458, "Sao Paulo": 2026,
+    Gremio: 8749
   };
   function urlEscudo(nome) {
     if (!nome) return "";

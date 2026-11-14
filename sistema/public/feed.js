@@ -419,7 +419,7 @@
       (p.imagem
         ? '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
         : "") +
-      '<span class="media-tag">FOTO: ' + esc(fonte) + "</span></div>" +
+      '<span class="media-tag">' + (p.imagem ? "FOTO" : "CAPA") + ": " + esc(fonte) + "</span></div>" +
       '<div class="news-actions news-footer post-acoes">' +
       '<button type="button" class="action-btn news-action acao" data-comentar="' + p.id + '">💬 ' + p.comentarios + "</button>" +
       '<button type="button" class="action-btn news-action acao" data-repost="' + p.id + '">🔄 ' + p.reposts + "</button>" +

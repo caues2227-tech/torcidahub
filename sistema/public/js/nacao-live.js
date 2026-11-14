@@ -3,9 +3,19 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v6";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v7";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
+  var FOTOS_STOCK = [
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fm=webp&fit=crop&w=800&q=60",
+    "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fm=webp&fit=crop&w=800&q=60"
+  ];
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
   var CACHE_TTL_JOGOS = 5 * 60 * 1000;
   var ESPN_BRA1 = "https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1";
@@ -97,7 +107,7 @@
         titulo: titulo,
         resumo: resumo,
         texto: titulo,
-        imagem: a.image || "",
+        imagem: a.image || FOTOS_STOCK[i % FOTOS_STOCK.length],
         url: a.url || "#",
         comentarios: 20 + ((i * 17) % 180),
         reposts: 8 + ((i * 11) % 90),

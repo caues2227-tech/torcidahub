@@ -13,14 +13,23 @@
   var ESPN_CREST = {
     Santos: 2674, Flamengo: 819, Palmeiras: 2029, Corinthians: 874,
     "São Paulo": 2026, "Grêmio": 8749, Internacional: 2028, "Atlético-MG": 7632,
-    Cruzeiro: 2022, Botafogo: 6086, Vasco: 2675, Bahia: 6155,
-    Fortaleza: 6270, "Athletico-PR": 3458, Fluminense: 8745, Bragantino: 10278,
-    "Vitória": 2671, "Cuiabá": 18469, Juventude: 6271, "Criciúma": 6272
+    Cruzeiro: 2022, Botafogo: 6086, Vasco: 2675, Bahia: 9967,
+    Fortaleza: 6270, "Athletico-PR": 3458, Fluminense: 8745, Bragantino: 6079,
+    "Vitória": 2671, "Cuiabá": 18469, Juventude: 6271, "Criciúma": 6272,
+    "Atlético-GO": 10357, "América-MG": 6154, Ceará: 9969, Sport: 6125,
+    Mirassol: 21977, "Red Bull Bragantino": 6079,
+    "Atlético Mineiro": 7632, "Athletico Paranaense": 3458, "Sao Paulo": 2026,
+    Gremio: 8749, "Clube de Regatas do Flamengo": 819
   };
   function crestUrl(club) {
     var nome = club.name || club.nome || "";
+    var id = ESPN_CREST[nome];
+    if (!id && T.nomeBate) {
+      var chave = Object.keys(ESPN_CREST).filter(function (k) { return T.nomeBate(k, nome); })[0];
+      id = chave ? ESPN_CREST[chave] : null;
+    }
+    if (id) return "https://a.espncdn.com/i/teamlogos/soccer/500/" + id + ".png";
     if (club.badge && String(club.badge).indexOf("/img/escudo") !== 0) return club.badge;
-    if (ESPN_CREST[nome]) return "https://a.espncdn.com/i/teamlogos/soccer/500/" + ESPN_CREST[nome] + ".png";
     return "/img/crests/" + encodeURIComponent(nome) + ".png";
   }
   var FALLBACK = [
@@ -155,9 +164,20 @@
     btn.title = club.name;
     btn.setAttribute("aria-label", club.name);
     var src = crestUrl(club);
-    btn.innerHTML = '<img src="' + T.esc(src) + '" alt="" loading="lazy" decoding="async">';
+    btn.innerHTML = '<img src="' + T.esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">';
     var img = btn.querySelector("img");
     img.onerror = function () {
+      var tried = img.getAttribute("data-tried") || "";
+      if (tried !== "1" && club.badge && String(club.badge).indexOf("http") === 0 && img.src.indexOf("espncdn") >= 0) {
+        img.setAttribute("data-tried", "1");
+        img.src = club.badge;
+        return;
+      }
+      if (tried !== "2") {
+        img.setAttribute("data-tried", "2");
+        var local = "/img/crests/" + encodeURIComponent(club.name) + ".png";
+        if (img.src.indexOf(local) < 0) { img.src = local; return; }
+      }
       var initials = club.name.split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2);
       btn.innerHTML =
         '<span style="font-size:12px;font-weight:700;color:#8a93a6;display:grid;place-items:center;width:100%;height:100%">' +

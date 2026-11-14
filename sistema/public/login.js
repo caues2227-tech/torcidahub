@@ -508,6 +508,13 @@
     } catch (err) {}
   }
 
+  function apiFora(err) {
+    return !!(err && (err.offline || err.status === 404 || err.status === 502 || err.status === 503));
+  }
+  function msgContaOffline() {
+    return "Conta (login, cadastro e senha) precisa do servidor Torcida. Neste site estático use Visitante — ou rode o app local (porta 3000).";
+  }
+
   $("form-esqueci").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var email = $("esqueci-email").value.trim();
@@ -525,7 +532,7 @@
       loading(btn, false);
     }).catch(function (err) {
       $("erro-esqueci").style.color = "";
-      $("erro-esqueci").textContent = err.message || "Não deu para enviar agora.";
+      $("erro-esqueci").textContent = apiFora(err) ? msgContaOffline() : (err.message || "Não deu para enviar agora.");
       loading(btn, false);
     });
   });
@@ -565,7 +572,9 @@
       mostrarToast("Bem-vindo de volta!");
       setTimeout(function () { location.href = destino; }, 900);
     }).catch(function (err) {
-      $("erro-login").textContent = err.status === 401 ? "E-mail ou senha inválidos." : (err.message || "Falha ao entrar.");
+      $("erro-login").textContent = apiFora(err)
+        ? msgContaOffline()
+        : (err.status === 401 ? "E-mail ou senha inválidos." : (err.message || "Falha ao entrar."));
       shake(err.campo === "email" ? $("login-email") : $("login-senha"));
       loading(btn, false);
     });
@@ -629,7 +638,7 @@
       mostrarToast("Bem-vindo à nação, " + nome + "!");
       setTimeout(function () { location.href = destino; }, 1200);
     }).catch(function (err) {
-      $("erro-cadastro").textContent = err.message || "Não deu para criar a conta.";
+      $("erro-cadastro").textContent = apiFora(err) ? msgContaOffline() : (err.message || "Não deu para criar a conta.");
       loading(btn, false);
     });
   });

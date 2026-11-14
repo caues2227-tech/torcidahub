@@ -149,9 +149,30 @@
     return DIAS[p.dt.getDay()] + " · " + String(p.d).padStart(2, "0") + "/" + String(p.m).padStart(2, "0");
   }
 
+  /* Escudos ESPN CDN — hosting estático não tem /img/escudo do Node. */
+  var ESPN_CREST = {
+    Santos: 2674, Flamengo: 819, Palmeiras: 2029, Corinthians: 874,
+    "São Paulo": 2026, "Grêmio": 8749, Internacional: 2028, "Atlético-MG": 7632,
+    Cruzeiro: 2022, Botafogo: 6086, Vasco: 2675, Bahia: 9967,
+    Fortaleza: 6270, "Athletico-PR": 3458, Fluminense: 8745, Bragantino: 6079,
+    "Vitória": 2671, "Cuiabá": 18469, Juventude: 6271, "Criciúma": 6272,
+    "Atlético-GO": 10357, "América-MG": 6154, Ceará: 9969, Sport: 6125,
+    "Mirassol": 21977, "Red Bull Bragantino": 6079
+  };
+  function urlEscudo(nome) {
+    if (!nome) return "";
+    var id = ESPN_CREST[nome];
+    if (!id) {
+      var chave = Object.keys(ESPN_CREST).filter(function (k) { return nomeBate(k, nome); })[0];
+      id = chave ? ESPN_CREST[chave] : null;
+    }
+    if (id) return "https://a.espncdn.com/i/teamlogos/soccer/500/" + id + ".png";
+    return "/img/crests/" + encodeURIComponent(nome) + ".png";
+  }
+
   function escudo(url, nome, tam) {
     var cls = "escudo" + (tam ? " escudo-" + tam : "");
-    var src = url || (nome ? "/img/escudo?time=" + encodeURIComponent(nome) : "");
+    var src = url || (nome ? urlEscudo(nome) : "");
     if (!src) return '<span class="' + cls + ' escudo-letra">' + esc(iniciais(nome)) + "</span>";
     return '<img class="' + cls + '" src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-escudo="' + esc(nome || "") + '">';
   }
@@ -161,7 +182,7 @@
     // só foto enviada pelo usuário ou avatar gerado vale como foto; o escudo padrão vira o escudo do clube
     var propria = o.foto && /^\/(fotos\/|img\/avatar\?)/.test(o.foto);
     if (propria) return '<span class="' + cls + '"><img src="' + esc(o.foto) + '" alt="" loading="lazy" data-some-troca="' + esc(iniciais(o.nome)) + '"></span>';
-    if (o.time) return '<span class="' + cls + ' escudo-av"><img src="/img/escudo?time=' + encodeURIComponent(o.time) + '" alt="" loading="lazy" data-escudo="' + esc(o.time) + '"></span>';
+    if (o.time) return '<span class="' + cls + ' escudo-av"><img src="' + esc(urlEscudo(o.time)) + '" alt="" loading="lazy" data-escudo="' + esc(o.time) + '"></span>';
     return '<span class="' + cls + '">' + esc(iniciais(o.nome)) + "</span>";
   }
 
@@ -401,6 +422,11 @@
       }
       ouvintes.forEach(function (f) { try { f(d); } catch (e2) { /* ouvinte com defeito não derruba os outros */ } });
     };
+    fonte.onerror = function () {
+      /* Hosting estático / API offline: não fica reconectando em loop. */
+      fecharAoVivo();
+      pedidoAoVivo = false;
+    };
   }
 
   /* ---------------------------------------------------------------- topo, menu e busca */
@@ -622,8 +648,11 @@
     if (el.dataset.escudo !== undefined) {
       if (!el.dataset.tentou) {
         el.dataset.tentou = "1";
-        el.src = "/img/escudo?time=" + encodeURIComponent(el.dataset.escudo || "time");
-        return;
+        var cdn = urlEscudo(el.dataset.escudo || "");
+        if (cdn && el.src.indexOf(cdn) < 0) {
+          el.src = cdn;
+          return;
+        }
       }
       var s = document.createElement("span");
       s.className = (el.className || "") + " mono-clube escudo-letra";
@@ -645,7 +674,7 @@
     api: api, headers: headers, clienteId: clienteId,
     esc: esc, hrefSeguro: hrefSeguro, iniciais: iniciais, normaliza: normaliza, nomeBate: nomeBate, contarCaracteres: contarCaracteres,
     tempoRelativo: tempoRelativo, dataCurta: dataCurta, dataLonga: dataLonga,
-    escudo: escudo, monoClube: monoClube, avatar: avatar, placarTxt: placarTxt, statusHtml: statusHtml, hrefJogo: hrefJogo, cardJogo: cardJogo, tickJogo: tickJogo,
+    escudo: escudo, urlEscudo: urlEscudo, monoClube: monoClube, avatar: avatar, placarTxt: placarTxt, statusHtml: statusHtml, hrefJogo: hrefJogo, cardJogo: cardJogo, tickJogo: tickJogo,
     formaPills: formaPills, skeleton: skeleton, vazio: vazio, erroBloco: erroBloco, icone: function (n) { return ICONES[n] || ""; },
     aplicarTema: aplicarTema, garantirTema: garantirTema, montarMarcaDagua: montarMarcaDagua,
     toast: toast, abrirModal: abrirModal, exigirConta: exigirConta, voltarUrl: voltarUrl,

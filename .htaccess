@@ -3,9 +3,7 @@ RewriteEngine On
 # Home → login do app
 RewriteRule ^$ sistema/public/login.html [L]
 
-# Assets e páginas do app (caminhos absolutos /css, /img, /login.html…)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+# Sempre preferir sistema/public (evita cópia antiga na raiz do repo)
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -f [OR]
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -d
 RewriteRule ^(.*)$ sistema/public/$1 [L]

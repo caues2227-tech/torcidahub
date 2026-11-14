@@ -69,8 +69,11 @@
     $("mcNome").textContent = e.time;
     $("mcEscudo").innerHTML = T.escudo(null, e.time, "g");
 
+    var portalP = T.api("/api/portal", { semRedirecionar: true }).catch(function () {
+      return T.portalEstatico ? T.portalEstatico() : Promise.reject(new Error("Sem dados do portal"));
+    });
     return Promise.all([
-      T.api("/api/portal"),
+      portalP,
       T.api("/api/avatares?time=" + encodeURIComponent(e.time), { semRedirecionar: true }).catch(function () { return { jogadores: [] }; })
     ]).then(function (res) {
       var p = res[0];

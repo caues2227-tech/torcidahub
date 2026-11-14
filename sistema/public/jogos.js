@@ -63,8 +63,15 @@
   $("maisDias").addEventListener("click", function () { diasVisiveis += 4; pintar(); });
 
   function carregar() {
-    return T.api("/api/agenda").then(function (d) { pack = d; pintar(); }, function (e) {
+    return T.api("/api/agenda", { semRedirecionar: true }).then(function (d) { pack = d; pintar(); }, function (e) {
       if (pack) return;
+      if (T.agendaEstatica) {
+        return T.agendaEstatica().then(function (d) { pack = d; pintar(); }, function (err) {
+          $("agenda").innerHTML = T.erroBloco(err.message || e.message, "tentarAgenda");
+          var b = $("tentarAgenda");
+          if (b) b.addEventListener("click", function () { ctrl.agora(); });
+        });
+      }
       $("agenda").innerHTML = T.erroBloco(e.message, "tentarAgenda");
       var b = $("tentarAgenda");
       if (b) b.addEventListener("click", function () { ctrl.agora(); });

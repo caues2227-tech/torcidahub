@@ -287,6 +287,14 @@
     if (b) b.addEventListener("click", function () { ctrl.agora(); });
   }
 
-  var ctrl = T.atualizar(function () { return T.api("/api/portal").then(pintar, mostrarErro); }, 45000);
+  function carregarPortal() {
+    return T.api("/api/portal", { semRedirecionar: true }).then(pintar, function (err) {
+      if (err && err.name === "AbortError") return;
+      if (!T.portalEstatico) return mostrarErro(err);
+      return T.portalEstatico().then(pintar, mostrarErro);
+    });
+  }
+
+  var ctrl = T.atualizar(function () { return carregarPortal(); }, 45000);
   T.aoVivo(function (d) { if (d.tipo === "gol" || d.tipo === "status") ctrl.agora(); });
 })();

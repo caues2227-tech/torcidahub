@@ -3,7 +3,7 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v9";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v10";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
@@ -81,8 +81,10 @@
       var fonte = a.source;
       if (fonte && typeof fonte === "object") fonte = fonte.name || "Fonte";
       fonte = limparTexto(fonte);
-      var titulo = limparTexto(a.title || "");
-      var resumo = limparTexto(a.description || "");
+      var titulo = limparTexto(a.title || a.titulo || "");
+      var resumo = limparTexto(a.description || a.resumo || "");
+      if (resumo && titulo && resumo.toLowerCase() === titulo.toLowerCase()) resumo = "";
+      var img = a.image || a.imagem || "";
       var tag = detectarTagGlobal(titulo);
       return {
         id: (prefix || "gn") + (i + 1),
@@ -90,14 +92,14 @@
         fonte: fonte || "Fonte",
         nome: fonte || "Fonte",
         verificado: true,
-        quando: D.tempoRelativo ? D.tempoRelativo(a.publishedAt) : "",
-        ts: a.publishedAt ? new Date(a.publishedAt).getTime() : Date.now() - i * 36e5,
+        quando: D.tempoRelativo ? D.tempoRelativo(a.publishedAt || a.publicadoEm) : "",
+        ts: (a.publishedAt || a.publicadoEm) ? new Date(a.publishedAt || a.publicadoEm).getTime() : Date.now() - i * 36e5,
         tag: tag,
         tagLabel: LABEL_TAG[tag] || "JOGO",
         titulo: titulo,
         resumo: resumo,
         texto: titulo,
-        imagem: a.image || "",
+        imagem: img,
         url: a.url || "#",
         comentarios: 20 + ((i * 17) % 180),
         reposts: 8 + ((i * 11) % 90),
@@ -108,6 +110,8 @@
         reatores: ["A", "B"],
         reatoresN: 40 + ((i * 23) % 450)
       };
+    }).filter(function (n) {
+      return n.titulo && n.imagem && String(n.imagem).indexOf("http") === 0;
     });
   }
 
@@ -177,6 +181,8 @@
       var data = await res.json();
       return (data.noticias || []).map(function (n, i) {
         var tag = detectarTag(n.titulo || "");
+        var resumo = n.resumo || n.texto || "";
+        if (resumo && n.titulo && String(resumo).toLowerCase() === String(n.titulo).toLowerCase()) resumo = "";
         return {
           id: "ln" + (n.id || i + 1),
           tipo: "noticia",
@@ -188,9 +194,9 @@
           tag: tag,
           tagLabel: LABEL_TAG[tag] || "JOGO",
           titulo: n.titulo || "",
-          resumo: n.resumo || n.texto || "",
+          resumo: resumo,
           texto: n.titulo || "",
-          imagem: n.imagem || "",
+          imagem: n.imagem || n.image || "",
           url: n.url || "#",
           comentarios: 20 + ((i * 13) % 120),
           reposts: 8 + ((i * 7) % 60),
@@ -201,7 +207,7 @@
           reatores: ["A", "B"],
           reatoresN: 40
         };
-      });
+      }).filter(function (n) { return n.imagem && n.titulo; });
     } catch (e) {
       return [];
     }
@@ -234,25 +240,28 @@
 
   async function getNoticias() {
     var cached = lerCache(CACHE_NOTICIAS, CACHE_TTL_NOTICIAS);
-    if (cached && Array.isArray(cached) && cached.length >= 12) return cached;
+    if (cached && Array.isArray(cached) && cached.length >= 8) {
+      var okCache = cached.filter(function (n) {
+        return n && n.imagem && String(n.imagem).indexOf("http") === 0;
+      });
+      if (okCache.length >= 8) return okCache.slice(0, NOTICIAS_MAX);
+    }
 
-    var espn = await buscarNoticiasEspn();
     var php = await buscarNoticiasPhp();
-    var gnews = (!php || !php.length) ? await buscarNoticiasGNews() : null;
+    var espn = await buscarNoticiasEspn();
+    var gnews = (!php || php.length < 6) ? await buscarNoticiasGNews() : null;
     var locais = await buscarNoticiasLocais();
 
-    var noticias = mesclarNoticias([espn, php, gnews, locais]);
+    var noticias = mesclarNoticias([php, espn, gnews, locais]);
+    noticias = noticias.filter(function (n) {
+      return n && n.imagem && String(n.imagem).indexOf("http") === 0 && n.titulo;
+    });
     if (!noticias.length) {
-      console.error("Falha total em notícias: PHP/GNews/ESPN sem resultado");
+      console.error("Falha total em notícias: sem matérias com foto");
       return null;
     }
 
-    noticias.sort(function (a, b) {
-      var ia = a.imagem ? 1 : 0;
-      var ib = b.imagem ? 1 : 0;
-      if (ib !== ia) return ib - ia;
-      return (b.ts || 0) - (a.ts || 0);
-    });
+    noticias.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
     noticias = noticias.slice(0, NOTICIAS_MAX);
     gravarCache(CACHE_NOTICIAS, noticias);
     return noticias;

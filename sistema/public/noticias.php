@@ -1,56 +1,64 @@
 <?php
 /**
- * Notícias com foto real: ESPN (várias ligas) + Google News RSS.
+ * Notícias com foto real obrigatória: ESPN (várias ligas) + Google News com og:image.
  */
 header("Content-Type: application/json; charset=utf-8");
-header("Cache-Control: public, max-age=300");
+header("Cache-Control: public, max-age=180");
 header("Access-Control-Allow-Origin: *");
 
 $max = isset($_GET["max"]) ? max(5, min(60, (int) $_GET["max"])) : 40;
 $modo = isset($_GET["modo"]) ? (string) $_GET["modo"] : "global";
+$somenteFoto = !isset($_GET["semfoto"]); /* padrão: só com imagem */
 
-function baixar($url) {
+function baixar($url, $timeout = 10) {
   if (function_exists("curl_init")) {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
       CURLOPT_RETURNTRANSFER => true,
       CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_TIMEOUT => 10,
-      CURLOPT_USERAGENT => "TorcidaHostinger/1.0",
-      CURLOPT_SSL_VERIFYPEER => true
+      CURLOPT_MAXREDIRS => 5,
+      CURLOPT_TIMEOUT => $timeout,
+      CURLOPT_USERAGENT => "Mozilla/5.0 (compatible; TorcidaBot/1.1)",
+      CURLOPT_SSL_VERIFYPEER => true,
+      CURLOPT_ENCODING => ""
     ]);
     $body = curl_exec($ch);
     $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $final = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     curl_close($ch);
-    if ($body === false || $code >= 400) return null;
-    return $body;
+    if ($body === false || $code >= 400) return [null, $final];
+    return [$body, $final];
   }
   $ctx = stream_context_create([
-    "http" => ["timeout" => 10, "header" => "User-Agent: TorcidaHostinger/1.0\r\n"]
+    "http" => ["timeout" => $timeout, "header" => "User-Agent: TorcidaBot/1.1\r\n"]
   ]);
   $body = @file_get_contents($url, false, $ctx);
-  return $body === false ? null : $body;
+  return [$body === false ? null : $body, $url];
 }
 
 function espn_news($path) {
-  $body = baixar("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $path . "/news");
+  list($body) = baixar("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $path . "/news");
   if (!$body) return [];
   $data = json_decode($body, true);
   if (!is_array($data)) return [];
   $out = [];
   foreach (($data["articles"] ?? []) as $a) {
     $img = null;
-    if (!empty($a["images"][0]["url"])) $img = $a["images"][0]["url"];
+    foreach (($a["images"] ?? []) as $im) {
+      if (!empty($im["url"])) { $img = $im["url"]; break; }
+    }
     $title = trim((string) ($a["headline"] ?? $a["description"] ?? ""));
     if ($title === "") continue;
+    $desc = trim((string) ($a["description"] ?? ""));
+    if ($desc === $title) $desc = "";
     $out[] = [
       "title" => $title,
-      "description" => trim((string) ($a["description"] ?? "")),
-      "content" => trim((string) ($a["description"] ?? "")),
+      "description" => $desc,
+      "content" => $desc,
       "url" => ($a["links"]["web"]["href"] ?? "#"),
       "image" => $img,
       "publishedAt" => $a["published"] ?? date("c"),
-      "source" => $a["byline"] ?? "ESPN"
+      "source" => is_array($a["byline"] ?? null) ? "ESPN" : ($a["byline"] ?? "ESPN")
     ];
   }
   return $out;
@@ -91,6 +99,7 @@ function parse_rss($xml) {
       $titulo = trim(preg_replace('/\s-\s[^-]+$/u', "", $titulo));
     }
     $titulo = preg_replace('/\s+/u', " ", $titulo);
+    if ($desc === $titulo) $desc = "";
     $pub = trim((string) $item->pubDate);
     $iso = $pub ? date("c", strtotime($pub)) : date("c");
     if ($titulo === "") continue;
@@ -108,81 +117,77 @@ function parse_rss($xml) {
 }
 
 function og_image($url) {
-  if (!$url || strpos($url, "http") !== 0) return null;
-  $html = baixar($url);
-  if (!$html) return null;
-  if (preg_match('/property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']/i', $html, $m)) return $m[1];
-  if (preg_match('/content=["\']([^"\']+)["\'][^>]*property=["\']og:image["\']/i', $html, $m)) return $m[1];
-  return null;
+  if (!$url || strpos($url, "http") !== 0) return [null, $url];
+  list($html, $final) = baixar($url, 8);
+  if (!$html) return [null, $final ?: $url];
+  $img = null;
+  if (preg_match('/property=["\']og:image(?::secure_url)?["\'][^>]*content=["\']([^"\']+)["\']/i', $html, $m)) $img = $m[1];
+  elseif (preg_match('/content=["\']([^"\']+)["\'][^>]*property=["\']og:image(?::secure_url)?["\']/i', $html, $m)) $img = $m[1];
+  elseif (preg_match('/name=["\']twitter:image["\'][^>]*content=["\']([^"\']+)["\']/i', $html, $m)) $img = $m[1];
+  elseif (preg_match('/content=["\']([^"\']+)["\'][^>]*name=["\']twitter:image["\']/i', $html, $m)) $img = $m[1];
+  if ($img) {
+    $img = html_entity_decode($img, ENT_QUOTES | ENT_HTML5, "UTF-8");
+    if (strpos($img, "//") === 0) $img = "https:" . $img;
+  }
+  return [$img, $final ?: $url];
 }
 
 $articles = [];
 $vistos = [];
 
-/* 1) ESPN com foto real */
-$ligas = ["bra.1", "esp.1", "eng.1", "usa.1", "fra.1", "ger.1", "ita.1"];
+/* 1) ESPN — quase sempre tem foto */
+$ligas = ["bra.1", "esp.1", "eng.1", "usa.1", "fra.1", "ger.1", "ita.1", "uefa.champions"];
 foreach ($ligas as $liga) {
   foreach (espn_news($liga) as $a) {
     $k = mb_strtolower(mb_substr($a["title"], 0, 48));
     if ($k === "" || isset($vistos[$k])) continue;
     $vistos[$k] = true;
-    $articles[] = [
-      "title" => $a["title"],
-      "description" => $a["description"],
-      "content" => $a["content"],
-      "url" => $a["url"],
-      "image" => $a["image"],
-      "publishedAt" => $a["publishedAt"],
-      "source" => is_array($a["source"]) ? ($a["source"]["name"] ?? "ESPN") : $a["source"]
-    ];
+    $articles[] = $a;
   }
 }
 
-/* 2) Google News RSS (complementa) */
+/* 2) Google News — só entra se der pra achar foto */
 $consultas = $modo === "clube" && !empty($_GET["time"])
   ? [trim((string) $_GET["time"]) . " futebol"]
   : [
       "brasileirão OR futebol brasil",
+      "flamengo OR palmeiras OR corinthians OR santos",
       "real madrid OR barcelona OR psg OR champions",
       "mercado da bola OR contratação futebol"
     ];
 
 foreach ($consultas as $q) {
-  if (count($articles) >= $max + 20) break;
+  if (count($articles) >= $max + 30) break;
   $url = "https://news.google.com/rss/search?q=" . rawurlencode($q) . "&hl=pt-BR&gl=BR&ceid=BR:pt-419";
-  $xml = baixar($url);
+  list($xml) = baixar($url);
   foreach (parse_rss($xml) as $a) {
     $k = mb_strtolower(mb_substr($a["title"], 0, 48));
     if ($k === "" || isset($vistos[$k])) continue;
     $vistos[$k] = true;
-    $articles[] = [
-      "title" => $a["title"],
-      "description" => $a["description"],
-      "content" => $a["content"],
-      "url" => $a["url"],
-      "image" => $a["image"],
-      "publishedAt" => $a["publishedAt"],
-      "source" => $a["source"]
-    ];
+    $articles[] = $a;
   }
 }
 
-/* 3) Tenta og:image só nos primeiros sem foto (limite pra não estourar timeout) */
+/* 3) og:image / twitter:image nos sem foto (resolve redirect do Google News) */
 $tentativas = 0;
 foreach ($articles as &$a) {
   if (!empty($a["image"])) continue;
-  if ($tentativas >= 8) break;
+  if ($tentativas >= 14) break;
   $tentativas++;
-  $img = og_image($a["url"]);
+  list($img, $finalUrl) = og_image($a["url"]);
+  if ($finalUrl) $a["url"] = $finalUrl;
   if ($img) $a["image"] = $img;
 }
 unset($a);
 
-/* Prioriza quem tem foto real */
+/* 4) Só matéria com foto real */
+if ($somenteFoto) {
+  $articles = array_values(array_filter($articles, function ($a) {
+    return !empty($a["image"]) && strpos($a["image"], "http") === 0;
+  }));
+}
+
 usort($articles, function ($x, $y) {
-  $ix = !empty($x["image"]) ? 0 : 1;
-  $iy = !empty($y["image"]) ? 0 : 1;
-  if ($ix !== $iy) return $ix <=> $iy;
   return strcmp((string) ($y["publishedAt"] ?? ""), (string) ($x["publishedAt"] ?? ""));
 });
 
@@ -192,5 +197,6 @@ echo json_encode([
   "articles" => $articles,
   "total" => count($articles),
   "via" => "espn+google-news",
+  "somenteFoto" => $somenteFoto,
   "cache" => false
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

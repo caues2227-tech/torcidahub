@@ -973,6 +973,15 @@
   async function bootNoticias() {
     mostrarSkeletonNoticias(4);
     try {
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf("torcida_noticias_global_v") === 0 && k !== "torcida_noticias_global_v10") {
+            localStorage.removeItem(k);
+            i--;
+          }
+        }
+      } catch (e) { /* ignore */ }
       if (!Live || !Live.getNoticias) {
         noticiasLive = null;
         mostrarErroNoticias();

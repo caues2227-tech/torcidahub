@@ -278,8 +278,24 @@
   }
 
   function carregar() {
-    var e = T.eu();
-    return T.api("/api/noticias?limite=50").then(pintar, function (err) {
+    return T.api("/api/noticias?limite=50", { semRedirecionar: true }).then(function (d) {
+      if (d && (d.noticias || []).length) return pintar(d);
+      return fetch("/noticias.php?modo=global&max=40").then(function (r) { return r.json(); }).then(function (x) {
+        pintar({
+          noticias: (x.articles || []).map(function (a, i) {
+            return {
+              id: a.id || i + 1,
+              titulo: a.title,
+              resumo: a.description || "",
+              imagem: a.image || "",
+              url: a.url || "#",
+              fonteNome: a.source || "Fonte",
+              publicadoEm: a.publishedAt
+            };
+          })
+        });
+      });
+    }).catch(function (err) {
       $("feed").innerHTML = T.erroBloco(err.message, "tentarRadar");
       var b = $("tentarRadar");
       if (b) b.addEventListener("click", function () { $("feed").innerHTML = T.skeleton(2); carregar(); });

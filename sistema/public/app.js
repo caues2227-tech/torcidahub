@@ -447,6 +447,7 @@
     ["Meu Clube", "/meu-clube.html", "coracao"],
     ["Jogos", "/jogos.html", "jogos"],
     ["Nação", "/feed.html", "nacao"],
+    ["Radar", "/radar.html", "radar"],
     ["Ranking", "/ranking.html", "ranking"],
     ["Bot", "/chatbot.html", "bot"]
   ];

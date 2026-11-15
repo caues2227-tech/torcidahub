@@ -144,13 +144,21 @@
 
   async function buscarNoticiasPhp() {
     try {
-      var res = await fetch("/noticias.php?modo=global&max=" + NOTICIAS_MAX, { credentials: "same-origin" });
+      /* Preferir /api/noticias (ESPN com foto real); fallback noticias.php */
+      var res = await fetch("/api/noticias?limite=" + NOTICIAS_MAX, { credentials: "same-origin" });
+      if (res.ok) {
+        var dataApi = await res.json();
+        var artsApi = dataApi.noticias || dataApi.articles || [];
+        var mappedApi = mapArticles(artsApi, "api");
+        if (mappedApi.length >= 4) return mappedApi;
+      }
+      res = await fetch("/noticias.php?modo=global&max=" + NOTICIAS_MAX, { credentials: "same-origin" });
       if (!res.ok) throw new Error("noticias.php HTTP " + res.status);
       var data = await res.json();
       if (!data.articles || !data.articles.length) throw new Error("Sem resultados PHP");
       return mapArticles(data.articles, "php");
     } catch (e) {
-      console.warn("noticias.php falhou:", e && e.message ? e.message : e);
+      console.warn("noticias PHP falhou:", e && e.message ? e.message : e);
       return null;
     }
   }

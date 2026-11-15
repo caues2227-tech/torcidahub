@@ -64,12 +64,14 @@ function imagem_valida($url) {
   if (strpos($url, "http") !== 0) return false;
   $u = mb_strtolower($url);
 
+  /* Ícone genérico do Google News (várias variações do mesmo asset) */
+  if (strpos($u, "j6_cofb") !== false) return false;
+  if (strpos($u, "googleusercontent.com") !== false) return false;
+  if (strpos($u, "gstatic.com") !== false) return false;
+  if (strpos($u, "news.google.com") !== false) return false;
+
   $bloqueios = [
-    "j6_cofbogxhri9im864nl_ligxvsQp2",
-    "j6_cofbogxhri9im864nl_ligxvsqp2",
     "encrypted-tbn",
-    "news.google.com/",
-    "gstatic.com/images",
     "favicon",
     "sprite",
     "1x1",
@@ -87,16 +89,6 @@ function imagem_valida($url) {
   ];
   foreach ($bloqueios as $b) {
     if (strpos($u, $b) !== false) return false;
-  }
-
-  /* stub curto do Google (ícone genérico sem path de proxy) */
-  if (strpos($u, "googleusercontent.com") !== false) {
-    if (preg_match('#googleusercontent\.com/[A-Za-z0-9_-]{8,60}$#', $url)) return false;
-    if (strpos($u, "/proxy") === false && strpos($u, "=s") === false && strpos($u, "w=") === false) {
-      /* muitos stubs do News são path curto sem query */
-      $path = parse_url($url, PHP_URL_PATH) ?: "";
-      if (strlen(basename($path)) < 48 && substr_count($path, "/") <= 1) return false;
-    }
   }
 
   return true;
@@ -252,45 +244,44 @@ foreach ($ligas as $liga) {
   }
 }
 
-/* 2) Google News — só entra com og:image válido do publisher */
-$consultas = $modo === "clube" && !empty($_GET["time"])
-  ? [trim((string) $_GET["time"]) . " futebol"]
-  : [
-      "brasileirão OR futebol brasil",
-      "flamengo OR palmeiras OR corinthians OR santos",
-      "real madrid OR barcelona OR champions league",
-      "mercado da bola OR contratação futebol"
-    ];
-
+/* 2) Google News — só se ESPN não encheu; exige og:image real do publisher */
 $gPendentes = [];
-foreach ($consultas as $q) {
-  if (count($articles) + count($gPendentes) >= $max + 40) break;
-  $url = "https://news.google.com/rss/search?q=" . rawurlencode($q) . "&hl=pt-BR&gl=BR&ceid=BR:pt-419";
-  list($xml) = baixar($url, 10);
-  foreach (parse_rss($xml) as $a) {
-    $k = mb_strtolower(mb_substr($a["title"], 0, 48));
-    if ($k === "" || isset($vistos[$k])) continue;
-    $vistos[$k] = true;
-    if (!empty($a["image"]) && imagem_valida($a["image"])) {
-      $articles[] = $a;
-    } else {
-      $gPendentes[] = $a;
+if (count($articles) < $max) {
+  $consultas = $modo === "clube" && !empty($_GET["time"])
+    ? [trim((string) $_GET["time"]) . " futebol"]
+    : [
+        "brasileirão OR futebol brasil",
+        "flamengo OR palmeiras OR corinthians OR santos",
+        "real madrid OR barcelona OR champions league"
+      ];
+
+  foreach ($consultas as $q) {
+    if (count($articles) + count($gPendentes) >= $max + 20) break;
+    $url = "https://news.google.com/rss/search?q=" . rawurlencode($q) . "&hl=pt-BR&gl=BR&ceid=BR:pt-419";
+    list($xml) = baixar($url, 10);
+    foreach (parse_rss($xml) as $a) {
+      $k = mb_strtolower(mb_substr($a["title"], 0, 48));
+      if ($k === "" || isset($vistos[$k])) continue;
+      $vistos[$k] = true;
+      if (!empty($a["image"]) && imagem_valida($a["image"])) {
+        $articles[] = $a;
+      } else {
+        $gPendentes[] = $a;
+      }
     }
   }
-}
 
-/* 3) Resolve og:image (publisher) — máx. 18 tentativas */
-$tentativas = 0;
-foreach ($gPendentes as $a) {
-  if (count($articles) >= $max + 10) break;
-  if ($tentativas >= 18) break;
-  $tentativas++;
-  $alvo = $a["url"];
-  list($img, $finalUrl) = og_image($alvo);
-  if ($finalUrl) $a["url"] = $finalUrl;
-  if ($img && imagem_valida($img)) {
-    $a["image"] = $img;
-    $articles[] = $a;
+  $tentativas = 0;
+  foreach ($gPendentes as $a) {
+    if (count($articles) >= $max) break;
+    if ($tentativas >= 12) break;
+    $tentativas++;
+    list($img, $finalUrl) = og_image($a["url"]);
+    if ($finalUrl) $a["url"] = $finalUrl;
+    if ($img && imagem_valida($img)) {
+      $a["image"] = $img;
+      $articles[] = $a;
+    }
   }
 }
 

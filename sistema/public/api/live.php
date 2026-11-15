@@ -122,7 +122,8 @@ function crest_map() {
     "Flamengo" => 819, "Palmeiras" => 2029, "Corinthians" => 874, "São Paulo" => 2026,
     "Santos" => 2674, "Fluminense" => 3445, "Botafogo" => 6086, "Vasco" => 3454,
     "Grêmio" => 6273, "Internacional" => 1936, "Atlético-MG" => 7632, "Cruzeiro" => 2022,
-    "Bahia" => 9967, "Vitória" => 3457, "Athletico-PR" => 3458, "Fortaleza" => 6272,
+    "Bahia" => 9967, "Vitória" => 3457, "Athletico-PR" => 3458, "Athletico Paranaense" => 3458,
+    "CAP" => 3458, "Fortaleza" => 6272,
     "Bragantino" => 6079, "Mirassol" => 9169, "Cuiabá" => 17313, "Juventude" => 6270,
     "Real Madrid" => 86, "Barcelona" => 83, "PSG" => 160, "Manchester City" => 382,
     "Manchester United" => 360, "Liverpool" => 364, "Chelsea" => 363, "Arsenal" => 359,
@@ -135,6 +136,10 @@ function crest_map() {
 function crest_id($nome) {
   $map = crest_map();
   if (isset($map[$nome])) return (int) $map[$nome];
+  /* Aliases (Athletico Paranaense ↔ Athletico-PR, etc.) */
+  foreach ($map as $k => $id) {
+    if (nome_bate($k, $nome)) return (int) $id;
+  }
   $n = mb_strtolower(trim((string) $nome));
   foreach ($map as $k => $id) {
     if (mb_stripos($n, mb_strtolower($k)) !== false || mb_stripos(mb_strtolower($k), $n) !== false) {

@@ -12,12 +12,27 @@
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/archivo-latin-wght-normal.woff2" />
-  <link rel="stylesheet" href="/css/fonts.css?v=26" />
-  <link rel="stylesheet" href="/estilos.css?v=26" />
-  <link rel="stylesheet" href="/css/tokens.css?v=26" />
-  <link rel="stylesheet" href="/css/base.css?v=26" />
-  <link rel="stylesheet" href="/css/portal.css?v=26" />
-  <script src="/tema.js?v=26"></script>
+  <link rel="stylesheet" href="/css/fonts.css?v=27" />
+  <link rel="stylesheet" href="/estilos.css?v=27" />
+  <link rel="stylesheet" href="/css/tokens.css?v=27" />
+  <link rel="stylesheet" href="/css/base.css?v=27" />
+  <link rel="stylesheet" href="/css/portal.css?v=27" />
+  <script src="/tema.js?v=27"></script>
+  <script>
+    /* Boot imediato: começa o fetch do portal no head, sem depender de app.js */
+    (function () {
+      var time = "Santos";
+      try {
+        var prefs = JSON.parse(localStorage.getItem("torcida.prefs") || "null");
+        var sess = JSON.parse(localStorage.getItem("torcida.sessao") || "null");
+        var clube = JSON.parse(localStorage.getItem("torcida_clube") || "null");
+        time = (sess && sess.time) || (prefs && prefs.time) || (clube && clube.nome) || time;
+      } catch (e) {}
+      window.__torcidaPortalBoot = fetch("/api/portal", {
+        headers: { "X-Torcida-Time": time, "Accept": "application/json" }
+      }).then(function (r) { return r.json(); }).catch(function () { return null; });
+    })();
+  </script>
 </head>
 <body class="pagina-portal">
   <a class="pular" href="#principal">Ir para o conteúdo</a>
@@ -27,10 +42,10 @@
     <section class="hoje-hero" id="hero" aria-labelledby="titulo">
       <p class="hoje-rotulo rotulo" id="rotuloHero" hidden><i class="ponto-vivo" hidden id="pontoVivo"></i><span id="rotuloTxt">Ao vivo</span></p>
       <div class="hoje-placar num-display" id="placarHero" hidden aria-live="polite"></div>
-      <div data-reveal>
-        <h1 class="hoje-titulo titulo-display" id="titulo"><span class="mask-linha"><span>Tudo do clube, agora</span></span></h1>
+      <div>
+        <h1 class="hoje-titulo titulo-display" id="titulo">Tudo do clube, agora</h1>
       </div>
-      <p class="hoje-sub" id="lead">Resumo real do seu clube: tabela, próximo jogo e notícias.</p>
+      <p class="hoje-sub" id="lead">Carregando jogos e tabela do seu clube…</p>
       <p class="hoje-atualizado" id="atualizado" hidden></p>
       <div class="ticker-vivo" id="ticker" hidden><div class="ticker-pista" id="tickerPista"></div></div>
     </section>
@@ -85,14 +100,54 @@
   </div>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
-  <!-- Crítico: app → portal. Motion/chat/GSAP só depois. -->
-  <script src="/js/vendor-loader.js?v=26"></script>
-  <script src="/app.js?v=26" defer></script>
-  <script src="/auth.js?v=26" defer></script>
-  <script src="/js/dados-estaticos.js?v=26" defer></script>
-  <script src="/js/nav.js?v=26" defer></script>
-  <script src="/portal.js?v=26" defer></script>
-  <script defer>
+
+  <script src="/js/vendor-loader.js?v=27"></script>
+  <script src="/app.js?v=27"></script>
+  <script src="/auth.js?v=27"></script>
+  <script src="/js/dados-estaticos.js?v=27"></script>
+  <script src="/js/nav.js?v=27"></script>
+  <script src="/portal.js?v=27"></script>
+  <script>
+    /* Se portal.js falhar, pinta um fallback mínimo com o boot do head */
+    (function () {
+      function fallback() {
+        var boot = window.__torcidaPortalBoot;
+        if (!boot) return;
+        boot.then(function (p) {
+          if (!p || !p.clube) return;
+          var hojeEl = document.getElementById("hoje");
+          if (hojeEl && hojeEl.querySelector(".esqueleto")) {
+            var nome = (p.clube && p.clube.nome) || "seu clube";
+            var tit = document.getElementById("titulo");
+            if (tit) tit.textContent = "Tudo do " + nome + ", agora";
+            var lead = document.getElementById("lead");
+            if (lead) lead.textContent = "Tabela e jogos do " + nome + ".";
+            var clube = document.getElementById("clube");
+            if (clube) {
+              var tab = p.clube.tabela || {};
+              clube.innerHTML = "<div class=\"holo-topo\"><div><p class=\"rotulo\">Seu clube</p><h2>" + nome + "</h2>" +
+                "<p class=\"muted pequeno\">" + (tab.posicao ? tab.posicao + "º · " + tab.pontos + " pts" : "") + "</p></div></div>";
+            }
+            var jogos = p.jogosHoje || [];
+            hojeEl.innerHTML = jogos.length
+              ? jogos.slice(0, 6).map(function (j) {
+                  return "<div class=\"card-jogo\"><strong>" + (j.mandante || "") + " x " + (j.visitante || "") + "</strong>" +
+                    "<span>" + (j.horario || j.status || "") + "</span></div>";
+                }).join("")
+              : "<div class=\"hoje-vazio\">Sem jogos listados agora. <a href=\"/jogos.html\">Ver agenda</a></div>";
+            var trilho = document.getElementById("trilho");
+            if (trilho && jogos.length) {
+              trilho.innerHTML = jogos.slice(0, 10).map(function (j) {
+                return "<span class=\"trilho-chip\">" + (j.mandante || "") + " x " + (j.visitante || "") + "</span>";
+              }).join("");
+            }
+          }
+        }).catch(function () {});
+      }
+      setTimeout(fallback, 3200);
+    })();
+  </script>
+  <script>
     (function () {
       function load(src) {
         var s = document.createElement("script");
@@ -103,12 +158,12 @@
       function depois() {
         load("/js/vendor/gsap.min.js");
         load("/js/vendor/lenis.min.js");
-        load("/js/motion.js?v=26");
-        load("/js/notif.js?v=26");
-        load("/chat.js?v=26");
+        load("/js/motion.js?v=27");
+        load("/js/notif.js?v=27");
+        load("/chat.js?v=27");
       }
-      if ("requestIdleCallback" in window) requestIdleCallback(depois, { timeout: 1800 });
-      else setTimeout(depois, 400);
+      if ("requestIdleCallback" in window) requestIdleCallback(depois, { timeout: 2500 });
+      else setTimeout(depois, 600);
     })();
   </script>
 </body>

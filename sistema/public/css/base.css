@@ -39,7 +39,8 @@ body {
 }
 
 .mask-linha { overflow: hidden; display: block; }
-.mask-linha > span { display: block; transform: translateY(110%); }
+/* Visível por padrão — GSAP só anima se quiser; sem GSAP o título não some */
+.mask-linha > span { display: block; transform: none; }
 
 /* Nav */
 .topo {

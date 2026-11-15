@@ -2,10 +2,15 @@
 (function () {
   "use strict";
   var T = window.Torcida;
+  if (!T) {
+    console.error("[portal] Torcida app.js não carregou");
+    return;
+  }
   var esc = T.esc;
   var $ = function (id) { return document.getElementById(id); };
   var ultimoPortal = null;
   var clubesCache = [];
+  var ctrl = null;
 
   function splitHora(txt) {
     var m = String(txt || "").match(/(\d{1,2}):(\d{2})/);
@@ -19,7 +24,6 @@
 
   function pintarPlacar(p) {
     var e = T.eu();
-    /* Só placar ao vivo do SEU clube — nunca inventa 0:1 de outro jogo */
     var vivo = (p.jogosHoje || []).concat(p.extra || []).filter(function (j) {
       return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
     })[0];
@@ -28,21 +32,24 @@
     var ponto = $("pontoVivo");
     var placar = $("placarHero");
     var atualizado = $("atualizado");
+    if (!hero || !rotulo || !placar) return;
 
     if (vivo) {
       hero.classList.add("ao-vivo-modo");
       rotulo.hidden = false;
       rotulo.classList.add("vivo");
-      ponto.hidden = false;
-      $("rotuloTxt").textContent = "Ao vivo";
+      if (ponto) ponto.hidden = false;
+      if ($("rotuloTxt")) $("rotuloTxt").textContent = "Ao vivo";
       placar.hidden = false;
       placar.innerHTML =
         '<span class="num-display">' + (vivo.placarMandante != null ? vivo.placarMandante : "0") + "</span>" +
         '<span class="pisca">:</span>' +
         '<span class="num-display">' + (vivo.placarVisitante != null ? vivo.placarVisitante : "0") + "</span>";
-      $("ticker").hidden = false;
+      if ($("ticker")) $("ticker").hidden = false;
       var evt = (vivo.mandante || "") + " " + (vivo.placarMandante || 0) + "–" + (vivo.placarVisitante || 0) + " " + (vivo.visitante || "");
-      $("tickerPista").innerHTML = "<span>" + esc(evt) + " · bola rolando</span><span>" + esc(evt) + " · bola rolando</span>";
+      if ($("tickerPista")) {
+        $("tickerPista").innerHTML = "<span>" + esc(evt) + " · bola rolando</span><span>" + esc(evt) + " · bola rolando</span>";
+      }
       if (atualizado) {
         atualizado.hidden = false;
         if (p.atualizadoEm) {
@@ -53,10 +60,10 @@
       hero.classList.remove("ao-vivo-modo");
       rotulo.hidden = true;
       rotulo.classList.remove("vivo");
-      ponto.hidden = true;
+      if (ponto) ponto.hidden = true;
       placar.hidden = true;
       placar.innerHTML = "";
-      $("ticker").hidden = true;
+      if ($("ticker")) $("ticker").hidden = true;
       if (atualizado) { atualizado.hidden = true; atualizado.textContent = ""; }
     }
   }
@@ -67,6 +74,8 @@
   }
 
   function pintarClube(p) {
+    var box = $("clube");
+    if (!box) return;
     var e = T.eu();
     var c = p.clube || {};
     var tab = c.tabela || {};
@@ -75,7 +84,7 @@
     var saldoTxt = saldo == null ? "–" : (saldo > 0 ? "+" : "") + saldo;
     var saldoNorm = saldo == null ? 0 : Math.min(100, Math.round(((Number(saldo) + 30) / 60) * 100));
 
-    $("clube").innerHTML =
+    box.innerHTML =
       '<i class="canto tl"></i><i class="canto tr"></i><i class="canto bl"></i><i class="canto br"></i>' +
       '<div class="holo-topo">' +
       '<div class="holo-anel">' + T.escudo(c.escudo, c.nome || e.time, "") + "</div>" +
@@ -103,42 +112,52 @@
   }
 
   function pintar(p) {
+    if (!p) return;
     ultimoPortal = p;
     var e = T.eu();
-    if (p.tema && p.tema.cores) T.aplicarTema(p.tema.cores, e.time);
+    try {
+      if (p.tema && p.tema.cores) T.aplicarTema(p.tema.cores, e.time);
+    } catch (errTema) { /* tema opcional */ }
+
     var meuVivo = (p.jogosHoje || []).concat(p.extra || []).some(function (j) {
       return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
     });
     document.title = (meuVivo ? "(ao vivo) " : "") + "Hoje | Torcida";
 
-    $("titulo").innerHTML = '<span class="mask-linha"><span>Tudo do ' + esc(e.time) + ", agora</span></span>";
-    if (window.TorcidaMotion) TorcidaMotion.mascaras();
-    $("lead").textContent = meuVivo
-      ? "Seu clube tá em campo. Placar real, sem inventar."
-      : "Sem jogo do " + e.time + " agora. Tabela, próximo confronto e notícias abaixo.";
-    $("dataHoje").textContent = "Hoje · " + String(p.data || "").split("-").reverse().join("/");
+    if ($("titulo")) {
+      $("titulo").textContent = "Tudo do " + e.time + ", agora";
+    }
+    if ($("lead")) {
+      $("lead").textContent = meuVivo
+        ? "Seu clube tá em campo. Placar real, sem inventar."
+        : "Sem jogo do " + e.time + " agora. Tabela, próximo confronto e notícias abaixo.";
+    }
+    if ($("dataHoje")) {
+      $("dataHoje").textContent = "Hoje · " + String(p.data || "").split("-").reverse().join("/");
+    }
 
     pintarPlacar(p);
     pintarClube(p);
 
     var m = p.manchete;
     var cm = $("manchete");
-    var imgOk = m && m.imagem && String(m.imagem).indexOf("http") === 0 &&
-      String(m.imagem).toLowerCase().indexOf("j6_cofb") < 0;
-    if (m && imgOk) {
-      cm.hidden = false;
-      cm.href = T.hrefSeguro(m.url);
-      cm.innerHTML =
-        '<div class="foto"><img src="' + esc(m.imagem) + '" alt="" loading="lazy" data-some data-parallax onerror="this.closest(\'#manchete\').hidden=true"></div>' +
-        '<div class="corpo"><p class="rotulo">' + esc(m.fonteNome || "redação") + (m.time ? " · " + esc(m.time) : "") + "</p>" +
-        "<h2>" + esc(m.titulo) + "</h2><p>" + esc((m.resumo || "").slice(0, 180)) + "</p>" +
-        '<p class="destaque-meta">' + esc(m.fonteNome || "") + (m.publicadoEm ? " · " + esc(T.tempoRelativo(m.publicadoEm)) : "") + "</p></div>";
-    } else cm.hidden = true;
+    if (cm) {
+      var imgOk = m && m.imagem && String(m.imagem).indexOf("http") === 0 &&
+        String(m.imagem).toLowerCase().indexOf("j6_cofb") < 0;
+      if (m && imgOk) {
+        cm.hidden = false;
+        cm.href = T.hrefSeguro(m.url);
+        cm.innerHTML =
+          '<div class="foto"><img src="' + esc(m.imagem) + '" alt="" loading="lazy" onerror="this.closest(\'#manchete\').hidden=true"></div>' +
+          '<div class="corpo"><p class="rotulo">' + esc(m.fonteNome || "redação") + (m.time ? " · " + esc(m.time) : "") + "</p>" +
+          "<h2>" + esc(m.titulo) + "</h2><p>" + esc((m.resumo || "").slice(0, 180)) + "</p></div>";
+      } else cm.hidden = true;
+    }
 
-    if (p.resumo && p.resumo.texto) {
+    if (p.resumo && p.resumo.texto && $("resumoCard")) {
       $("resumoCard").hidden = false;
-      $("resumoEscudo").innerHTML = T.escudo(p.resumo.escudo, e.time, "p");
-      $("resumoTexto").textContent = p.resumo.texto;
+      if ($("resumoEscudo")) $("resumoEscudo").innerHTML = T.escudo(p.resumo.escudo, e.time, "p");
+      if ($("resumoTexto")) $("resumoTexto").textContent = p.resumo.texto;
     }
 
     var hoje = p.jogosHoje || [];
@@ -156,7 +175,7 @@
         return true;
       });
     }
-    /* Destaque ao vivo só do clube do usuário */
+
     var aoVivo = uniq(hoje.concat(extra).filter(function (j) {
       return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
     }));
@@ -164,44 +183,53 @@
     var deHoje = uniq(hoje.concat(extra).filter(function (j) {
       return j.status !== "ao vivo" && jogoDoMeuTime(j, e.time);
     }));
-    /* Outros jogos do dia (sem inventar placar do seu time) */
     vistos = {};
     var ligaHoje = uniq(hoje.concat(extra).filter(function (j) {
       return j.status !== "ao vivo" && !jogoDoMeuTime(j, e.time);
     }));
 
-    $("secAoVivo").hidden = !aoVivo.length;
-    $("aoVivoGrade").innerHTML = aoVivo.map(function (j) { return T.cardJogo(j, { quente: true }); }).join("");
+    if ($("secAoVivo")) $("secAoVivo").hidden = !aoVivo.length;
+    if ($("aoVivoGrade")) {
+      $("aoVivoGrade").innerHTML = aoVivo.map(function (j) { return T.cardJogo(j, { quente: true }); }).join("");
+    }
 
     var trilhoFonte = aoVivo.concat(deHoje).concat(ligaHoje).slice(0, 14);
-    $("trilhoTitulo").textContent = aoVivo.length
-      ? "Seu clube ao vivo"
-      : (deHoje.length ? "Jogo do seu clube hoje" : (ligaHoje.length ? "Outros jogos de hoje" : "Em breve"));
-    $("trilho").innerHTML = trilhoFonte.length
-      ? trilhoFonte.map(function (j) {
-          return '<a class="trilho-chip' + (j.status === "ao vivo" ? " vivo" : "") + '" href="' + esc(T.hrefJogo(j)) + '">' +
-            (j.status === "ao vivo" ? '<span class="chip-live">LIVE</span>' : "") +
-            T.escudo(j.escudoMandante || j.escudoCasa, j.mandante, "p") +
-            "<span>" + esc(j.mandante) + " x " + esc(j.visitante) + "</span>" +
-            T.escudo(j.escudoVisitante || j.escudoFora, j.visitante, "p") +
-            "</a>";
-        }).join("")
-      : '<span class="muted pequeno">Sem jogo do ' + esc(e.time) + " hoje — confira os próximos abaixo.</span>';
+    if ($("trilhoTitulo")) {
+      $("trilhoTitulo").textContent = aoVivo.length
+        ? "Seu clube ao vivo"
+        : (deHoje.length ? "Jogo do seu clube hoje" : (ligaHoje.length ? "Outros jogos de hoje" : "Em breve"));
+    }
+    if ($("trilho")) {
+      $("trilho").innerHTML = trilhoFonte.length
+        ? trilhoFonte.map(function (j) {
+            return '<a class="trilho-chip' + (j.status === "ao vivo" ? " vivo" : "") + '" href="' + esc(T.hrefJogo(j)) + '">' +
+              (j.status === "ao vivo" ? '<span class="chip-live">LIVE</span>' : "") +
+              T.escudo(j.escudoMandante || j.escudoCasa, j.mandante, "p") +
+              "<span>" + esc(j.mandante) + " x " + esc(j.visitante) + "</span>" +
+              T.escudo(j.escudoVisitante || j.escudoFora, j.visitante, "p") +
+              "</a>";
+          }).join("")
+        : '<span class="muted pequeno">Sem jogo do ' + esc(e.time) + " hoje — confira os próximos abaixo.</span>";
+    }
 
-    if (aoVivo.length || deHoje.length) {
-      $("hoje").innerHTML = aoVivo.concat(deHoje).map(function (j) { return T.cardJogo(j, { quente: j.status === "ao vivo" }); }).join("");
-    } else {
-      $("hoje").innerHTML = '<div class="hoje-vazio" style="grid-column:1/-1">O ' + esc(e.time) + ' não joga hoje. <a class="com-ponto" href="/jogos.html">Ver agenda</a></div>';
+    if ($("hoje")) {
+      if (aoVivo.length || deHoje.length) {
+        $("hoje").innerHTML = aoVivo.concat(deHoje).map(function (j) { return T.cardJogo(j, { quente: j.status === "ao vivo" }); }).join("");
+      } else {
+        $("hoje").innerHTML = '<div class="hoje-vazio" style="grid-column:1/-1">O ' + esc(e.time) + ' não joga hoje. <a class="com-ponto" href="/jogos.html">Ver agenda</a></div>';
+      }
     }
 
     var meusProximos = (proximos || []).filter(function (j) { return jogoDoMeuTime(j, e.time); });
     var listaProx = meusProximos.length ? meusProximos : proximos;
-    $("secProximos").hidden = !listaProx.length;
-    $("proximosGrade").innerHTML = listaProx.map(function (j) {
-      return T.cardJogo(j, { mostrarData: true, hoje: p.data });
-    }).join("");
-    if (!aoVivo.length && !deHoje.length && listaProx.length) {
-      $("trilhoTitulo").textContent = "Próximos do " + e.time;
+    if ($("secProximos")) $("secProximos").hidden = !listaProx.length;
+    if ($("proximosGrade")) {
+      $("proximosGrade").innerHTML = listaProx.map(function (j) {
+        return T.cardJogo(j, { mostrarData: true, hoje: p.data });
+      }).join("");
+    }
+    if (!aoVivo.length && !deHoje.length && listaProx.length && $("trilho")) {
+      if ($("trilhoTitulo")) $("trilhoTitulo").textContent = "Próximos do " + e.time;
       $("trilho").innerHTML = listaProx.slice(0, 12).map(function (j) {
         return '<a class="trilho-chip" href="' + esc(T.hrefJogo(j)) + '">' +
           T.escudo(j.escudoMandante || j.escudoCasa, j.mandante, "p") +
@@ -214,6 +242,7 @@
 
   function ligarTrilhoDrag() {
     var el = $("trilho");
+    if (!el) return;
     var down = false, startX = 0, scroll = 0;
     el.addEventListener("mousedown", function (ev) {
       down = true; startX = ev.pageX; scroll = el.scrollLeft; el.style.cursor = "grabbing";
@@ -226,25 +255,24 @@
   }
 
   function abrirTroca() {
+    if (!$("trocaTela")) return;
     $("trocaTela").hidden = false;
     document.body.style.overflow = "hidden";
     carregarClubes().then(pintarTroca);
   }
   function fecharTroca() {
-    $("trocaTela").hidden = true;
+    if ($("trocaTela")) $("trocaTela").hidden = true;
     document.body.style.overflow = "";
   }
 
   function carregarClubes() {
     if (clubesCache.length) return Promise.resolve(clubesCache);
     return T.api("/api/clubes?pais=Brasil", { semRedirecionar: true }).then(function (d) {
-      clubesCache = (d.clubes || d || []).filter(function (c) {
-        return c && c.nome;
-      });
+      clubesCache = (d.clubes || d || []).filter(function (c) { return c && c.nome; });
       if (!Array.isArray(clubesCache)) clubesCache = [];
       return clubesCache;
     }).catch(function () {
-      clubesCache = ["Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos", "Grêmio", "Internacional", "Cruzeiro", "Atlético-MG", "Botafogo", "Fluminense", "Vasco", "Bahia", "Fortaleza", "Athletico-PR", "Bragantino", "Cuiabá", "Vitória", "Juventude", "Criciúma"].map(function (n) {
+      clubesCache = ["Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos", "Grêmio", "Internacional", "Cruzeiro", "Atlético-MG", "Botafogo", "Fluminense", "Vasco", "Bahia", "Fortaleza", "Athletico-PR", "Bragantino", "Cuiabá", "Vitória", "Juventude"].map(function (n) {
         return { nome: n };
       });
       return clubesCache;
@@ -252,7 +280,8 @@
   }
 
   function pintarTroca() {
-    var q = ($("trocaBusca").value || "").trim().toLowerCase();
+    if (!$("trocaGrade")) return;
+    var q = (($("trocaBusca") && $("trocaBusca").value) || "").trim().toLowerCase();
     var tab = (ultimoPortal && ultimoPortal.tabela) || [];
     var lista = clubesCache.filter(function (c) {
       return !q || String(c.nome).toLowerCase().indexOf(q) >= 0;
@@ -290,20 +319,13 @@
     });
   }
 
-  $("trocaFechar").addEventListener("click", fecharTroca);
-  $("trocaBusca").addEventListener("input", pintarTroca);
-  $("trocaGrade").addEventListener("click", function (ev) {
-    var b = ev.target.closest("[data-time]");
-    if (b) escolherClube(b.getAttribute("data-time"));
-  });
-
-  ligarTrilhoDrag();
-
   function mostrarErro(e) {
     if (e && e.name === "AbortError") return;
-    $("hoje").innerHTML = '<div style="grid-column:1/-1">' + T.erroBloco(e && e.message, "tentarPortal") + "</div>";
-    var b = $("tentarPortal");
-    if (b) b.addEventListener("click", function () { ctrl.agora(); });
+    if ($("hoje")) {
+      $("hoje").innerHTML = '<div style="grid-column:1/-1">' + T.erroBloco(e && e.message, "tentarPortal") + "</div>";
+      var b = $("tentarPortal");
+      if (b && ctrl) b.addEventListener("click", function () { ctrl.agora(); });
+    }
   }
 
   function lerCacheLocal() {
@@ -327,20 +349,51 @@
     } catch (e) { /* quota */ }
   }
 
+  function buscarPortal() {
+    /* Nunca espera prefetch infinito — timeout 2.5s e cai no /api/portal */
+    var early = window.__torcidaPortalEarly || window.__torcidaPortalBoot;
+    window.__torcidaPortalEarly = null;
+    window.__torcidaPortalBoot = null;
+
+    var api = function () { return T.api("/api/portal", { semRedirecionar: true }); };
+
+    if (!early) return api();
+
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true;
+        api().then(resolve, reject);
+      }, 2500);
+
+      Promise.resolve(early).then(function (p) {
+        if (done) return;
+        if (p && (p.jogosHoje || p.clube)) {
+          done = true;
+          clearTimeout(timer);
+          resolve(p);
+        } else {
+          done = true;
+          clearTimeout(timer);
+          api().then(resolve, reject);
+        }
+      }, function () {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        api().then(resolve, reject);
+      });
+    });
+  }
+
   function carregarPortal() {
     var local = lerCacheLocal();
-    if (local) pintar(local);
+    if (local) {
+      try { pintar(local); } catch (e0) { /* cache velho */ }
+    }
 
-    var early = window.__torcidaPortalEarly;
-    window.__torcidaPortalEarly = null;
-    var req = early
-      ? Promise.resolve(early).then(function (p) {
-          if (p && (p.jogosHoje || p.clube)) return p;
-          return T.api("/api/portal", { semRedirecionar: true });
-        })
-      : T.api("/api/portal", { semRedirecionar: true });
-
-    return req.then(function (p) {
+    return buscarPortal().then(function (p) {
       gravarCacheLocal(p);
       pintar(p);
     }, function (err) {
@@ -351,6 +404,25 @@
     });
   }
 
-  var ctrl = T.atualizar(function () { return carregarPortal(); }, 90000);
-  T.aoVivo(function (d) { if (d.tipo === "gol" || d.tipo === "status") ctrl.agora(); });
+  /* Boot: dados primeiro; UI secundária não pode travar a carga */
+  try {
+    ctrl = T.atualizar(function () { return carregarPortal(); }, 90000);
+  } catch (bootErr) {
+    console.error("[portal] boot", bootErr);
+    carregarPortal();
+  }
+
+  try {
+    if ($("trocaFechar")) $("trocaFechar").addEventListener("click", fecharTroca);
+    if ($("trocaBusca")) $("trocaBusca").addEventListener("input", pintarTroca);
+    if ($("trocaGrade")) {
+      $("trocaGrade").addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-time]");
+        if (b) escolherClube(b.getAttribute("data-time"));
+      });
+    }
+    ligarTrilhoDrag();
+  } catch (uiErr) {
+    console.error("[portal] ui", uiErr);
+  }
 })();

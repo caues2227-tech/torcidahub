@@ -306,7 +306,54 @@
     if (b) b.addEventListener("click", function () { ctrl.agora(); });
   }
 
+  function pintarSoJogos(p) {
+    if (ultimoPortal) return;
+    var e = T.eu();
+    var hoje = p.jogosHoje || [];
+    var aoVivo = hoje.filter(function (j) {
+      return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
+    });
+    var deHoje = hoje.filter(function (j) {
+      return j.status !== "ao vivo" && jogoDoMeuTime(j, e.time);
+    });
+    var ligaHoje = hoje.filter(function (j) {
+      return j.status !== "ao vivo" && !jogoDoMeuTime(j, e.time);
+    });
+    $("secAoVivo").hidden = !aoVivo.length;
+    $("aoVivoGrade").innerHTML = aoVivo.map(function (j) { return T.cardJogo(j, { quente: true }); }).join("");
+    var trilhoFonte = aoVivo.concat(deHoje).concat(ligaHoje).slice(0, 14);
+    $("trilhoTitulo").textContent = aoVivo.length
+      ? "Seu clube ao vivo"
+      : (deHoje.length ? "Jogo do seu clube hoje" : (ligaHoje.length ? "Outros jogos de hoje" : "Em breve"));
+    $("trilho").innerHTML = trilhoFonte.length
+      ? trilhoFonte.map(function (j) {
+          return '<a class="trilho-chip' + (j.status === "ao vivo" ? " vivo" : "") + '" href="' + esc(T.hrefJogo(j)) + '">' +
+            (j.status === "ao vivo" ? '<span class="chip-live">LIVE</span>' : "") +
+            T.escudo(j.escudoMandante || j.escudoCasa, j.mandante, "p") +
+            "<span>" + esc(j.mandante) + " x " + esc(j.visitante) + "</span>" +
+            T.escudo(j.escudoVisitante || j.escudoFora, j.visitante, "p") +
+            "</a>";
+        }).join("")
+      : '<span class="muted pequeno">Sem jogo do ' + esc(e.time) + " hoje — confira os próximos abaixo.</span>";
+    if (aoVivo.length || deHoje.length) {
+      $("hoje").innerHTML = aoVivo.concat(deHoje).map(function (j) { return T.cardJogo(j, { quente: j.status === "ao vivo" }); }).join("");
+    } else {
+      $("hoje").innerHTML = '<div class="hoje-vazio" style="grid-column:1/-1">O ' + esc(e.time) + ' não joga hoje. <a class="com-ponto" href="/jogos.html">Ver agenda</a></div>';
+    }
+    if (p.data) $("dataHoje").textContent = T.dataCurta(p.data);
+    pintarPlacar(p);
+  }
+
   function carregarPortal() {
+    /* Jogos de hoje primeiro — some o esqueleto sem esperar tabela/agenda */
+    T.api("/api/hoje", { semRedirecionar: true }).then(function (d) {
+      pintarSoJogos({
+        data: d.data || "",
+        jogosHoje: d.jogosHoje || d.jogos || [],
+        extra: []
+      });
+    }).catch(function () {});
+
     return T.api("/api/portal", { semRedirecionar: true }).then(pintar, function (err) {
       if (err && err.name === "AbortError") return;
       if (!T.portalEstatico) return mostrarErro(err);
@@ -314,6 +361,6 @@
     });
   }
 
-  var ctrl = T.atualizar(function () { return carregarPortal(); }, 45000);
+  var ctrl = T.atualizar(function () { return carregarPortal(); }, 60000);
   T.aoVivo(function (d) { if (d.tipo === "gol" || d.tipo === "status") ctrl.agora(); });
 })();

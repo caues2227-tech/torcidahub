@@ -159,21 +159,86 @@ function letra_resultado($j, $time) {
   return $pf > $pc ? "V" : "D";
 }
 
-function ultimos_do_clube($time, $dias = 18) {
+function norm_nome_jogador($s) {
+  $s = mb_strtolower(trim((string) $s));
+  $s = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $s) ?: $s;
+  return preg_replace('/[^a-z0-9]+/', "", $s);
+}
+
+function avatar_data_uri($nome, $hex = "1e90ff") {
+  $parts = preg_split('/\s+/', trim((string) $nome));
+  $ini = "?";
+  if ($parts && $parts[0] !== "") {
+    $a = mb_strtoupper(mb_substr($parts[0], 0, 1));
+    $b = count($parts) > 1 ? mb_strtoupper(mb_substr($parts[count($parts) - 1], 0, 1)) : "";
+    $ini = $a . $b;
+  }
+  $hex = ltrim($hex, "#");
+  if (!preg_match('/^[0-9a-fA-F]{6}$/', $hex)) $hex = "1e90ff";
+  $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">' .
+    '<rect width="128" height="128" rx="64" fill="#' . $hex . '"/>' .
+    '<text x="64" y="72" text-anchor="middle" font-family="Arial,sans-serif" font-size="42" font-weight="700" fill="#f4f6fb">' .
+    htmlspecialchars($ini, ENT_QUOTES, "UTF-8") . "</text></svg>";
+  return "data:image/svg+xml;base64," . base64_encode($svg);
+}
+
+/** Agenda do time: 1 request ESPN schedule → últimos + próximos. */
+function agenda_do_clube($time) {
   $id = crest_id($time);
-  if (!$id) return [];
+  if (!$id) return ["ultimos" => [], "proximos" => [], "proximo" => null];
   $liga = espn_liga_time($time);
-  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/schedule", 12);
-  $lista = [];
+  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/schedule", 10);
+  $ultimos = [];
+  $proximos = [];
   foreach (($data["events"] ?? []) as $ev) {
     $j = evento_jogo($ev, $time);
-    if ($j["status"] !== "encerrado") continue;
-    if ($j["placarMandante"] === null || $j["placarVisitante"] === null) continue;
-    $j["letra"] = letra_resultado($j, $time);
-    $lista[] = $j;
+    if ($j["status"] === "encerrado") {
+      if ($j["placarMandante"] === null || $j["placarVisitante"] === null) continue;
+      $j["letra"] = letra_resultado($j, $time);
+      $ultimos[] = $j;
+    } else {
+      $proximos[] = $j;
+    }
   }
-  usort($lista, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
-  return array_slice($lista, 0, 10);
+  usort($ultimos, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
+  usort($proximos, function ($a, $b) { return strcmp($a["data"] . $a["horario"], $b["data"] . $b["horario"]); });
+  return [
+    "ultimos" => array_slice($ultimos, 0, 10),
+    "proximos" => array_slice($proximos, 0, 8),
+    "proximo" => $proximos[0] ?? null
+  ];
+}
+
+function ultimos_do_clube($time, $dias = 18) {
+  return agenda_do_clube($time)["ultimos"];
+}
+
+function fotos_sportsdb($time) {
+  $map = [];
+  $q = rawurlencode($time);
+  $teams = baixar_json("https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=" . $q, 6);
+  $tid = null;
+  foreach (($teams["teams"] ?? []) as $t) {
+    $league = (string) ($t["strLeague"] ?? "");
+    if (stripos($league, "Serie A") !== false || stripos($league, "Brasileiro") !== false || nome_bate($t["strTeam"] ?? "", $time)) {
+      $tid = $t["idTeam"] ?? null;
+      if (stripos($league, "Serie A") !== false) break;
+    }
+  }
+  if (!$tid) return $map;
+  $pack = baixar_json("https://www.thesportsdb.com/api/v1/json/123/lookup_all_players.php?id=" . $tid, 8);
+  foreach (($pack["player"] ?? []) as $p) {
+    $nome = trim((string) ($p["strPlayer"] ?? ""));
+    $foto = $p["strCutout"] ?: ($p["strThumb"] ?: "");
+    if ($nome === "" || $foto === "") continue;
+    $map[norm_nome_jogador($nome)] = $foto;
+    /* também chave pelo último sobrenome */
+    $parts = preg_split('/\s+/', $nome);
+    if (count($parts) > 1) {
+      $map[norm_nome_jogador($parts[count($parts) - 1])] = $foto;
+    }
+  }
+  return $map;
 }
 
 function stat_jogador($athlete, $nomeStat) {
@@ -210,16 +275,15 @@ function elenco_espn($time) {
   if (!$id) return ["jogadores" => [], "artilharia" => [], "via" => "sem-id"];
 
   $store = torcida_store_dir();
-  $cacheFile = $store . DIRECTORY_SEPARATOR . "elenco_" . $id . ".json";
+  $cacheFile = $store . DIRECTORY_SEPARATOR . "elenco_v3_" . $id . ".json";
   if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 6 * 3600) {
     $cached = json_decode(@file_get_contents($cacheFile), true);
     if (is_array($cached) && !empty($cached["jogadores"])) return $cached;
   }
 
   $liga = espn_liga_time($time);
-  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/roster", 14);
+  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/roster", 12);
   $athletes = $data["athletes"] ?? [];
-  /* às vezes vem agrupado por posição */
   if ($athletes && isset($athletes[0]["items"])) {
     $flat = [];
     foreach ($athletes as $grp) {
@@ -228,6 +292,11 @@ function elenco_espn($time) {
     $athletes = $flat;
   }
 
+  $fotosDb = fotos_sportsdb($time);
+  $tema = tema_clube($time);
+  $hex = preg_replace('/[^0-9a-fA-F]/', "", (string) ($tema["cores"]["accent"] ?? "1e90ff"));
+  if (strlen($hex) !== 6) $hex = "1e90ff";
+
   $jogadores = [];
   foreach ($athletes as $a) {
     $nome = trim((string) ($a["displayName"] ?? $a["fullName"] ?? ""));
@@ -235,6 +304,19 @@ function elenco_espn($time) {
     $pid = (string) ($a["id"] ?? "");
     $foto = "";
     if (!empty($a["headshot"]["href"])) $foto = $a["headshot"]["href"];
+    if ($foto === "") {
+      $k = norm_nome_jogador($nome);
+      if (isset($fotosDb[$k])) $foto = $fotosDb[$k];
+      else {
+        $parts = preg_split('/\s+/', $nome);
+        $ult = norm_nome_jogador($parts[count($parts) - 1] ?? "");
+        if ($ult && isset($fotosDb[$ult])) $foto = $fotosDb[$ult];
+      }
+    }
+    /* Sem foto real: avatar SVG colorido (sempre carrega) */
+    $fotoReal = $foto !== "";
+    if ($foto === "") $foto = avatar_data_uri($nome, $hex);
+
     $gols = stat_jogador($a, "totalGoals");
     $assist = stat_jogador($a, "goalAssists");
     $apps = stat_jogador($a, "appearances");
@@ -244,6 +326,7 @@ function elenco_espn($time) {
       "posicao" => posicao_pt($a),
       "numero" => (string) ($a["jersey"] ?? ""),
       "foto" => $foto,
+      "fotoReal" => $fotoReal,
       "gols" => $gols,
       "assistencias" => $assist,
       "jogos" => $apps
@@ -272,7 +355,7 @@ function elenco_espn($time) {
     "time" => $time,
     "jogadores" => $jogadores,
     "artilharia" => $artilharia,
-    "via" => "espn-roster",
+    "via" => "espn-roster+fotos",
     "atualizadoEm" => date("c")
   ];
   if ($jogadores) {
@@ -372,6 +455,12 @@ function scoreboard($ymd, $liga = "bra.1") {
 }
 
 function tabela_bra() {
+  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+  $cacheFile = torcida_store_dir() . DIRECTORY_SEPARATOR . "tabela_bra_v1.json";
+  if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 120) {
+    $cached = json_decode(@file_get_contents($cacheFile), true);
+    if (is_array($cached) && $cached) return $cached;
+  }
   $data = baixar_json("https://site.api.espn.com/apis/v2/sports/soccer/bra.1/standings");
   if (!$data) return [];
   $entries = [];
@@ -398,6 +487,9 @@ function tabela_bra() {
     ];
   }
   usort($out, function ($a, $b) { return ($a["posicao"] ?? 99) <=> ($b["posicao"] ?? 99); });
+  if ($out) {
+    @file_put_contents($cacheFile, json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+  }
   return $out;
 }
 
@@ -575,53 +667,38 @@ if ($acao === "agenda") {
 }
 
 if ($acao === "portal") {
+  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
   $hoje = hoje_sp();
-  $liga = espn_liga_time($timeUser);
-  /* Próximos 7 dias em paralelo + forma via agenda do time (1 request) */
-  $datasProx = [];
-  for ($i = 0; $i < 7; $i++) $datasProx[] = add_dias($hoje, $i);
-  $boardsProx = scoreboards_multi($datasProx, $liga, 8);
-  $evsHoje = $boardsProx[$hoje] ?? [];
-  $jogosHoje = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evsHoje);
-  $proximos = [];
-  foreach ($datasProx as $d) {
-    foreach (($boardsProx[$d] ?? []) as $ev) {
-      $j = evento_jogo($ev, $timeUser);
-      if ($j["status"] === "encerrado") continue;
-      $proximos[] = $j;
+  $cacheKey = "portal_v2_" . preg_replace('/[^a-z0-9]+/i', "_", mb_strtolower($timeUser)) . "_" . $hoje . ".json";
+  $cacheFile = torcida_store_dir() . DIRECTORY_SEPARATOR . $cacheKey;
+  if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 60) {
+    $cached = json_decode(@file_get_contents($cacheFile), true);
+    if (is_array($cached) && isset($cached["jogosHoje"])) {
+      $cached["cache"] = true;
+      ok($cached);
     }
   }
-  $ultimos = ultimos_do_clube($timeUser);
+
+  /* Leve: 1 scoreboard (hoje) + 1 schedule (agenda) + 1 standings — sem 7 dias nem news */
+  $liga = espn_liga_time($timeUser);
+  $evsHoje = scoreboard($hoje, $liga);
+  $jogosHoje = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evsHoje);
+  $agenda = agenda_do_clube($timeUser);
+  $proximos = $agenda["proximos"];
+  $ultimos = $agenda["ultimos"];
   $tabela = tabela_bra();
   $linha = null;
   foreach ($tabela as $l) {
     if (nome_bate($l["time"], $timeUser)) { $linha = $l; break; }
   }
-  $proxClube = null;
-  foreach ($proximos as $j) {
-    if ($j["quente"]) { $proxClube = $j; break; }
+  $proxClube = $agenda["proximo"];
+  if (!$proxClube) {
+    foreach ($proximos as $j) {
+      if (!empty($j["quente"])) { $proxClube = $j; break; }
+    }
   }
   $tema = tema_clube($timeUser);
-  /* Manchete opcional — 1 request; some se falhar */
-  $manchete = null;
-  $news = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/news", 6);
-  foreach (($news["articles"] ?? []) as $a) {
-    $img = $a["images"][0]["url"] ?? null;
-    if (!$img || strpos($img, "http") !== 0) continue;
-    $title = trim((string) ($a["headline"] ?? ""));
-    if ($title === "") continue;
-    $manchete = [
-      "titulo" => $title,
-      "resumo" => trim((string) ($a["description"] ?? "")),
-      "url" => $a["links"]["web"]["href"] ?? "#",
-      "imagem" => $img,
-      "fonteNome" => is_array($a["byline"] ?? null) ? "ESPN" : ($a["byline"] ?? "ESPN"),
-      "publicadoEm" => $a["published"] ?? date("c"),
-      "time" => $timeUser
-    ];
-    break;
-  }
-  ok([
+  $pack = [
     "data" => $hoje,
     "atualizadoEm" => date("c"),
     "aoVivo" => count(array_filter($jogosHoje, function ($j) { return $j["status"] === "ao vivo"; })),
@@ -629,10 +706,10 @@ if ($acao === "portal") {
     "extra" => [],
     "proximos" => array_slice($proximos, 0, 8),
     "tabela" => $tabela,
-    "meta" => ["fonte" => "ESPN", "via" => "php"],
+    "meta" => ["fonte" => "ESPN", "via" => "php-leve"],
     "noticiasMeta" => [],
     "noticias" => ["jogo" => [], "mercado" => []],
-    "manchete" => $manchete,
+    "manchete" => null,
     "resumo" => null,
     "clube" => [
       "nome" => $timeUser,
@@ -641,8 +718,11 @@ if ($acao === "portal") {
       "proximo" => $proxClube,
       "ultimos" => $ultimos
     ],
-    "tema" => $tema
-  ]);
+    "tema" => $tema,
+    "cache" => false
+  ];
+  @file_put_contents($cacheFile, json_encode($pack, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+  ok($pack);
 }
 
 if ($acao === "jogo") {

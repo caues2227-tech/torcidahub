@@ -50,7 +50,7 @@
     $("mcElenco").innerHTML = jogadores.map(function (j) {
       var ini = esc((j.nome || "?").trim().charAt(0).toUpperCase() || "?");
       var foto = j.foto
-        ? '<img src="' + esc(j.foto) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.outerHTML=\'<span class=mono-clube>' + ini + "</span>';\">"
+        ? '<img src="' + esc(j.foto) + '" alt="" width="64" height="64" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.outerHTML=\'<span class=mono-clube>' + ini + "</span>';\">"
         : T.monoClube(j.nome);
       return '<div class="elenco-item">' + foto + "<strong>" + esc(j.nome) + "</strong><span>" +
         esc(j.posicao || "") + (j.numero ? " · #" + esc(j.numero) : "") +

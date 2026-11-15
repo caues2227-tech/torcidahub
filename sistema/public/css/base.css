@@ -117,6 +117,8 @@ body {
 }
 
 .topo-direita { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+/* Sino de notificações fake removido */
+.notif-wrap, .notif-drawer, .notif-backdrop, .btn-notif { display: none !important; }
 
 /* Sino global (também em nacao.css; aqui garante todas as páginas) */
 .notif-wrap { position: relative; flex-shrink: 0; }

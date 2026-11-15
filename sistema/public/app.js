@@ -717,11 +717,6 @@
       s.defer = true;
       document.head.appendChild(s);
     }
-    if (!w.TorcidaNotif) {
-      var sn = document.createElement("script");
-      sn.src = "/js/notif.js";
-      sn.defer = true;
-      document.head.appendChild(sn);
-    }
+    /* Sino/notificações removido — era fake (badge "3") */
   }
 })(window);

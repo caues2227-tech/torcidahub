@@ -13,42 +13,51 @@
     return { h: ("0" + m[1]).slice(-2), min: m[2] };
   }
 
+  function jogoDoMeuTime(j, time) {
+    return T.nomeBate(j.mandante, time) || T.nomeBate(j.visitante, time);
+  }
+
   function pintarPlacar(p) {
     var e = T.eu();
+    /* Só placar ao vivo do SEU clube — nunca inventa 0:1 de outro jogo */
     var vivo = (p.jogosHoje || []).concat(p.extra || []).filter(function (j) {
-      return j.status === "ao vivo" && (T.nomeBate(j.mandante, e.time) || T.nomeBate(j.visitante, e.time));
+      return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
     })[0];
-    var qualquerVivo = (p.jogosHoje || []).concat(p.extra || []).filter(function (j) { return j.status === "ao vivo"; })[0];
-    var alvo = vivo || qualquerVivo;
-    var prox = (p.clube && p.clube.proximo) || (p.proximos || [])[0];
     var hero = $("hero");
     var rotulo = $("rotuloHero");
     var ponto = $("pontoVivo");
+    var placar = $("placarHero");
+    var atualizado = $("atualizado");
 
-    if (alvo) {
+    if (vivo) {
       hero.classList.add("ao-vivo-modo");
+      rotulo.hidden = false;
       rotulo.classList.add("vivo");
       ponto.hidden = false;
       $("rotuloTxt").textContent = "Ao vivo";
-      $("placarHero").innerHTML =
-        '<span class="num-display">' + (alvo.placarMandante != null ? alvo.placarMandante : "0") + "</span>" +
+      placar.hidden = false;
+      placar.innerHTML =
+        '<span class="num-display">' + (vivo.placarMandante != null ? vivo.placarMandante : "0") + "</span>" +
         '<span class="pisca">:</span>' +
-        '<span class="num-display">' + (alvo.placarVisitante != null ? alvo.placarVisitante : "0") + "</span>";
+        '<span class="num-display">' + (vivo.placarVisitante != null ? vivo.placarVisitante : "0") + "</span>";
       $("ticker").hidden = false;
-      var evt = (alvo.mandante || "") + " " + (alvo.placarMandante || 0) + "–" + (alvo.placarVisitante || 0) + " " + (alvo.visitante || "");
+      var evt = (vivo.mandante || "") + " " + (vivo.placarMandante || 0) + "–" + (vivo.placarVisitante || 0) + " " + (vivo.visitante || "");
       $("tickerPista").innerHTML = "<span>" + esc(evt) + " · bola rolando</span><span>" + esc(evt) + " · bola rolando</span>";
+      if (atualizado) {
+        atualizado.hidden = false;
+        if (p.atualizadoEm) {
+          atualizado.textContent = "placar atualizado às " + new Date(p.atualizadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        }
+      }
     } else {
       hero.classList.remove("ao-vivo-modo");
+      rotulo.hidden = true;
       rotulo.classList.remove("vivo");
       ponto.hidden = true;
-      $("rotuloTxt").textContent = "Próximo jogo";
+      placar.hidden = true;
+      placar.innerHTML = "";
       $("ticker").hidden = true;
-      var hora = prox && prox.horario ? splitHora(prox.horario) : null;
-      if (!hora) {
-        var agora = new Date();
-        hora = { h: ("0" + agora.getHours()).slice(-2), min: ("0" + agora.getMinutes()).slice(-2) };
-      }
-      $("placarHero").innerHTML = hora.h + '<span class="pisca">:</span>' + hora.min;
+      if (atualizado) { atualizado.hidden = true; atualizado.textContent = ""; }
     }
   }
 
@@ -97,18 +106,17 @@
     ultimoPortal = p;
     var e = T.eu();
     if (p.tema && p.tema.cores) T.aplicarTema(p.tema.cores, e.time);
-    document.title = (p.aoVivo ? "(" + p.aoVivo + " ao vivo) " : "") + "Hoje | Torcida";
+    var meuVivo = (p.jogosHoje || []).concat(p.extra || []).some(function (j) {
+      return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
+    });
+    document.title = (meuVivo ? "(ao vivo) " : "") + "Hoje | Torcida";
 
     $("titulo").innerHTML = '<span class="mask-linha"><span>Tudo do ' + esc(e.time) + ", agora</span></span>";
     if (window.TorcidaMotion) TorcidaMotion.mascaras();
-    $("lead").textContent = p.aoVivo
-      ? "Bola rolando no HUD. Placar e notícias atualizam sozinhos."
-      : "HUD do seu clube: placar, tabela e notícias sem inventar jogo.";
+    $("lead").textContent = meuVivo
+      ? "Seu clube tá em campo. Placar real, sem inventar."
+      : "Sem jogo do " + e.time + " agora. Tabela, próximo confronto e notícias abaixo.";
     $("dataHoje").textContent = "Hoje · " + String(p.data || "").split("-").reverse().join("/");
-    if (p.atualizadoEm) {
-      $("atualizado").textContent = "placar atualizado às " + new Date(p.atualizadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    }
-    $("onlineTxt").textContent = (1240 + (e.time.length % 40)) + " torcedores online agora";
 
     pintarPlacar(p);
     pintarClube(p);
@@ -146,15 +154,27 @@
         return true;
       });
     }
-    var aoVivo = uniq(hoje.concat(extra).filter(function (j) { return j.status === "ao vivo"; }));
+    /* Destaque ao vivo só do clube do usuário */
+    var aoVivo = uniq(hoje.concat(extra).filter(function (j) {
+      return j.status === "ao vivo" && jogoDoMeuTime(j, e.time);
+    }));
     vistos = {};
-    var deHoje = uniq(hoje.concat(extra).filter(function (j) { return j.status !== "ao vivo"; }));
+    var deHoje = uniq(hoje.concat(extra).filter(function (j) {
+      return j.status !== "ao vivo" && jogoDoMeuTime(j, e.time);
+    }));
+    /* Outros jogos do dia (sem inventar placar do seu time) */
+    vistos = {};
+    var ligaHoje = uniq(hoje.concat(extra).filter(function (j) {
+      return j.status !== "ao vivo" && !jogoDoMeuTime(j, e.time);
+    }));
 
     $("secAoVivo").hidden = !aoVivo.length;
     $("aoVivoGrade").innerHTML = aoVivo.map(function (j) { return T.cardJogo(j, { quente: true }); }).join("");
 
-    var trilhoFonte = aoVivo.concat(deHoje).slice(0, 14);
-    $("trilhoTitulo").textContent = aoVivo.length ? "Ao vivo e hoje" : (deHoje.length ? "Jogos de hoje" : "Em breve");
+    var trilhoFonte = aoVivo.concat(deHoje).concat(ligaHoje).slice(0, 14);
+    $("trilhoTitulo").textContent = aoVivo.length
+      ? "Seu clube ao vivo"
+      : (deHoje.length ? "Jogo do seu clube hoje" : (ligaHoje.length ? "Outros jogos de hoje" : "Em breve"));
     $("trilho").innerHTML = trilhoFonte.length
       ? trilhoFonte.map(function (j) {
           return '<a class="trilho-chip' + (j.status === "ao vivo" ? " vivo" : "") + '" href="' + esc(T.hrefJogo(j)) + '">' +
@@ -164,26 +184,23 @@
             T.escudo(j.escudoVisitante || j.escudoFora, j.visitante, "p") +
             "</a>";
         }).join("")
-      : '<span class="muted pequeno">Sem jogos no trilho agora — veja os próximos abaixo.</span>';
+      : '<span class="muted pequeno">Sem jogo do ' + esc(e.time) + " hoje — confira os próximos abaixo.</span>';
 
-    if (deHoje.length) {
-      $("hoje").innerHTML = deHoje.map(function (j) { return T.cardJogo(j); }).join("");
-    } else if (aoVivo.length) {
-      $("hoje").innerHTML = "";
-    } else if (proximos.length) {
-      $("hoje").innerHTML = "";
+    if (aoVivo.length || deHoje.length) {
+      $("hoje").innerHTML = aoVivo.concat(deHoje).map(function (j) { return T.cardJogo(j, { quente: j.status === "ao vivo" }); }).join("");
     } else {
-      $("hoje").innerHTML = '<div class="hoje-vazio" style="grid-column:1/-1">Sem jogos na cobertura agora. <a class="com-ponto" href="/jogos.html">Abrir agenda</a></div>';
+      $("hoje").innerHTML = '<div class="hoje-vazio" style="grid-column:1/-1">O ' + esc(e.time) + ' não joga hoje. <a class="com-ponto" href="/jogos.html">Ver agenda</a></div>';
     }
 
-    // Sem jogo hoje: sobe os próximos pro destaque (não deixa a home vazia)
-    $("secProximos").hidden = !proximos.length;
-    $("proximosGrade").innerHTML = proximos.map(function (j) {
+    var meusProximos = (proximos || []).filter(function (j) { return jogoDoMeuTime(j, e.time); });
+    var listaProx = meusProximos.length ? meusProximos : proximos;
+    $("secProximos").hidden = !listaProx.length;
+    $("proximosGrade").innerHTML = listaProx.map(function (j) {
       return T.cardJogo(j, { mostrarData: true, hoje: p.data });
     }).join("");
-    if (!aoVivo.length && !deHoje.length && proximos.length) {
-      $("trilhoTitulo").textContent = "Próximos jogos";
-      $("trilho").innerHTML = proximos.slice(0, 12).map(function (j) {
+    if (!aoVivo.length && !deHoje.length && listaProx.length) {
+      $("trilhoTitulo").textContent = "Próximos do " + e.time;
+      $("trilho").innerHTML = listaProx.slice(0, 12).map(function (j) {
         return '<a class="trilho-chip" href="' + esc(T.hrefJogo(j)) + '">' +
           T.escudo(j.escudoMandante || j.escudoCasa, j.mandante, "p") +
           "<span>" + esc(j.mandante) + " x " + esc(j.visitante) + "</span>" +

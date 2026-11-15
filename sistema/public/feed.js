@@ -650,30 +650,10 @@
     $("marquee").innerHTML = '<span data-marquee-dup>' + esc(linha) + esc(linha) + "</span>";
   }
 
-  function syncNotifSino() {
-    if (!window.TorcidaNotif || !TorcidaNotif.setNotifs) return;
-    TorcidaNotif.setNotifs((estado.notifs || []).map(function (n) {
-      return { id: n.id, emoji: n.emoji || "🔔", texto: n.texto, tempo: n.quando, lida: !!n.lida };
-    }));
-  }
-
-  function pintarNotifs() {
-    syncNotifSino();
-  }
-
-  function injetarSino() {
-    if (window.TorcidaNotif && TorcidaNotif.boot) TorcidaNotif.boot();
-    syncNotifSino();
-  }
-
-  function abrirNotif(on) {
-    /* drawer legado desativado — usa dropdown do sino */
-    var drawer = $("notifDrawer");
-    var back = $("notifBackdrop");
-    if (drawer) drawer.hidden = true;
-    if (back) back.hidden = true;
-    if (on) syncNotifSino();
-  }
+  function syncNotifSino() { /* sino removido */ }
+  function pintarNotifs() {}
+  function injetarSino() {}
+  function abrirNotif() {}
 
   function seguir(handle) {
     if (precisaConta("seguir torcedores")) return;

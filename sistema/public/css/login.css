@@ -9,7 +9,8 @@
   min-height: 100dvh;
   background: #05070c;
   overflow-x: hidden;
-  overflow-y: hidden;
+  /* Antes: hidden — em notebook a página parecia “travada” (não rolava). */
+  overflow-y: auto;
 }
 
 .auth-layout {
@@ -51,12 +52,13 @@
   position: relative;
   z-index: 10;
   margin: 40px 48px 40px auto;
-  width: min(420px, 38vw);
-  min-height: calc(100dvh - 80px);
+  width: min(420px, 36vw);
+  max-height: calc(100dvh - 48px);
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 40px 36px;
+  justify-content: flex-start;
+  padding: 32px 28px;
   background: rgba(8, 12, 22, 0.5);
   backdrop-filter: blur(28px) saturate(1.5);
   -webkit-backdrop-filter: blur(28px) saturate(1.5);
@@ -331,7 +333,7 @@
   left: 0;
   bottom: 0;
   z-index: 5;
-  width: 55%;
+  width: min(52%, calc(100% - min(420px, 36vw) - 96px));
   max-width: 640px;
   display: flex;
   flex-direction: column;
@@ -855,6 +857,28 @@
 .auth-toast.on {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* Notebook / telas baixas: evita título cortado e “página travada” */
+@media (max-width: 1280px), (max-height: 820px) {
+  .auth-form {
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+    transform: none;
+    width: min(400px, 40vw);
+    margin: 24px 24px 24px auto;
+    max-height: calc(100dvh - 32px);
+    padding: 24px 22px;
+  }
+  .auth-content {
+    width: min(50%, calc(100% - min(400px, 40vw) - 64px));
+    padding: 28px 24px;
+  }
+  .auth-title {
+    font-size: clamp(28px, 3.8vw, 52px);
+  }
+  .auth-subtitle { margin-bottom: 20px; }
+  .club-grid { max-height: 220px; }
 }
 
 /* —— Responsivo —— */

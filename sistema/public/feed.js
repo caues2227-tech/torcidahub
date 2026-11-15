@@ -4,10 +4,12 @@
   var T = window.Torcida;
   var esc = T.esc;
   var $ = function (id) { return document.getElementById(id); };
-  var KEY = "torcida.nacao.social.v6";
+  var KEY = "torcida.nacao.social.v7";
   var Live = window.TorcidaNacaoLive || null;
   var Data = window.TorcidaData || null;
   var noticiasLive = null;
+  var postsServidor = [];
+  var modoPerfil = location.hash === "#perfil";
 
   function feedEl() {
     return document.getElementById("feed-noticias") || document.getElementById("feedLista");
@@ -29,18 +31,26 @@
     var e = T.eu();
     var local = window.AUTH && AUTH.getUser && AUTH.getUser();
     var visitante = window.AUTH ? AUTH.estaVisitante() : !e.autenticado;
-    var nome = e.autenticado ? e.nome : (local && local.nome) || (visitante ? "Visitante" : "Caue Souza Marinho");
+    var nome = e.autenticado ? e.nome : (local && local.nome) || (visitante ? "Visitante" : "Torcedor");
+    var handle = e.autenticado
+      ? ("@" + (e.usuario || String(nome).toLowerCase().replace(/\s+/g, "").slice(0, 16) || "torcedor"))
+      : (visitante ? "@visitante" : "@torcedor");
+    var meusPosts = (estado && estado.posts ? estado.posts : []).filter(function (p) {
+      return p.eu || p.handle === handle;
+    }).length;
+    var seguindoN = estado && estado.following ? Object.keys(estado.following).length : 0;
     return {
-      id: "me",
+      id: e.id || "me",
       nome: nome,
-      handle: e.autenticado ? ("@" + (e.usuario || "caue")) : (visitante ? "@visitante" : "@caue"),
+      handle: handle,
       time: e.time || "Santos",
       inicial: String(nome || "V").charAt(0).toUpperCase(),
-      posts: 12,
-      seguindo: 348,
-      seguidores: 1247,
+      posts: meusPosts || (estado && estado.postsCount) || 0,
+      seguindo: seguindoN,
+      seguidores: (estado && estado.seguidoresCount) || 0,
       desde: 2024,
-      visitante: visitante
+      visitante: visitante,
+      autenticado: !!e.autenticado
     };
   }
 
@@ -167,17 +177,51 @@
 
   function carregar() {
     try {
-      var raw = localStorage.getItem(KEY);
+      var raw = localStorage.getItem(KEY) || localStorage.getItem("torcida.nacao.social.v6");
       if (raw) {
         var d = JSON.parse(raw);
-        if (d && d.posts && d.posts.length >= 30) return d;
+        if (d && typeof d === "object") {
+          d.posts = Array.isArray(d.posts) ? d.posts : [];
+          d.following = d.following || {};
+          d.interacoes = d.interacoes || {};
+          d.notifs = d.notifs || [];
+          d.sugeridos = d.sugeridos || seed().sugeridos;
+          d.topics = d.topics || seed().topics;
+          return d;
+        }
       }
     } catch (err) { /* seed */ }
-    return seed();
+    var s = seed();
+    s.interacoes = {};
+    return s;
   }
 
   function salvar() {
     try { localStorage.setItem(KEY, JSON.stringify(estado)); } catch (err) { /* quota */ }
+  }
+
+  function guardarInteracao(p) {
+    if (!p || !p.id) return;
+    estado.interacoes = estado.interacoes || {};
+    estado.interacoes[p.id] = {
+      minhaReacao: p.minhaReacao || null,
+      likes: p.likes || 0,
+      reposts: p.reposts || 0,
+      comentarios: p.comentarios || 0,
+      comentariosLista: p.comentariosLista || []
+    };
+  }
+
+  function aplicarInteracao(p) {
+    if (!p || !estado.interacoes) return p;
+    var i = estado.interacoes[p.id];
+    if (!i) return p;
+    if (i.minhaReacao) p.minhaReacao = i.minhaReacao;
+    if (i.likes != null) p.likes = i.likes;
+    if (i.reposts != null) p.reposts = i.reposts;
+    if (i.comentarios != null) p.comentarios = i.comentarios;
+    if (i.comentariosLista) p.comentariosLista = i.comentariosLista;
+    return p;
   }
 
   function mono(nome) {
@@ -266,8 +310,8 @@
       '<div class="clube-linha">' + badgeEscudo(me.time, 22) + "<span>" + esc(me.time) + "</span></div>" +
       "</div></div>" +
       '<p class="perfil-desde">Torcedor desde ' + me.desde + "</p>" +
-      '<p class="perfil-metas" id="perfilMetas">' + estado.postsCount + " posts · " + me.seguindo + " seguindo · " + me.seguidores.toLocaleString("pt-BR") + " seguidores</p>" +
-      '<button type="button" class="btn-editar-perfil" id="btnEditar">Editar perfil</button></div>' +
+      '<p class="perfil-metas" id="perfilMetas">' + me.posts + " posts · " + me.seguindo + " seguindo · " + me.seguidores + " seguidores</p>" +
+      '<button type="button" class="btn-editar-perfil" id="btnEditar">Meu perfil</button></div>' +
       '<div class="sugeridos" id="sugestoes-seguir"><h3>Sugeridos pra seguir</h3>' +
       estado.sugeridos.map(function (s) {
         var on = !!estado.following[s.handle];
@@ -324,25 +368,33 @@
   }
 
   function listaFiltrada() {
-    var lista = (noticiasLive || []).slice();
-    lista.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    var me = euSocial();
+    var noticias = (noticiasLive || []).map(aplicarInteracao);
+    var locais = (estado.posts || []).filter(function (p) {
+      return p && (p.tipo === "torcedor" || p.eu || p.texto);
+    });
+    var remotos = (postsServidor || []).filter(function (p) {
+      return !(estado.posts || []).some(function (x) { return String(x.id) === String(p.id); });
+    });
+    var lista = locais.concat(remotos).concat(noticias);
+    lista.sort(function (a, b) {
+      var ta = typeof a.ts === "number" ? a.ts : (a.ts ? Date.parse(a.ts) : 0);
+      var tb = typeof b.ts === "number" ? b.ts : (b.ts ? Date.parse(b.ts) : 0);
+      return (tb || 0) - (ta || 0);
+    });
     return lista.filter(function (p) {
       var fonte = String(p.fonte || p.nome || "").toLowerCase();
+      var blob = ((p.titulo || "") + " " + (p.resumo || "") + " " + (p.texto || "")).toLowerCase();
       if (filtro === "todas") return true;
       if (filtro === "clube") {
-        var me = euSocial();
-        var blob = ((p.titulo || "") + " " + (p.resumo || "")).toLowerCase();
-        return blob.indexOf(String(me.time || "").toLowerCase()) >= 0;
+        return blob.indexOf(String(me.time || "").toLowerCase()) >= 0 || T.nomeBate(p.time, me.time);
       }
       if (filtro === "jogo") return p.tag === "jogo" || p.secao === "jogo";
       if (filtro === "mercado") return p.tag === "mercado" || p.secao === "mercado";
       if (filtro === "ge") return fonte.indexOf("ge") >= 0 || fonte.indexOf("globo") >= 0;
       if (filtro === "terra") return fonte.indexOf("terra") >= 0;
       if (filtro === "lance") return fonte.indexOf("lance") >= 0;
-      if (filtro.indexOf("#") === 0) {
-        var txt = ((p.titulo || "") + " " + (p.resumo || "")).toLowerCase();
-        return txt.indexOf(filtro.slice(1).toLowerCase()) >= 0;
-      }
+      if (filtro.indexOf("#") === 0) return blob.indexOf(filtro.slice(1).toLowerCase()) >= 0;
       return true;
     });
   }
@@ -453,7 +505,12 @@
       '<div class="av">' + esc(euSocial().inicial) + "</div>" +
       '<input type="text" data-cmt-input="' + p.id + '" placeholder="Comentar…" maxlength="280">' +
       '<button type="button" data-cmt-enviar="' + p.id + '" disabled>Enviar</button></div>' +
-      '<div class="cmts" id="cmts-' + p.id + '"></div></div></article>';
+      '<div class="cmts" id="cmts-' + p.id + '">' +
+      ((p.comentariosLista || []).map(function (c) {
+        return '<div class="comentario"><strong>' + esc(c.nome || "?") + "</strong> " + esc(c.texto || "") +
+          '<span class="muted pequeno"> · ' + esc(c.quando || "") + "</span></div>";
+      }).join("")) +
+      "</div></div></article>";
   }
 
   function cardHtml(p) {
@@ -544,8 +601,10 @@
   function pintarFeed(animId) {
     var feed = feedEl();
     if (!feed) return;
+    if (modoPerfil) return;
 
-    if (noticiasLive === null) {
+    var temPosts = (estado.posts && estado.posts.length) || (postsServidor && postsServidor.length);
+    if (noticiasLive === null && !temPosts) {
       mostrarErroNoticias();
       return;
     }
@@ -553,14 +612,13 @@
     var lista = listaFiltrada();
     if (!lista.length) {
       feed.innerHTML = T.vazio
-        ? T.vazio("Nada nesse filtro", "Troque o chip acima pra ver outra cobertura.")
+        ? T.vazio("Nada nesse filtro", "Troque o chip acima ou seja o primeiro a postar.")
         : '<p class="nj-next" style="padding:24px;text-align:center">Nada nesse filtro.</p>';
       return;
     }
 
-    /* Feed central = só cards de notícia GNews (nunca posts fake) */
     feed.innerHTML = lista.map(function (p) {
-      return newsCardHtml(p);
+      return (p.tipo === "noticia") ? newsCardHtml(aplicarInteracao(p)) : cardHtml(p);
     }).join("");
 
     if (animId) {
@@ -569,12 +627,12 @@
     }
     aplicarTilt(feed);
     if (window.gsap && !reduced) {
-      var cards = feed.querySelectorAll(".news-card");
+      var cards = feed.querySelectorAll(".news-card, .post-card");
       gsap.from(cards, {
         opacity: 0,
         y: 24,
         duration: 0.5,
-        stagger: 0.07,
+        stagger: 0.05,
         ease: "power2.out",
         clearProps: "transform,opacity"
       });
@@ -619,6 +677,7 @@
 
   function seguir(handle) {
     if (precisaConta("seguir torcedores")) return;
+    if (!handle) return;
     if (estado.following[handle]) {
       delete estado.following[handle];
       T.toast("Deixou de seguir " + handle);
@@ -627,16 +686,64 @@
       T.toast("Agora você segue " + handle + " ✓");
     }
     salvar();
+    T.api("/api/social/seguir", { metodo: "POST", corpo: { handle: handle }, semRedirecionar: true }).catch(function () {});
     pintarEsq();
     pintarFeed();
+    if (modoPerfil) pintarPainelPerfil();
+  }
+
+  function abrirPerfil() {
+    modoPerfil = true;
+    if (location.hash !== "#perfil") history.replaceState(null, "", "#perfil");
+    var painel = $("painelPerfil");
+    var feed = feedEl();
+    if (painel) painel.hidden = false;
+    if (feed) feed.hidden = true;
+    pintarPainelPerfil();
+  }
+
+  function fecharPerfil() {
+    modoPerfil = false;
+    if (location.hash === "#perfil") history.replaceState(null, "", location.pathname + location.search);
+    var painel = $("painelPerfil");
+    var feed = feedEl();
+    if (painel) painel.hidden = true;
+    if (feed) feed.hidden = false;
+    pintarFeed();
+  }
+
+  function pintarPainelPerfil() {
+    var me = euSocial();
+    var painel = $("painelPerfil");
+    if (!painel) return;
+    painel.hidden = false;
+    $("perfilTitulo").textContent = me.nome;
+    $("perfilSub").textContent = me.handle + " · " + me.time;
+    $("perfilPainelMetas").innerHTML =
+      "<strong>" + me.posts + "</strong> posts · <strong>" + me.seguindo + "</strong> seguindo · <strong>" + me.seguidores + "</strong> seguidores";
+    var seg = Object.keys(estado.following || {});
+    $("perfilSeguindo").innerHTML = seg.length
+      ? "<h3>Seguindo</h3><div class=\"chips\">" + seg.map(function (h) {
+          return '<button type="button" class="chip on" data-seguir="' + esc(h) + '">' + esc(h) + " · deixar</button>";
+        }).join("") + "</div>"
+      : "<p class=\"muted pequeno\">Você ainda não segue ninguém. Use Seguir nos sugeridos ou nos posts.</p>";
+    var meus = (estado.posts || []).filter(function (p) { return p.eu || p.handle === me.handle; });
+    var remoto = (postsServidor || []).filter(function (p) { return p.handle === me.handle || p.autorId; });
+    var todos = meus.concat(remoto.filter(function (p) {
+      return !meus.some(function (x) { return String(x.id) === String(p.id); });
+    }));
+    $("perfilPosts").innerHTML = todos.length
+      ? todos.map(cardHtml).join("")
+      : T.vazio("Nenhum post ainda", "Escreva no composer acima e solte pra nação.");
   }
 
   function acharPost(id) {
     var i;
     if (noticiasLive) {
-      for (i = 0; i < noticiasLive.length; i++) if (String(noticiasLive[i].id) === String(id)) return noticiasLive[i];
+      for (i = 0; i < noticiasLive.length; i++) if (String(noticiasLive[i].id) === String(id)) return aplicarInteracao(noticiasLive[i]);
     }
-    for (i = 0; i < estado.posts.length; i++) if (String(estado.posts[i].id) === String(id)) return estado.posts[i];
+    for (i = 0; i < (estado.posts || []).length; i++) if (String(estado.posts[i].id) === String(id)) return estado.posts[i];
+    for (i = 0; i < (postsServidor || []).length; i++) if (String(postsServidor[i].id) === String(id)) return postsServidor[i];
     return null;
   }
 
@@ -666,8 +773,13 @@
       if (!p.minhaReacao) p.likes = (p.likes || 0) + 1;
       p.minhaReacao = reactId;
     }
+    guardarInteracao(p);
     salvar();
+    if (p.tipo === "torcedor" || p.autorId) {
+      T.api("/api/social/curtir", { metodo: "POST", corpo: { postId: postId }, semRedirecionar: true }).catch(function () {});
+    }
     pintarFeed();
+    if (modoPerfil) pintarPainelPerfil();
   }
 
   function countUp(el, to) {
@@ -721,8 +833,12 @@
     }
 
     if (t.closest("#btnEditar")) {
-      if (precisaConta("editar o perfil")) return;
-      T.toast("Perfil em breve — por enquanto troque o clube no onboarding.");
+      if (precisaConta("abrir o perfil")) return;
+      abrirPerfil();
+      return;
+    }
+    if (t.closest("#fecharPerfil")) {
+      fecharPerfil();
       return;
     }
 
@@ -790,9 +906,18 @@
         likes: 0
       });
       post.comentarios = (post.comentarios || 0) + 1;
+      guardarInteracao(post);
       inp.value = "";
       salvar();
+      if (post.tipo === "torcedor" || post.autorId) {
+        T.api("/api/social/comentar", {
+          metodo: "POST",
+          corpo: { postId: cid, texto: txt },
+          semRedirecionar: true
+        }).catch(function () {});
+      }
       pintarFeed();
+      if (modoPerfil) pintarPainelPerfil();
       var th3 = document.getElementById("thread-" + cid);
       if (th3) th3.hidden = false;
       T.toast("Comentário publicado");
@@ -901,13 +1026,23 @@
         reatoresN: 1
       };
       estado.posts.unshift(novo);
-      estado.postsCount = (estado.postsCount || 12) + 1;
+      estado.postsCount = (estado.postsCount || 0) + 1;
       salvar();
       pintarComposer();
       pintarEsq();
       pintarMarquee();
-      pintarFeed(novo.id);
+      if (modoPerfil) pintarPainelPerfil();
+      else pintarFeed(novo.id);
       T.toast("No ar pra nação ⚽");
+      T.api("/api/social/post", { metodo: "POST", corpo: { texto: texto }, semRedirecionar: true })
+        .then(function (d) {
+          if (d && d.post && d.post.id) {
+            novo.id = d.post.id;
+            novo.autorId = d.post.autorId;
+            salvar();
+          }
+        })
+        .catch(function () {});
       return;
     }
 
@@ -1037,9 +1172,36 @@
     }
   }
 
+  function carregarSocial() {
+    return T.api("/api/social/feed", { semRedirecionar: true }).then(function (d) {
+      postsServidor = (d.posts || []).map(function (p) {
+        return Object.assign({}, p, {
+          tipo: "torcedor",
+          ts: p.ts ? Date.parse(p.ts) || Date.now() : Date.now(),
+          quando: p.quando || "há pouco"
+        });
+      });
+      (d.seguindo || []).forEach(function (h) { estado.following[h] = true; });
+      if (d.eu && d.eu.handle) {
+        /* sincroniza handle local com o servidor */
+      }
+      salvar();
+      pintarEsq();
+      if (modoPerfil) pintarPainelPerfil();
+      else pintarFeed();
+    }).catch(function () { /* offline social ok */ });
+  }
+
   bootNoticias();
-  Promise.all([carregarJogosLive(), carregarSugestoesLive()]);
+  Promise.all([carregarJogosLive(), carregarSugestoesLive(), carregarSocial()]);
   setInterval(carregarJogosLive, 5 * 60 * 1000);
+  setInterval(carregarSocial, 90 * 1000);
+
+  window.addEventListener("hashchange", function () {
+    if (location.hash === "#perfil") abrirPerfil();
+    else if (modoPerfil) fecharPerfil();
+  });
+  if (location.hash === "#perfil") setTimeout(abrirPerfil, 100);
 
   if (location.hash && location.hash.indexOf("#post-") === 0) {
     setTimeout(function () {

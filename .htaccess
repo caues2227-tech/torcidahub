@@ -11,6 +11,7 @@ RewriteRule ^api/ranking/?$ sistema/public/api/ranking.php [L,QSA]
 RewriteRule ^api/chatbot/status/?$ sistema/public/api/chatbot.php [L,QSA]
 RewriteRule ^api/chatbot/?$ sistema/public/api/chatbot.php [L,QSA]
 RewriteRule ^api/(portal|hoje|agenda|tabela|tema|clubes|times|paises|busca|noticias|onboarding|jogo|coracao|avatares|resumo|feed|gnews)/?$ sistema/public/api/live.php [L,QSA]
+RewriteRule ^api/social/(feed|post|seguir|curtir|comentar|perfil)/?$ sistema/public/api/social.php [L,QSA]
 
 # Sempre preferir sistema/public (evita cópia antiga na raiz do repo)
 RewriteCond %{DOCUMENT_ROOT}/sistema/public%{REQUEST_URI} -f [OR]

@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/estilos.css" />
   <link rel="stylesheet" href="/css/tokens.css" />
   <link rel="stylesheet" href="/css/base.css" />
-  <link rel="stylesheet" href="/css/nacao.css?v=17" />
+  <link rel="stylesheet" href="/css/nacao.css?v=18" />
   <script src="/tema.js"></script>
 </head>
 <body class="pagina-nacao">
@@ -27,6 +27,20 @@
       <div class="chips-fade" id="filtros" role="tablist" aria-label="Filtros"></div>
       <div class="marquee-nacao" aria-hidden="true"><div class="marquee-pista" id="marquee"></div></div>
       <div class="composer" id="composer"></div>
+      <section class="painel-perfil" id="painelPerfil" hidden aria-label="Meu perfil">
+        <header class="perfil-painel-cab">
+          <div>
+            <span class="selo-pagina">seu perfil</span>
+            <h2 id="perfilTitulo">Meu perfil</h2>
+            <p class="muted pequeno" id="perfilSub">Posts, quem você segue e sua nação.</p>
+          </div>
+          <button type="button" class="chip" id="fecharPerfil">Voltar ao feed</button>
+        </header>
+        <div class="perfil-painel-metas" id="perfilPainelMetas"></div>
+        <div class="perfil-seguindo" id="perfilSeguindo"></div>
+        <h3 class="perfil-posts-titulo">Seus posts</h3>
+        <div class="feed-lista" id="perfilPosts"></div>
+      </section>
       <div class="feed-lista" id="feed-noticias" aria-live="polite">
         <div class="esqueleto esqueleto-card"></div>
         <div class="esqueleto esqueleto-card"></div>
@@ -49,17 +63,17 @@
   <div class="notif-backdrop" id="notifBackdrop" hidden></div>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
-  <script src="/js/vendor-loader.js?v=17"></script>
+  <script src="/js/vendor-loader.js?v=18"></script>
   <script src="/js/vendor/gsap.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'"></script>
   <script src="/js/vendor/lenis.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js'"></script>
-  <script src="/app.js?v=17"></script>
-  <script src="/auth.js?v=17"></script>
-  <script src="/js/nav.js?v=17"></script>
-  <script src="/js/motion.js?v=17"></script>
-  <script src="/js/data.js?v=17"></script>
-  <script src="/js/nacao-live.js?v=17"></script>
-  <script src="/js/notif.js?v=17"></script>
-  <script src="/feed.js?v=17"></script>
-  <script src="/chat.js?v=17"></script>
+  <script src="/app.js?v=18"></script>
+  <script src="/auth.js?v=18"></script>
+  <script src="/js/nav.js?v=18"></script>
+  <script src="/js/motion.js?v=18"></script>
+  <script src="/js/data.js?v=18"></script>
+  <script src="/js/nacao-live.js?v=18"></script>
+  <script src="/js/notif.js?v=18"></script>
+  <script src="/feed.js?v=18"></script>
+  <script src="/chat.js?v=18"></script>
 </body>
 </html>

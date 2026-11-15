@@ -1650,3 +1650,41 @@
   .sk-line,
   .sk-block { animation: none; }
 }
+
+/* Perfil escondido na Nação (#perfil) */
+.painel-perfil {
+  margin-bottom: 20px;
+  padding: 18px 16px 8px;
+  border-radius: 16px;
+  background: rgba(8, 12, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.perfil-painel-cab {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.perfil-painel-cab h2 {
+  margin: 4px 0 2px;
+  font-size: 1.35rem;
+}
+.perfil-painel-metas {
+  font-size: 0.92rem;
+  color: var(--text-2, #c8d0e0);
+  margin-bottom: 14px;
+}
+.perfil-seguindo {
+  margin-bottom: 16px;
+}
+.perfil-seguindo .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.perfil-posts-titulo {
+  font-size: 0.95rem;
+  margin: 8px 0 10px;
+  color: var(--text-2, #c8d0e0);
+}

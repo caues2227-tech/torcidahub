@@ -3,8 +3,8 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v10";
-  var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
+  var CACHE_NOTICIAS = "torcida_noticias_global_v12";
+  var CACHE_TTL_NOTICIAS = 10 * 60 * 1000;
   var NOTICIAS_MAX = 60;
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
   var CACHE_TTL_JOGOS = 5 * 60 * 1000;
@@ -76,6 +76,33 @@
       .trim();
   }
 
+  function imagemValida(url) {
+    if (!url || String(url).indexOf("http") !== 0) return false;
+    var u = String(url).toLowerCase();
+    var ruins = [
+      "j6_cofbogxhri9im864nl_ligxvsqp2",
+      "encrypted-tbn",
+      "news.google.com/",
+      "gstatic.com/images",
+      "favicon",
+      "placeholder",
+      "1x1",
+      "pixel.gif",
+      "blank.gif",
+      "data:image"
+    ];
+    for (var i = 0; i < ruins.length; i++) {
+      if (u.indexOf(ruins[i]) >= 0) return false;
+    }
+    if (u.indexOf("googleusercontent.com") >= 0) {
+      try {
+        var path = (new URL(url)).pathname || "";
+        if (path.split("/").filter(Boolean).length <= 1 && path.length < 50) return false;
+      } catch (e) { return false; }
+    }
+    return true;
+  }
+
   function mapArticles(articles, prefix) {
     return (articles || []).map(function (a, i) {
       var fonte = a.source;
@@ -111,7 +138,7 @@
         reatoresN: 40 + ((i * 23) % 450)
       };
     }).filter(function (n) {
-      return n.titulo && n.imagem && String(n.imagem).indexOf("http") === 0;
+      return n.titulo && imagemValida(n.imagem);
     });
   }
 
@@ -163,10 +190,8 @@
           })
           .catch(function () {});
       }));
-      arts = arts.filter(function (a) { return a.title; });
-      /* Prefere matérias com foto real */
-      arts.sort(function (a, b) { return (b.image ? 1 : 0) - (a.image ? 1 : 0); });
-      if (!arts.length) throw new Error("ESPN sem artigos");
+      arts = arts.filter(function (a) { return a.title && imagemValida(a.image); });
+      if (!arts.length) throw new Error("ESPN sem artigos com foto");
       return mapArticles(arts, "espn");
     } catch (e) {
       console.warn("ESPN news falhou:", e && e.message ? e.message : e);
@@ -207,7 +232,7 @@
           reatores: ["A", "B"],
           reatoresN: 40
         };
-      }).filter(function (n) { return n.imagem && n.titulo; });
+      }).filter(function (n) { return n.titulo && imagemValida(n.imagem); });
     } catch (e) {
       return [];
     }
@@ -240,21 +265,21 @@
 
   async function getNoticias() {
     var cached = lerCache(CACHE_NOTICIAS, CACHE_TTL_NOTICIAS);
-    if (cached && Array.isArray(cached) && cached.length >= 8) {
+    if (cached && Array.isArray(cached) && cached.length >= 6) {
       var okCache = cached.filter(function (n) {
-        return n && n.imagem && String(n.imagem).indexOf("http") === 0;
+        return n && n.titulo && imagemValida(n.imagem);
       });
-      if (okCache.length >= 8) return okCache.slice(0, NOTICIAS_MAX);
+      if (okCache.length >= 6) return okCache.slice(0, NOTICIAS_MAX);
     }
 
     var php = await buscarNoticiasPhp();
     var espn = await buscarNoticiasEspn();
-    var gnews = (!php || php.length < 6) ? await buscarNoticiasGNews() : null;
+    var gnews = (!php || php.length < 8) ? await buscarNoticiasGNews() : null;
     var locais = await buscarNoticiasLocais();
 
-    var noticias = mesclarNoticias([php, espn, gnews, locais]);
+    var noticias = mesclarNoticias([espn, php, locais, gnews]);
     noticias = noticias.filter(function (n) {
-      return n && n.imagem && String(n.imagem).indexOf("http") === 0 && n.titulo;
+      return n && n.titulo && imagemValida(n.imagem);
     });
     if (!noticias.length) {
       console.error("Falha total em notícias: sem matérias com foto");

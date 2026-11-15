@@ -385,6 +385,25 @@ if ($acao === "portal") {
     if ($j["quente"]) { $proxClube = $j; break; }
   }
   $tema = tema_clube($timeUser);
+  /* Manchete com foto real (ESPN) — some se não houver imagem */
+  $manchete = null;
+  $news = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/news");
+  foreach (($news["articles"] ?? []) as $a) {
+    $img = $a["images"][0]["url"] ?? null;
+    if (!$img || strpos($img, "http") !== 0) continue;
+    $title = trim((string) ($a["headline"] ?? ""));
+    if ($title === "") continue;
+    $manchete = [
+      "titulo" => $title,
+      "resumo" => trim((string) ($a["description"] ?? "")),
+      "url" => $a["links"]["web"]["href"] ?? "#",
+      "imagem" => $img,
+      "fonteNome" => is_array($a["byline"] ?? null) ? "ESPN" : ($a["byline"] ?? "ESPN"),
+      "publicadoEm" => $a["published"] ?? date("c"),
+      "time" => $timeUser
+    ];
+    break;
+  }
   ok([
     "data" => $hoje,
     "atualizadoEm" => date("c"),
@@ -396,7 +415,7 @@ if ($acao === "portal") {
     "meta" => ["fonte" => "ESPN", "via" => "php"],
     "noticiasMeta" => [],
     "noticias" => ["jogo" => [], "mercado" => []],
-    "manchete" => null,
+    "manchete" => $manchete,
     "resumo" => null,
     "clube" => [
       "nome" => $timeUser,
@@ -517,17 +536,33 @@ if ($acao === "busca") {
 }
 
 if ($acao === "noticias" || $acao === "gnews" || $acao === "feed") {
-  /* Delega à lógica de noticias.php via include HTTP local seria lento — reusa ESPN direto */
+  /* ESPN com foto real; rejeita placeholder */
   $arts = [];
-  foreach (["bra.1", "esp.1", "eng.1", "usa.1", "fra.1"] as $liga) {
+  $vistos = [];
+  foreach (["bra.1", "esp.1", "eng.1", "usa.1", "fra.1", "ger.1", "ita.1", "uefa.champions"] as $liga) {
     $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/news");
     foreach (($data["articles"] ?? []) as $a) {
-      $img = $a["images"][0]["url"] ?? null;
+      $img = null;
+      $best = -1;
+      foreach (($a["images"] ?? []) as $im) {
+        $u = $im["url"] ?? "";
+        if (!$u || strpos($u, "http") !== 0) continue;
+        $ul = strtolower($u);
+        if (strpos($ul, "j6_cofb") !== false || strpos($ul, "encrypted-tbn") !== false) continue;
+        $score = ((int) ($im["width"] ?? 0)) * ((int) ($im["height"] ?? 0));
+        if (strpos($ul, "espncdn.com/photo") !== false) $score += 100000;
+        if ($score >= $best) { $best = $score; $img = $u; }
+      }
       if (!$img) continue;
       $title = trim((string) ($a["headline"] ?? ""));
       if ($title === "") continue;
+      $k = mb_strtolower(mb_substr($title, 0, 48));
+      if (isset($vistos[$k])) continue;
+      $vistos[$k] = true;
       $desc = trim((string) ($a["description"] ?? ""));
       if ($desc === $title) $desc = "";
+      $by = $a["byline"] ?? "ESPN";
+      if (is_array($by)) $by = "ESPN";
       $arts[] = [
         "id" => $a["id"] ?? (count($arts) + 1),
         "titulo" => $title,
@@ -540,9 +575,9 @@ if ($acao === "noticias" || $acao === "gnews" || $acao === "feed") {
         "image" => $img,
         "publicadoEm" => $a["published"] ?? date("c"),
         "publishedAt" => $a["published"] ?? date("c"),
-        "fonteNome" => $a["byline"] ?? "ESPN",
-        "fonte" => $a["byline"] ?? "ESPN",
-        "source" => $a["byline"] ?? "ESPN",
+        "fonteNome" => $by ?: "ESPN",
+        "fonte" => $by ?: "ESPN",
+        "source" => $by ?: "ESPN",
         "quando" => ""
       ];
     }

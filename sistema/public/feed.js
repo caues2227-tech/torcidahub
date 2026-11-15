@@ -454,25 +454,21 @@
     return "";
   }
 
-  /** Capa só quando a matéria não trouxe foto real (escudo/ícone — sem Unsplash). */
-  function capaNoticia(p, icone, labelTag) {
-    var hue = hueDoTitulo(p.titulo || p.id || "");
-    var clube = clubeNoTitulo(p.titulo || "");
-    var crest = clube && T.urlEscudo ? T.urlEscudo(clube) : "";
-    return '<div class="news-media-cover" style="--hue:' + hue + '" data-tag="' + esc(p.tag || "jogo") + '">' +
-      (crest
-        ? '<img class="cover-crest" src="' + esc(crest) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
-        : '<span class="fb-icon" aria-hidden="true">' + icone + "</span>") +
-      '<span class="fb-label">' + esc(labelTag) + "</span></div>";
+  function imagemNoticiaOk(url) {
+    if (!url || String(url).indexOf("http") !== 0) return false;
+    var u = String(url).toLowerCase();
+    if (u.indexOf("j6_cofb") >= 0 || u.indexOf("encrypted-tbn") >= 0 || u.indexOf("news.google.com/") >= 0) return false;
+    if (u.indexOf("placeholder") >= 0 || u.indexOf("favicon") >= 0) return false;
+    return true;
   }
 
   function newsCardHtml(p) {
+    if (!imagemNoticiaOk(p.imagem)) return "";
     var r = reactMeta(p.minhaReacao);
     var icoLike = r ? r.emoji : "❤️";
     var corLike = r ? r.cor : "";
     var tag = p.tag || "jogo";
     var fonte = (p.nome || p.fonte || "FONTE").toUpperCase();
-    var icone = (Live && Live.ICONE_TAG && Live.ICONE_TAG[tag]) || "⚽";
     var labelTag = p.tagLabel || (Live && Live.LABEL_TAG && Live.LABEL_TAG[tag]) || tag.toUpperCase();
     var url = p.url && p.url !== "#" ? p.url : "#";
     var externa = url.indexOf("http") === 0;
@@ -488,10 +484,8 @@
       '<h3 class="news-title">' + esc(p.titulo || p.texto || "") + "</h3>" +
       (p.resumo ? '<p class="news-excerpt">' + esc(p.resumo) + "</p>" : "") +
       '<div class="news-media-wrap">' +
-      (p.imagem
-        ? '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;var d=document.createElement(\'div\');d.className=\'news-media-cover\';d.innerHTML=\'<span class=fb-icon aria-hidden=true>⚽</span>\';this.replaceWith(d);">'
-        : capaNoticia(p, icone, labelTag)) +
-      '<span class="media-tag">' + (p.imagem ? "FOTO" : "CAPA") + ": " + esc(fonte) + "</span></div>" +
+      '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;var a=this.closest(\'.news-card\');if(a)a.remove();">' +
+      '<span class="media-tag">FOTO: ' + esc(fonte) + "</span></div>" +
       '<div class="news-actions news-footer post-acoes">' +
       '<button type="button" class="action-btn news-action acao" data-comentar="' + p.id + '">💬 ' + p.comentarios + "</button>" +
       '<button type="button" class="action-btn news-action acao" data-repost="' + p.id + '">🔄 ' + p.reposts + "</button>" +

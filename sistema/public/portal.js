@@ -123,11 +123,13 @@
 
     var m = p.manchete;
     var cm = $("manchete");
-    if (m) {
+    var imgOk = m && m.imagem && String(m.imagem).indexOf("http") === 0 &&
+      String(m.imagem).toLowerCase().indexOf("j6_cofb") < 0;
+    if (m && imgOk) {
       cm.hidden = false;
       cm.href = T.hrefSeguro(m.url);
       cm.innerHTML =
-        '<div class="foto">' + (m.imagem ? '<img src="' + esc(m.imagem) + '" alt="" loading="lazy" data-some data-parallax>' : "") + "</div>" +
+        '<div class="foto"><img src="' + esc(m.imagem) + '" alt="" loading="lazy" data-some data-parallax onerror="this.closest(\'#manchete\').hidden=true"></div>' +
         '<div class="corpo"><p class="rotulo">' + esc(m.fonteNome || "redação") + (m.time ? " · " + esc(m.time) : "") + "</p>" +
         "<h2>" + esc(m.titulo) + "</h2><p>" + esc((m.resumo || "").slice(0, 180)) + "</p>" +
         '<p class="destaque-meta">' + esc(m.fonteNome || "") + (m.publicadoEm ? " · " + esc(T.tempoRelativo(m.publicadoEm)) : "") + "</p></div>";

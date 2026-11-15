@@ -30,11 +30,24 @@
     gravar(CH.sessao, s);
     gravar(CH.prefs, { time: s.time, feedTime: s.feedTime, pais: s.pais, nome: s.nome });
     if (d.tema && d.tema.cores) aplicarTema(d.tema.cores, s.time);
+    if (s.time) registrarVotoClube(s.time);
     return s;
   }
   function sair() { apagar(CH.sessao); }
   function prefs() { return ler(CH.prefs) || { time: "Santos", feedTime: "Santos", pais: "Brasil", nome: "" }; }
-  function salvarPrefs(p) { gravar(CH.prefs, p); }
+  /** Sobe o clube no ranking real (1 dispositivo/conta = 1 voto). */
+  function registrarVotoClube(time) {
+    var nome = String(time || "").trim();
+    if (!nome) return Promise.resolve(null);
+    var corpo = { time: nome, cliente: clienteId() };
+    var s = sessao();
+    if (s && s.id) corpo.userId = s.id;
+    return api("/api/ranking/voto", { metodo: "POST", corpo: corpo, semRedirecionar: true }).catch(function () { return null; });
+  }
+  function salvarPrefs(p) {
+    gravar(CH.prefs, p);
+    if (p && p.time) registrarVotoClube(p.time);
+  }
 
   // Quem está usando: conta (com token) ou visitante (só preferências deste navegador).
   function eu() {
@@ -684,6 +697,7 @@
   /* ---------------------------------------------------------------- inicialização */
   w.Torcida = {
     eu: eu, sessao: sessao, salvarSessao: salvarSessao, sair: sair, prefs: prefs, salvarPrefs: salvarPrefs,
+    registrarVotoClube: registrarVotoClube,
     api: api, headers: headers, clienteId: clienteId,
     esc: esc, hrefSeguro: hrefSeguro, iniciais: iniciais, normaliza: normaliza, nomeBate: nomeBate, contarCaracteres: contarCaracteres,
     tempoRelativo: tempoRelativo, dataCurta: dataCurta, dataLonga: dataLonga,

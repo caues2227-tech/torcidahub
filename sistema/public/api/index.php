@@ -187,6 +187,17 @@ if ($acao === "cadastro" && $method === "POST") {
   ];
   $db["usuarios"][] = $user;
   db_save($DB_FILE, $DATA_DIR, $db);
+  /* Ranking real: conta já entra como voto do clube */
+  $votosFile = $DATA_DIR . DIRECTORY_SEPARATOR . "votos.json";
+  $votos = ["votos" => []];
+  if (is_file($votosFile)) {
+    $j = json_decode(@file_get_contents($votosFile), true);
+    if (is_array($j) && isset($j["votos"])) $votos = $j;
+  }
+  $votos["votos"]["user_" . $user["id"]] = ["time" => $time, "em" => date("c")];
+  $cid = preg_replace('/[^a-zA-Z0-9_\-.]/', "", $_SERVER["HTTP_X_TORCIDA_CLIENTE"] ?? "");
+  if ($cid !== "") $votos["votos"][$cid] = ["time" => $time, "em" => date("c")];
+  @file_put_contents($votosFile, json_encode($votos, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
   responder(201, sessao_publica($user, $token));
 }
 

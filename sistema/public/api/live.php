@@ -385,8 +385,39 @@ if ($acao === "avatares") {
 if ($acao === "onboarding" && $method === "POST") {
   $raw = file_get_contents("php://input");
   $b = $raw ? json_decode($raw, true) : [];
-  $time = trim((string) ($b["time"] ?? $b["clube"] ?? $timeUser));
-  ok(["ok" => true, "time" => $time, "tema" => tema_clube($time)]);
+  $time = trim((string) ($b["time"] ?? $b["clube"] ?? $timeUser)) ?: "Santos";
+  $feed = trim((string) ($b["feedTime"] ?? $time)) ?: $time;
+  $nome = trim((string) ($b["nome"] ?? "")) ?: "Torcedor";
+  $tema = tema_clube($time);
+  /* registra voto no ranking real */
+  $store = __DIR__ . DIRECTORY_SEPARATOR . "_store";
+  $votosFile = $store . DIRECTORY_SEPARATOR . "votos.json";
+  if (!is_dir($store)) @mkdir($store, 0755, true);
+  $cid = $_SERVER["HTTP_X_TORCIDA_CLIENTE"] ?? "";
+  $cid = preg_replace('/[^a-zA-Z0-9_\-.]/', "", $cid);
+  if ($cid === "") $cid = "ip_" . substr(hash("sha256", $_SERVER["REMOTE_ADDR"] ?? "0"), 0, 16);
+  $votos = ["votos" => []];
+  if (is_file($votosFile)) {
+    $j = json_decode(@file_get_contents($votosFile), true);
+    if (is_array($j) && isset($j["votos"])) $votos = $j;
+  }
+  $votos["votos"][$cid] = ["time" => $time, "em" => date("c")];
+  @file_put_contents($votosFile, json_encode($votos, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
+
+  ok([
+    "ok" => true,
+    "token" => bin2hex(random_bytes(16)),
+    "id" => "v_" . substr($cid, 0, 12),
+    "nome" => $nome,
+    "usuario" => "",
+    "foto" => crest($time),
+    "time" => $time,
+    "feedTime" => $feed,
+    "pais" => "Brasil",
+    "papel" => "torcedor",
+    "convidado" => true,
+    "tema" => $tema
+  ]);
 }
 
 if ($acao === "resumo") {

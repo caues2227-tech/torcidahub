@@ -9,7 +9,7 @@
     var e = T.eu();
     var itens = d.ranking || [];
     if (!itens.length) {
-      lista.innerHTML = T.vazio("Ainda não tem movimento na arquibancada", "Escolha seu clube e solte o primeiro post na Nação.",
+      lista.innerHTML = T.vazio("Ranking zerado — seja o primeiro", "Cada pessoa que escolhe o clube sobe o time de verdade. Sem número inventado.",
         '<a class="btn" href="/onboarding.html">Escolher meu clube</a>');
       return;
     }

@@ -259,16 +259,16 @@
       s.feedTime = nome;
       T.salvarSessao(s);
     }
-    T.api("/api/tema?time=" + encodeURIComponent(nome) + "&pais=Brasil", { semRedirecionar: true })
-      .then(function (d) {
-        if (d && d.cores) T.aplicarTema(d.cores, nome);
-        fecharTroca();
-        location.reload();
-      })
-      .catch(function () {
-        fecharTroca();
-        location.reload();
-      });
+    Promise.resolve(T.registrarVotoClube ? T.registrarVotoClube(nome) : null).then(function () {
+      return T.api("/api/tema?time=" + encodeURIComponent(nome) + "&pais=Brasil", { semRedirecionar: true });
+    }).then(function (d) {
+      if (d && d.cores) T.aplicarTema(d.cores, nome);
+      fecharTroca();
+      location.reload();
+    }).catch(function () {
+      fecharTroca();
+      location.reload();
+    });
   }
 
   $("trocaFechar").addEventListener("click", fecharTroca);

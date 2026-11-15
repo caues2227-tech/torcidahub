@@ -189,6 +189,16 @@
       el.hidden = false;
       el.textContent = "Você torce para: " + clubName.toUpperCase();
     }
+    if (T.registrarVotoClube) T.registrarVotoClube(clubName);
+    try {
+      var prefs = T.prefs ? T.prefs() : {};
+      prefs.time = clubName;
+      prefs.feedTime = clubName;
+      if (T.salvarPrefs) {
+        /* salvarPrefs já vota; evita double só gravando */
+        localStorage.setItem("torcida.prefs", JSON.stringify(prefs));
+      }
+    } catch (e) {}
     T.api("/api/tema?time=" + encodeURIComponent(clubName) + "&pais=Brasil", { semRedirecionar: true })
       .then(function (d) {
         if (d && d.cores) {

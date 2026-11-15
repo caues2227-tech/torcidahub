@@ -160,21 +160,17 @@ function letra_resultado($j, $time) {
 }
 
 function ultimos_do_clube($time, $dias = 18) {
-  $hoje = hoje_sp();
-  $datas = [];
-  for ($i = 1; $i <= $dias; $i++) $datas[] = add_dias($hoje, -$i);
+  $id = crest_id($time);
+  if (!$id) return [];
   $liga = espn_liga_time($time);
-  $boards = scoreboards_multi($datas, $liga, 8);
+  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/schedule", 12);
   $lista = [];
-  foreach ($boards as $d => $evs) {
-    foreach ($evs as $ev) {
-      $j = evento_jogo($ev, $time);
-      if ($j["status"] !== "encerrado") continue;
-      if ($j["placarMandante"] === null || $j["placarVisitante"] === null) continue;
-      if (!$j["quente"]) continue;
-      $j["letra"] = letra_resultado($j, $time);
-      $lista[] = $j;
-    }
+  foreach (($data["events"] ?? []) as $ev) {
+    $j = evento_jogo($ev, $time);
+    if ($j["status"] !== "encerrado") continue;
+    if ($j["placarMandante"] === null || $j["placarVisitante"] === null) continue;
+    $j["letra"] = letra_resultado($j, $time);
+    $lista[] = $j;
   }
   usort($lista, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
   return array_slice($lista, 0, 10);
@@ -566,29 +562,21 @@ if ($acao === "agenda") {
 if ($acao === "portal") {
   $hoje = hoje_sp();
   $liga = espn_liga_time($timeUser);
-  /* Um único lote paralelo: 14 dias atrás + hoje + 6 à frente */
-  $datas = [];
-  for ($i = -14; $i <= 6; $i++) $datas[] = add_dias($hoje, $i);
-  $boards = scoreboards_multi($datas, $liga, 8);
-  $evsHoje = $boards[$hoje] ?? [];
+  /* Próximos 7 dias em paralelo + forma via agenda do time (1 request) */
+  $datasProx = [];
+  for ($i = 0; $i < 7; $i++) $datasProx[] = add_dias($hoje, $i);
+  $boardsProx = scoreboards_multi($datasProx, $liga, 8);
+  $evsHoje = $boardsProx[$hoje] ?? [];
   $jogosHoje = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evsHoje);
   $proximos = [];
-  $ultimos = [];
-  foreach ($datas as $d) {
-    foreach (($boards[$d] ?? []) as $ev) {
+  foreach ($datasProx as $d) {
+    foreach (($boardsProx[$d] ?? []) as $ev) {
       $j = evento_jogo($ev, $timeUser);
-      if ($j["status"] === "encerrado") {
-        if ($j["quente"] && $j["placarMandante"] !== null && $j["placarVisitante"] !== null) {
-          $j["letra"] = letra_resultado($j, $timeUser);
-          $ultimos[] = $j;
-        }
-        continue;
-      }
+      if ($j["status"] === "encerrado") continue;
       $proximos[] = $j;
     }
   }
-  usort($ultimos, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
-  $ultimos = array_slice($ultimos, 0, 10);
+  $ultimos = ultimos_do_clube($timeUser);
   $tabela = tabela_bra();
   $linha = null;
   foreach ($tabela as $l) {

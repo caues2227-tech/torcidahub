@@ -330,24 +330,19 @@
 
   function pintarDir() {
     var html =
-      '<div class="dir-card"><h2>Clima da nação hoje</h2>' +
-      '<div class="clima-barra"><i style="width:72%"></i></div>' +
-      '<p class="clima-meta">72% · 1.247 posts hoje</p></div>' +
       '<div class="dir-card"><h2>Em alta na nação</h2><div class="topic-lista">' +
-      estado.topics.map(function (t) {
-        return '<button type="button" data-topic="' + esc(t.tag) + '">' + esc(t.tag) + "<span>" + t.n + "</span></button>";
-      }).join("") +
+      (estado.topics && estado.topics.length
+        ? estado.topics.map(function (t) {
+            return '<button type="button" data-topic="' + esc(t.tag) + '">' + esc(t.tag) + "<span>" + t.n + "</span></button>";
+          }).join("")
+        : '<p class="muted pequeno">Sem tópicos ainda.</p>') +
       "</div></div>" +
       '<div class="dir-card"><h2>Jogos de hoje</h2>' +
       '<div id="jogos-hoje-wrap">' +
       (estado.jogosHtml || '<div class="news-skeleton" style="margin:0"><div class="sk-line" style="width:70%"></div><div class="sk-line" style="width:90%"></div></div>') +
       "</div></div>" +
-      '<div class="dir-card bot-dial-card"><h2>Probabilidade de vitória</h2>' +
-      '<div class="bot-dial"><svg viewBox="0 0 180 100" aria-hidden="true">' +
-      '<path d="M10 90 A80 80 0 0 1 170 90" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10" stroke-linecap="round"/>' +
-      '<path d="M10 90 A80 80 0 0 1 170 90" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="90"/>' +
-      '</svg><div class="bot-pct">64%</div></div>' +
-      "<small>Santos × Coritiba · qua 18/11</small>" +
+      '<div class="dir-card bot-dial-card"><h2>Fala com o Bot</h2>' +
+      '<p class="muted pequeno">Tabela, próximo jogo e clima do seu clube — sem chute.</p>' +
       '<p style="margin-top:12px"><a class="btn-pill cheio" href="/chatbot.html" style="display:inline-flex">Abrir Bot</a></p></div>';
     $("colDir").innerHTML = html;
   }

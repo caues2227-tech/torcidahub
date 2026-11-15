@@ -725,23 +725,36 @@ if ($acao === "hoje") {
 
 if ($acao === "agenda") {
   $hoje = hoje_sp();
+  $cacheNome = "agenda_bra_" . $hoje . ".json";
+  $cached = store_cache_get($cacheNome, 90);
+  if ($cached && isset($cached["dias"])) {
+    $cached["time"] = $timeUser;
+    $cached["cache"] = true;
+    api_cache_headers(30);
+    ok($cached);
+  }
+  $datas = [];
+  for ($i = 0; $i < 14; $i++) $datas[] = add_dias($hoje, $i);
+  $boards = scoreboards_multi($datas, "bra.1", 8);
   $dias = [];
-  for ($i = 0; $i < 25; $i++) {
-    $d = add_dias($hoje, $i);
-    $evs = scoreboard($d);
-    $jogos = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evs);
+  foreach ($datas as $d) {
+    $jogos = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $boards[$d] ?? []);
     if ($jogos) $dias[] = ["data" => $d, "jogos" => $jogos];
   }
   $qtd = 0;
   foreach ($dias as $d) $qtd += count($d["jogos"]);
-  ok([
+  $pack = [
     "dataHoje" => $hoje,
     "atualizadoEm" => date("c"),
     "time" => $timeUser,
     "grupos" => [["id" => "bra1", "nome" => "Brasileirão", "qtd" => $qtd]],
     "dias" => $dias,
-    "via" => "espn-php"
-  ]);
+    "via" => "espn-php-paralelo",
+    "cache" => false
+  ];
+  store_cache_put($cacheNome, $pack);
+  api_cache_headers(30);
+  ok($pack);
 }
 
 if ($acao === "portal") {

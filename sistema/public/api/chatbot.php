@@ -64,11 +64,54 @@ function norm($s) {
   return strtr($s, ["á"=>"a","à"=>"a","ã"=>"a","â"=>"a","é"=>"e","ê"=>"e","í"=>"i","ó"=>"o","ô"=>"o","õ"=>"o","ú"=>"u","ç"=>"c"]);
 }
 
+function aliases_clube($nome) {
+  $n = preg_replace('/[^a-z0-9]+/', "", norm($nome));
+  $mapa = [
+    "atleticomg" => ["atleticomg", "atleticomineiro", "galo", "cam"],
+    "atleticomineiro" => ["atleticomg", "atleticomineiro", "galo", "cam"],
+    "galo" => ["atleticomg", "atleticomineiro", "galo"],
+    "athleticopr" => ["athleticopr", "athleticoparanaense", "furacao"],
+    "saopaulo" => ["saopaulo", "tricolor", "spfc"],
+    "vasco" => ["vasco", "vascodagama"],
+    "vascodagama" => ["vasco", "vascodagama"],
+    "bragantino" => ["bragantino", "redbullbragantino", "rbb"],
+    "redbullbragantino" => ["bragantino", "redbullbragantino"]
+  ];
+  $out = [$n];
+  foreach ($mapa as $k => $lista) {
+    if ($n === $k || in_array($n, $lista, true)) {
+      foreach ($lista as $x) $out[] = $x;
+      $out[] = $k;
+    }
+  }
+  return array_values(array_unique(array_filter($out)));
+}
+
 function nome_bate($a, $b) {
-  $x = preg_replace('/[^a-z0-9]+/', "", norm($a));
-  $y = preg_replace('/[^a-z0-9]+/', "", norm($b));
-  if ($x === "" || $y === "") return false;
-  return $x === $y || strpos($x, $y) !== false || strpos($y, $x) !== false;
+  $as = aliases_clube($a);
+  $bs = aliases_clube($b);
+  foreach ($as as $x) {
+    foreach ($bs as $y) {
+      if ($x === "" || $y === "") continue;
+      if ($x === $y || strpos($x, $y) !== false || strpos($y, $x) !== false) return true;
+    }
+  }
+  return false;
+}
+
+function espn_id_clube($nome) {
+  static $map = [
+    "Flamengo" => 819, "Palmeiras" => 2029, "Corinthians" => 874, "São Paulo" => 2026,
+    "Santos" => 2674, "Fluminense" => 3445, "Botafogo" => 6086, "Vasco" => 3454,
+    "Grêmio" => 6273, "Internacional" => 1936, "Atlético-MG" => 7632, "Atlético Mineiro" => 7632,
+    "Cruzeiro" => 2022, "Bahia" => 9967, "Vitória" => 3457, "Athletico-PR" => 3458,
+    "Fortaleza" => 6272, "Bragantino" => 6079, "Mirassol" => 9169, "Cuiabá" => 17313,
+    "Juventude" => 6270, "Coritiba" => 3456, "Chapecoense" => 9318, "Remo" => 4936
+  ];
+  foreach ($map as $k => $id) {
+    if (nome_bate($k, $nome)) return $id;
+  }
+  return null;
 }
 
 function parse_standings($data) {
@@ -162,12 +205,75 @@ function jogos_hoje() {
 
 function proximo_do_clube($time) {
   $tz = new DateTimeZone("America/Sao_Paulo");
-  $base = new DateTime("now", $tz);
-  for ($i = 0; $i < 14; $i++) {
-    $d = clone $base;
+  $agora = new DateTime("now", $tz);
+
+  /* 1) Agenda do time na ESPN (1 request) */
+  $tid = espn_id_clube($time);
+  if ($tid) {
+    $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/teams/" . $tid . "/schedule", 12);
+    $candidatos = [];
+    foreach (($data["events"] ?? []) as $ev) {
+      $comp = $ev["competitions"][0] ?? [];
+      $comps = $comp["competitors"] ?? [];
+      $home = null; $away = null;
+      foreach ($comps as $c) {
+        if (($c["homeAway"] ?? "") === "home") $home = $c;
+        if (($c["homeAway"] ?? "") === "away") $away = $c;
+      }
+      $state = strtoupper((string) ($ev["status"]["type"]["state"] ?? ""));
+      if ($state === "POST") continue;
+      $dataIso = $ev["date"] ?? "";
+      if ($dataIso === "") continue;
+      try {
+        $dt = (new DateTime($dataIso))->setTimezone($tz);
+      } catch (Exception $e) { continue; }
+      /* ignora jogos muito antigos (mais de 1 dia atrás) */
+      if ($dt < (clone $agora)->modify("-1 day") && $state !== "IN") continue;
+      $candidatos[] = [
+        "casa" => $home["team"]["displayName"] ?? "?",
+        "fora" => $away["team"]["displayName"] ?? "?",
+        "pc" => $home["score"] ?? null,
+        "pf" => $away["score"] ?? null,
+        "status" => $state,
+        "hora" => $dt->format("H:i"),
+        "_dt" => $dt
+      ];
+    }
+    usort($candidatos, function ($a, $b) { return $a["_dt"] <=> $b["_dt"]; });
+    if ($candidatos) {
+      $j = $candidatos[0];
+      $dia = $j["_dt"]->format("d/m");
+      unset($j["_dt"]);
+      return [$j, $dia];
+    }
+  }
+
+  /* 2) Fallback: /api/agenda do próprio site */
+  $host = $_SERVER["HTTP_HOST"] ?? "";
+  $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ? "https" : "http";
+  if ($host) {
+    $agenda = baixar_json($https . "://" . $host . "/api/agenda", 14);
+    foreach (($agenda["dias"] ?? []) as $dia) {
+      foreach (($dia["jogos"] ?? []) as $jogo) {
+        if (!nome_bate($jogo["mandante"] ?? "", $time) && !nome_bate($jogo["visitante"] ?? "", $time)) continue;
+        if (($jogo["status"] ?? "") === "encerrado") continue;
+        return [[
+          "casa" => $jogo["mandante"] ?? "?",
+          "fora" => $jogo["visitante"] ?? "?",
+          "pc" => $jogo["placarMandante"] ?? null,
+          "pf" => $jogo["placarVisitante"] ?? null,
+          "status" => (($jogo["status"] ?? "") === "ao vivo" ? "IN" : "PRE"),
+          "hora" => $jogo["horario"] ?? ""
+        ], isset($dia["data"]) ? date("d/m", strtotime($dia["data"])) : ""];
+      }
+    }
+  }
+
+  /* 3) Último recurso: scoreboard dos próximos 21 dias (saltando) */
+  for ($i = 0; $i <= 21; $i += 1) {
+    $d = clone $agora;
     $d->modify("+$i day");
-    $ymd = $d->format("Ymd");
-    foreach (scoreboard($ymd) as $j) {
+    foreach (scoreboard($d->format("Ymd")) as $j) {
       if (!nome_bate($j["casa"], $time) && !nome_bate($j["fora"], $time)) continue;
       $st = strtoupper((string) $j["status"]);
       if ($st === "POST") continue;
@@ -266,24 +372,9 @@ if (preg_match('/\b(oi|ola|eae|fala|bom dia|boa noite|boa tarde)\b/', $p)) {
     }
     $resposta = "Brasileirão (topo):\n" . implode("\n", $linhas);
   }
-} elseif (strpos($p, "proximo") !== false || strpos($p, "próximo") !== false || (strpos($p, "jogo") !== false && strpos($p, "santos") === false && (strpos($p, "meu") !== false || strpos($p, "do ") !== false))) {
-  /* próximo jogo do clube do usuário (ou citado) */
-  $clube = $meuTime;
-  if (preg_match('/\b(flamengo|palmeiras|corinthians|santos|sao paulo|fluminense|botafogo|vasco|gremio|internacional|cruzeiro|bahia|vitoria)\b/', $p, $m)) {
-    $clube = $m[1];
-  }
-  list($j, $dia) = proximo_do_clube($clube);
-  if (!$j) {
-    $resposta = "Não achei próximo jogo do " . $clube . " na janela da ESPN. Confere a aba Jogos.";
-  } else {
-    $st = strtoupper((string) $j["status"]);
-    if ($st === "IN") $resposta = "AO VIVO agora: " . $j["casa"] . " " . ($j["pc"] ?? 0) . "–" . ($j["pf"] ?? 0) . " " . $j["fora"];
-    else $resposta = "Próximo do " . $clube . ": " . $j["casa"] . " x " . $j["fora"] . ($dia ? " (" . $dia . ")" : "") . ($j["hora"] ? " · " . $j["hora"] : "");
-  }
-} elseif (strpos($p, "jogo") !== false || strpos($p, "hoje") !== false || strpos($p, "ao vivo") !== false || strpos($p, "placar") !== false) {
+} elseif ((strpos($p, "hoje") !== false || strpos($p, "ao vivo") !== false || strpos($p, "placar") !== false) && strpos($p, "proximo") === false) {
   $jogos = jogos_hoje();
   if (!$jogos) {
-    /* tenta amanhã / ontem pra não ficar mudo */
     $tz = new DateTimeZone("America/Sao_Paulo");
     $d = new DateTime("now", $tz);
     $d->modify("+1 day");
@@ -305,6 +396,24 @@ if (preg_match('/\b(oi|ola|eae|fala|bom dia|boa noite|boa tarde)\b/', $p)) {
       $linhas[] = "• " . $txt;
     }
     $resposta = "Jogos de hoje (Brasileirão):\n" . implode("\n", $linhas);
+  }
+} elseif (
+  strpos($p, "proximo") !== false || strpos($p, "partida") !== false
+  || preg_match('/\bjogo\b/', $p)
+) {
+  $clube = $meuTime;
+  if (preg_match('/\b(flamengo|palmeiras|corinthians|santos|sao paulo|fluminense|botafogo|vasco|gremio|internacional|cruzeiro|bahia|vitoria|atletico[\s\-]?mg|atletico mineiro|galo|athletico[\s\-]?pr)\b/', $p, $m)) {
+    $clube = $m[1];
+    if (strpos(norm($clube), "atletico") !== false || norm($clube) === "galo") $clube = "Atlético-MG";
+    if (strpos(norm($clube), "athletico") !== false) $clube = "Athletico-PR";
+  }
+  list($j, $dia) = proximo_do_clube($clube);
+  if (!$j) {
+    $resposta = "Não achei próximo jogo do " . $clube . " na ESPN agora. Confere a aba Jogos.";
+  } else {
+    $st = strtoupper((string) $j["status"]);
+    if ($st === "IN") $resposta = "AO VIVO agora: " . $j["casa"] . " " . ($j["pc"] ?? 0) . "–" . ($j["pf"] ?? 0) . " " . $j["fora"];
+    else $resposta = "Próximo do " . $clube . ": " . $j["casa"] . " x " . $j["fora"] . ($dia ? " (" . $dia . ")" : "") . (!empty($j["hora"]) ? " · " . $j["hora"] : "");
   }
 } elseif (preg_match('/\b(flamengo|palmeiras|corinthians|santos|sao paulo|fluminense|botafogo|vasco|gremio|internacional|cruzeiro|atletico|bahia|real madrid|barcelona|psg)\b/', $p, $m)) {
   $clube = $m[1];

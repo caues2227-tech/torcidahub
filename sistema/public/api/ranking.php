@@ -14,7 +14,8 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
   exit;
 }
 
-$STORE = __DIR__ . DIRECTORY_SEPARATOR . "_store";
+require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+$STORE = torcida_store_dir();
 $VOTOS_FILE = $STORE . DIRECTORY_SEPARATOR . "votos.json";
 $DB_FILE = $STORE . DIRECTORY_SEPARATOR . "usuarios.json";
 

@@ -12,10 +12,16 @@ sistema/data/mail-outbox.json
 sistema/data/
 !sistema/data/.gitkeep
 
+# Store PHP (usuarios/votos) — NUNCA versionar (deploy apagava o ranking)
+sistema/public/api/_store/*.json
+!sistema/public/api/_store/.htaccess
+!sistema/public/api/_store/.gitkeep
+
 # Pacotes de upload manual (não versionar)
 PARA-SUBIR/
 torcida-hostinger.zip
 *.zip
+temp/
 
 # Dependências e sistema
 node_modules/

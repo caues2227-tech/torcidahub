@@ -459,10 +459,10 @@ if ($acao === "onboarding" && $method === "POST") {
   $feed = trim((string) ($b["feedTime"] ?? $time)) ?: $time;
   $nome = trim((string) ($b["nome"] ?? "")) ?: "Torcedor";
   $tema = tema_clube($time);
-  /* registra voto no ranking real */
-  $store = __DIR__ . DIRECTORY_SEPARATOR . "_store";
+  /* registra voto no ranking real (pasta persistente) */
+  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+  $store = torcida_store_dir();
   $votosFile = $store . DIRECTORY_SEPARATOR . "votos.json";
-  if (!is_dir($store)) @mkdir($store, 0755, true);
   $cid = $_SERVER["HTTP_X_TORCIDA_CLIENTE"] ?? "";
   $cid = preg_replace('/[^a-zA-Z0-9_\-.]/', "", $cid);
   if ($cid === "") $cid = "ip_" . substr(hash("sha256", $_SERVER["REMOTE_ADDR"] ?? "0"), 0, 16);

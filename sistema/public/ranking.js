@@ -38,11 +38,17 @@
   }
 
   function carregar() {
-    return T.api("/api/ranking").then(pintar, function (err) {
-      lista.innerHTML = T.erroBloco(err.message, "tentarRanking");
+    var e = T.eu();
+    var promete = (e.time && T.registrarVotoClube)
+      ? T.registrarVotoClube(e.time)
+      : Promise.resolve(null);
+    return Promise.resolve(promete).then(function () {
+      return T.api("/api/ranking");
+    }).then(pintar, function (err) {
+      lista.innerHTML = T.erroBloco(err.message || "Ranking indisponível", "tentarRanking");
       var b = document.getElementById("tentarRanking");
       if (b) b.addEventListener("click", function () { lista.innerHTML = T.skeleton(1); carregar(); });
     });
   }
-  T.atualizar(carregar, 60000);
+  T.atualizar(carregar, 45000);
 })();

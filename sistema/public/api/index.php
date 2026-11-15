@@ -8,13 +8,36 @@ header("Cache-Control: no-store");
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
   header("Access-Control-Allow-Origin: *");
   header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-  header("Access-Control-Allow-Headers: Content-Type, Authorization");
+  header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Torcida-Cliente, X-Torcida-Time");
   http_response_code(204);
   exit;
 }
 
-/* Pasta dentro de public/api pra existir no deploy Git; .htaccess bloqueia HTTP. */
-$DATA_DIR = __DIR__ . DIRECTORY_SEPARATOR . "_store";
+function gravar_voto_clube($dataDir, $userId, $time, $clienteHeader = "") {
+  $time = trim((string) $time);
+  if ($time === "") return;
+  $votosFile = $dataDir . DIRECTORY_SEPARATOR . "votos.json";
+  $votos = ["votos" => []];
+  if (is_file($votosFile)) {
+    $j = json_decode(@file_get_contents($votosFile), true);
+    if (is_array($j) && isset($j["votos"]) && is_array($j["votos"])) $votos = $j;
+  }
+  if ($userId !== "") {
+    $votos["votos"]["user_" . preg_replace('/[^a-zA-Z0-9_\-]/', "", (string) $userId)] = [
+      "time" => $time,
+      "em" => date("c")
+    ];
+  }
+  $cid = preg_replace('/[^a-zA-Z0-9_\-.]/', "", (string) $clienteHeader);
+  if ($cid !== "") {
+    $votos["votos"][$cid] = ["time" => $time, "em" => date("c")];
+  }
+  if (!is_dir($dataDir)) @mkdir($dataDir, 0755, true);
+  @file_put_contents($votosFile, json_encode($votos, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
+}
+
+require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+$DATA_DIR = torcida_store_dir();
 $DB_FILE = $DATA_DIR . DIRECTORY_SEPARATOR . "usuarios.json";
 
 function responder($codigo, $corpo) {
@@ -188,16 +211,7 @@ if ($acao === "cadastro" && $method === "POST") {
   $db["usuarios"][] = $user;
   db_save($DB_FILE, $DATA_DIR, $db);
   /* Ranking real: conta já entra como voto do clube */
-  $votosFile = $DATA_DIR . DIRECTORY_SEPARATOR . "votos.json";
-  $votos = ["votos" => []];
-  if (is_file($votosFile)) {
-    $j = json_decode(@file_get_contents($votosFile), true);
-    if (is_array($j) && isset($j["votos"])) $votos = $j;
-  }
-  $votos["votos"]["user_" . $user["id"]] = ["time" => $time, "em" => date("c")];
-  $cid = preg_replace('/[^a-zA-Z0-9_\-.]/', "", $_SERVER["HTTP_X_TORCIDA_CLIENTE"] ?? "");
-  if ($cid !== "") $votos["votos"][$cid] = ["time" => $time, "em" => date("c")];
-  @file_put_contents($votosFile, json_encode($votos, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
+  gravar_voto_clube($DATA_DIR, $user["id"], $time, $_SERVER["HTTP_X_TORCIDA_CLIENTE"] ?? "");
   responder(201, sessao_publica($user, $token));
 }
 
@@ -226,6 +240,8 @@ if ($acao === "login" && $method === "POST") {
   $db["usuarios"][$idx]["tokenExp"] = time() + 60 * 60 * 24 * 60;
   db_save($DB_FILE, $DATA_DIR, $db);
   $user = $db["usuarios"][$idx];
+  /* Garante voto no ranking mesmo se cadastro antigo não gravou */
+  gravar_voto_clube($DATA_DIR, $user["id"] ?? "", $user["time"] ?? "", $_SERVER["HTTP_X_TORCIDA_CLIENTE"] ?? "");
   responder(200, sessao_publica($user, $token));
 }
 

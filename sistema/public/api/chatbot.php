@@ -59,6 +59,14 @@ function header_time() {
   return $t !== "" ? $t : "Santos";
 }
 
+function header_nome() {
+  $n = rawurldecode($_SERVER["HTTP_X_TORCIDA_NOME"] ?? "");
+  $n = trim(preg_replace('/\s+/', " ", $n));
+  if ($n === "" || strcasecmp($n, "Visitante") === 0) return "parceiro";
+  $primeiro = explode(" ", $n)[0];
+  return $primeiro !== "" ? $primeiro : "parceiro";
+}
+
 function norm($s) {
   $s = mb_strtolower(trim((string) $s));
   return strtr($s, ["á"=>"a","à"=>"a","ã"=>"a","â"=>"a","é"=>"e","ê"=>"e","í"=>"i","ó"=>"o","ô"=>"o","õ"=>"o","ú"=>"u","ç"=>"c"]);
@@ -305,62 +313,144 @@ if ($pergunta === "") {
 }
 
 $meuTime = header_time();
+$meuNome = header_nome();
 $p = norm($pergunta);
 
+function achar_na_tabela($tab, $time) {
+  foreach ($tab as $l) {
+    if (nome_bate($l["time"], $time)) return $l;
+  }
+  return null;
+}
+
+function linha_corte($tab, $posCorte = 16) {
+  foreach ($tab as $l) {
+    if (($l["pos"] ?? 0) === $posCorte) return $l;
+  }
+  return $tab[$posCorte - 1] ?? null;
+}
+
+function resposta_rebaixamento($time, $tab) {
+  $eu = achar_na_tabela($tab, $time);
+  if (!$eu) return "Tabela sumiu, " . $time . ". Abre Hoje e sofre olhando a classificação. 😅";
+  $pos = (int) ($eu["pos"] ?? 99);
+  $pts = (int) ($eu["pts"] ?? 0);
+  $j = (int) ($eu["j"] ?? 0);
+  $restam = max(0, 38 - $j);
+  $corte = linha_corte($tab, 16);
+  $ptsCorte = (int) ($corte["pts"] ?? 0);
+  $nomeCorte = $corte["time"] ?? "16º";
+
+  if ($pos <= 16) {
+    $folga = $pts - $ptsCorte;
+    if ($folga >= 6) {
+      return "Relaxa um pouco: o " . $eu["time"] . " tá em " . $pos . "º com " . $pts . " pts. Z4 tá longe (" . $nomeCorte . " com " . $ptsCorte . "). Ainda tem " . $restam . " jogos — não entrega o ano, mas respira. ⚽";
+    }
+    return "O " . $eu["time"] . " tá em " . $pos . "º com " . $pts . " pts — fora da Z4, mas colado no " . $nomeCorte . " (" . $ptsCorte . " pts). Folga de " . max(0, $folga) . " ponto(s). " . $restam . " jogos pela frente. Não dorme na rodada. 🙏";
+  }
+  $falta = max(0, ($ptsCorte + 1) - $pts);
+  return "Olha… o " . $eu["time"] . " tá em " . $pos . "º com " . $pts . " pts. Pra sair da Z4 precisa passar o " . $nomeCorte . " (" . $ptsCorte . " pts). Faltam cerca de " . $falta . " ponto(s) e ainda tem " . $restam . " jogos. Dói? Dói. Mas ainda tem bola. 💪";
+}
+
+function resposta_g4($time, $tab) {
+  $eu = achar_na_tabela($tab, $time);
+  if (!$eu) return "Não achei o " . $time . " na tabela agora.";
+  $pos = (int) ($eu["pos"] ?? 99);
+  $pts = (int) ($eu["pts"] ?? 0);
+  $g4 = linha_corte($tab, 4);
+  $ptsG4 = (int) ($g4["pts"] ?? 0);
+  if ($pos <= 4) {
+    return "Tá no G4, hein? " . $eu["time"] . " em " . $pos . "º com " . $pts . " pts. Aproveita — amanhã o Brasileirão te humilha de novo. 🔥";
+  }
+  $falta = max(0, ($ptsG4 + 1) - $pts);
+  return $eu["time"] . " em " . $pos . "º com " . $pts . " pts. O 4º (" . ($g4["time"] ?? "?") . ") tem " . $ptsG4 . ". Faltam uns " . $falta . " ponto(s) pra cheirar Libertadores. Sonhar é de graça. 🏆";
+}
+
+function resposta_clima($time, $tab) {
+  $eu = achar_na_tabela($tab, $time);
+  $jogos = jogos_hoje();
+  $meuHoje = null;
+  foreach ($jogos as $j) {
+    if (nome_bate($j["casa"], $time) || nome_bate($j["fora"], $time)) { $meuHoje = $j; break; }
+  }
+  $pos = $eu ? (int) $eu["pos"] : null;
+  $txt = "Clima de hoje na nação " . $time . ": ";
+  if ($meuHoje) {
+    $st = strtoupper((string) $meuHoje["status"]);
+    if ($st === "IN") $txt .= "tem jogo AO VIVO (" . $meuHoje["casa"] . " " . ($meuHoje["pc"] ?? 0) . "–" . ($meuHoje["pf"] ?? 0) . " " . $meuHoje["fora"] . "). Coração na boca. 🏟️";
+    elseif ($st === "POST") $txt .= "já jogou hoje (" . $meuHoje["casa"] . " " . ($meuHoje["pc"] ?? 0) . "–" . ($meuHoje["pf"] ?? 0) . " " . $meuHoje["fora"] . "). Digestão de resultado. ⚽";
+    else $txt .= "tem " . $meuHoje["casa"] . " x " . $meuHoje["fora"] . " na agenda. Ansiedade nível clássico. 🔥";
+  } else {
+    $txt .= "sem jogo do " . $time . " hoje. ";
+    if ($pos !== null && $pos >= 17) $txt .= "E ainda por cima tá na zona. Clima de novelão. 😅";
+    elseif ($pos !== null && $pos <= 4) $txt .= "Mas tá no G4 — pode até sorrir no espelho. 😏";
+    else $txt .= "Dia de treino, meme e xingar o técnico no grupo. 📺";
+  }
+  if ($eu) $txt .= "\n\nAgora: " . $eu["pos"] . "º com " . $eu["pts"] . " pts.";
+  return $txt;
+}
+
+function temperar($fatos, $time, $tab) {
+  $eu = achar_na_tabela($tab, $time);
+  $pos = $eu ? (int) $eu["pos"] : 10;
+  if ($pos <= 4) {
+    $gancho = "Ah, tá bom pra você. Aproveita — no clássico eu torço contra. ⚔️";
+  } elseif ($pos >= 17) {
+    $gancho = "Tá, dói. Mas o " . $time . " já voltou de pior. Aguenta. 🙏";
+  } else {
+    $gancho = "Nem festa, nem enterro. Uma rodada muda tudo. ⚽";
+  }
+  return $fatos . "\n\n" . $gancho;
+}
+
+$tab = null;
 $resposta = null;
 
 if (preg_match('/\b(oi|ola|eae|fala|bom dia|boa noite|boa tarde)\b/', $p)) {
-  $resposta = "Fala, torcedor do " . $meuTime . "! Pergunta de tabela, jogos, rival, ranking ou próximo jogo que eu puxo ao vivo.";
-} elseif (strpos($p, "rival") !== false) {
-  $resposta = rival_de($meuTime);
+  $resposta = "Fala, " . $meuNome . "! ⚽ Pronto pra mais uma rodada de sofrimento (ou alegria) com o " . $meuTime . "? Tabela, rival, rebaixamento, próximo jogo — manda. Com farpa, claro.";
+} elseif (preg_match('/rebaix|z4|zona|nao cair|cair|degola|quanto falta.*cair|sair da zona/', $p)) {
+  $tab = tabela_bra();
+  $resposta = $tab ? resposta_rebaixamento($meuTime, $tab) : "Tabela offline, " . $meuNome . ". Abre Hoje e sofre olhando a Z4.";
+} elseif (preg_match('/\bg4\b|libertadores|entrar no g4|to no g4|no g4/', $p)) {
+  $tab = tabela_bra();
+  $resposta = $tab ? resposta_g4($meuTime, $tab) : "Tabela offline agora, " . $meuNome . ".";
+} elseif (preg_match('/\bclima\b|humor|como (esta|ta) (o )?dia|clima de hj|clima de hoje/', $p)) {
+  $tab = tabela_bra();
+  $resposta = resposta_clima($meuTime, $tab ?: []);
+} elseif (strpos($p, "rival") !== false || strpos($p, "classico") !== false) {
+  $resposta = rival_de($meuTime) . "\n\nE no dia do clássico eu torço CONTRA você, " . $meuNome . ". Com carinho. 😏";
 } elseif (strpos($p, "ranking") !== false || (strpos($p, "torcedor") !== false && strpos($p, "mais") !== false)) {
-  $resposta = "Ranking de torcida é real: cada pessoa que escolhe o clube sobe o time. Abre /ranking.html e vê o pódio.";
+  $resposta = "Ranking de torcida é briga de verdade, " . $meuNome . ": cada conta que escolhe o clube sobe o time. Abre Ranking e vê se a nação " . $meuTime . " tá no pódio. 🏟️";
 } elseif (
   strpos($p, "onde eu") !== false || strpos($p, "onde to") !== false || strpos($p, "onde estou") !== false
   || strpos($p, "to na tabela") !== false || strpos($p, "na tabela") !== false
   || ((strpos($p, "tabela") !== false || strpos($p, "classific") !== false) && (strpos($p, "eu") !== false || strpos($p, "meu") !== false || strpos($p, "nosso") !== false))
 ) {
   $tab = tabela_bra();
-  $achou = null;
-  foreach ($tab as $l) {
-    if (nome_bate($l["time"], $meuTime)) { $achou = $l; break; }
-  }
+  $achou = $tab ? achar_na_tabela($tab, $meuTime) : null;
   if ($achou) {
-    $resposta = $achou["time"] . " tá em " . ($achou["pos"] ?? "?") . "º com " . ($achou["pts"] ?? "?") . " pts (" . ($achou["j"] ?? "?") . " jogos).";
+    $fatos = $meuNome . ", o " . $achou["time"] . " tá em " . ($achou["pos"] ?? "?") . "º com " . ($achou["pts"] ?? "?") . " pts (" . ($achou["j"] ?? "?") . " jogos).";
+    $resposta = temperar($fatos, $meuTime, $tab);
   } elseif ($tab) {
-    $linhas = [];
-    foreach (array_slice($tab, 0, 5) as $l) {
-      $linhas[] = ($l["pos"] ?? "?") . "º " . $l["time"] . " — " . ($l["pts"] ?? "?") . " pts";
-    }
-    $resposta = "Não achei o " . $meuTime . " na Série A agora. Topo do Brasileirão:\n" . implode("\n", $linhas);
+    $resposta = "Não achei o " . $meuTime . " na Série A agora, " . $meuNome . ". Topo: " . ($tab[0]["time"] ?? "?") . " liderando.";
   } else {
-    $resposta = "Tabela offline neste instante. Abre a aba Hoje / Meu Clube que a classificação tá lá.";
+    $resposta = "Tabela offline. Abre Hoje — eu sou Bot de bancada, não milagreiro. 😅";
   }
 } elseif (strpos($p, "lider") !== false || strpos($p, "tabela") !== false || strpos($p, "brasileirao") !== false || strpos($p, "classific") !== false) {
   $tab = tabela_bra();
   if (!$tab) {
-    $resposta = "Não consegui puxar a tabela agora. Tenta de novo em instantes ou olha em Hoje.";
+    $resposta = "Não puxei a tabela agora. Tenta de novo ou olha em Hoje.";
   } else {
     $linhas = [];
     foreach (array_slice($tab, 0, 8) as $l) {
       $linhas[] = ($l["pos"] ?? "?") . "º " . $l["time"] . " — " . ($l["pts"] ?? "?") . " pts";
     }
-    $resposta = "Brasileirão (topo):\n" . implode("\n", $linhas);
+    $resposta = "Brasileirão (topo), sem enrolação:\n" . implode("\n", $linhas) . "\n\nSeu " . $meuTime . " tá nessa briga também. Confere. ⚽";
   }
 } elseif ((strpos($p, "hoje") !== false || strpos($p, "ao vivo") !== false || strpos($p, "placar") !== false) && strpos($p, "proximo") === false) {
   $jogos = jogos_hoje();
   if (!$jogos) {
-    $tz = new DateTimeZone("America/Sao_Paulo");
-    $d = new DateTime("now", $tz);
-    $d->modify("+1 day");
-    $jogos = scoreboard($d->format("Ymd"));
-    if ($jogos) {
-      $linhas = [];
-      foreach ($jogos as $j) $linhas[] = "• " . $j["casa"] . " x " . $j["fora"];
-      $resposta = "Hoje tá sem rodada na ESPN. Amanhã:\n" . implode("\n", $linhas);
-    } else {
-      $resposta = "Sem jogos do Brasileirão na agenda ESPN neste momento. Abre a aba Jogos pra cobertura completa.";
-    }
+    $resposta = "Hoje a ESPN não mostrou rodada do Brasileirão. Vai mexer no grupo da família então. 📺";
   } else {
     $linhas = [];
     foreach ($jogos as $j) {
@@ -370,7 +460,7 @@ if (preg_match('/\b(oi|ola|eae|fala|bom dia|boa noite|boa tarde)\b/', $p)) {
       else $txt = $j["casa"] . " x " . $j["fora"];
       $linhas[] = "• " . $txt;
     }
-    $resposta = "Jogos de hoje (Brasileirão):\n" . implode("\n", $linhas);
+    $resposta = "Jogos de hoje:\n" . implode("\n", $linhas);
   }
 } elseif (
   strpos($p, "proximo") !== false || strpos($p, "partida") !== false
@@ -384,26 +474,23 @@ if (preg_match('/\b(oi|ola|eae|fala|bom dia|boa noite|boa tarde)\b/', $p)) {
   }
   list($j, $dia) = proximo_do_clube($clube);
   if (!$j) {
-    $resposta = "Não achei próximo jogo do " . $clube . " na ESPN agora. Confere a aba Jogos.";
+    $resposta = "Não achei próximo do " . $clube . ". Confere a aba Jogos — às vezes a ESPN atrasa. 🏟️";
   } else {
     $st = strtoupper((string) $j["status"]);
-    if ($st === "IN") $resposta = "AO VIVO agora: " . $j["casa"] . " " . ($j["pc"] ?? 0) . "–" . ($j["pf"] ?? 0) . " " . $j["fora"];
-    else $resposta = "Próximo do " . $clube . ": " . $j["casa"] . " x " . $j["fora"] . ($dia ? " (" . $dia . ")" : "") . (!empty($j["hora"]) ? " · " . $j["hora"] : "");
+    if ($st === "IN") $resposta = "Tá rolando AGORA: " . $j["casa"] . " " . ($j["pc"] ?? 0) . "–" . ($j["pf"] ?? 0) . " " . $j["fora"] . " 🔥";
+    else $resposta = "Próximo do " . $clube . ": " . $j["casa"] . " x " . $j["fora"] . ($dia ? " (" . $dia . ")" : "") . (!empty($j["hora"]) ? " · " . $j["hora"] : "") . "\n\nMarca no calendário e já vai ficando nervoso. ⚽";
   }
 } elseif (preg_match('/\b(flamengo|palmeiras|corinthians|santos|sao paulo|fluminense|botafogo|vasco|gremio|internacional|cruzeiro|atletico|bahia|real madrid|barcelona|psg)\b/', $p, $m)) {
   $clube = $m[1];
   $tab = tabela_bra();
-  $achou = null;
-  foreach ($tab as $l) {
-    if (nome_bate($l["time"], $clube)) { $achou = $l; break; }
-  }
+  $achou = $tab ? achar_na_tabela($tab, $clube) : null;
   if ($achou) {
-    $resposta = $achou["time"] . " está em " . ($achou["pos"] ?? "?") . "º com " . ($achou["pts"] ?? "?") . " pontos (" . ($achou["j"] ?? "?") . " jogos).";
+    $resposta = temperar($achou["time"] . " em " . ($achou["pos"] ?? "?") . "º com " . ($achou["pts"] ?? "?") . " pts (" . ($achou["j"] ?? "?") . " jogos).", $meuTime, $tab);
   } else {
-    $resposta = "Vi que você falou de " . $clube . ". Pra posição na Série A pergunta \"onde eu tô na tabela?\" com o clube escolhido no perfil.";
+    $resposta = "Falei de " . $clube . " mas não achei na Série A agora. Pergunta de novo com o clube no perfil.";
   }
 } else {
-  $resposta = "Posso falar de tabela, onde o " . $meuTime . " está, rival, jogos de hoje, próximo jogo e ranking. Ex.: \"onde eu tô na tabela?\" ou \"quem é meu rival?\".";
+  $resposta = "Sou Bot de BANCADA, " . $meuNome . " — não locutor. Manda: tabela, quanto falta pra não cair, G4, rival, clima de hoje, próximo jogo ou ranking do " . $meuTime . ". ⚽";
 }
 
-responder(200, ["resposta" => $resposta, "via" => "espn-php", "time" => $meuTime]);
+responder(200, ["resposta" => $resposta, "via" => "espn-php", "time" => $meuTime, "nome" => $meuNome]);

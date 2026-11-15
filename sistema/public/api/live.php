@@ -308,6 +308,17 @@ function status_espn($state) {
   return "agendado";
 }
 
+function score_num($raw) {
+  if ($raw === null || $raw === "") return null;
+  if (is_array($raw)) {
+    if (isset($raw["value"]) && $raw["value"] !== "" && $raw["value"] !== null) return (int) $raw["value"];
+    if (isset($raw["displayValue"]) && $raw["displayValue"] !== "" && is_numeric($raw["displayValue"])) return (int) $raw["displayValue"];
+    return null;
+  }
+  if (is_numeric($raw)) return (int) $raw;
+  return null;
+}
+
 function evento_jogo($ev, $timeUser) {
   $comp = $ev["competitions"][0] ?? [];
   $comps = $comp["competitors"] ?? [];
@@ -316,7 +327,11 @@ function evento_jogo($ev, $timeUser) {
     if (($c["homeAway"] ?? "") === "home") $home = $c;
     if (($c["homeAway"] ?? "") === "away") $away = $c;
   }
-  $state = $ev["status"]["type"]["state"] ?? "";
+  /* scoreboard: status no evento; schedule do time: status na competition */
+  $state = $ev["status"]["type"]["state"]
+    ?? $comp["status"]["type"]["state"]
+    ?? $ev["status"]["type"]["name"]
+    ?? "";
   $mandante = $home["team"]["displayName"] ?? "A definir";
   $visitante = $away["team"]["displayName"] ?? "A definir";
   $logoCasa = $home["team"]["logo"] ?? crest($mandante);
@@ -325,8 +340,8 @@ function evento_jogo($ev, $timeUser) {
   $tz = new DateTimeZone("America/Sao_Paulo");
   $data = $dataIso ? (new DateTime($dataIso))->setTimezone($tz)->format("Y-m-d") : hoje_sp();
   $horario = $dataIso ? (new DateTime($dataIso))->setTimezone($tz)->format("H:i") : "";
-  $scoreCasa = isset($home["score"]) ? (is_array($home["score"]) ? ($home["score"]["value"] ?? null) : $home["score"]) : null;
-  $scoreFora = isset($away["score"]) ? (is_array($away["score"]) ? ($away["score"]["value"] ?? null) : $away["score"]) : null;
+  $scoreCasa = score_num($home["score"] ?? null);
+  $scoreFora = score_num($away["score"] ?? null);
   $quente = nome_bate($mandante, $timeUser) || nome_bate($visitante, $timeUser);
   return [
     "idJogo" => (string) ($ev["id"] ?? ""),

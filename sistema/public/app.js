@@ -718,15 +718,9 @@
     garantirTema();
     if (!document.body.classList.contains("auth-page") && !w.TorcidaFundo) {
       var s = document.createElement("script");
-      s.src = "/js/fundo.js?v=13";
+      s.src = "/js/fundo.js?v=26";
       s.defer = true;
       document.head.appendChild(s);
-    }
-    if (!w.TorcidaNotif) {
-      var sn = document.createElement("script");
-      sn.src = "/js/notif.js?v=24";
-      sn.defer = true;
-      document.head.appendChild(sn);
     }
   }
 })(window);

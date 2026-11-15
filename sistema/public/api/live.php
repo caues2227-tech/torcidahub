@@ -28,7 +28,8 @@ function baixar_json($url, $timeout = 10) {
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_TIMEOUT => $timeout,
     CURLOPT_USERAGENT => "TorcidaLive/1.0",
-    CURLOPT_SSL_VERIFYPEER => true
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_ENCODING => ""
   ]);
   $body = curl_exec($ch);
   $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -36,6 +37,65 @@ function baixar_json($url, $timeout = 10) {
   if ($body === false || $code >= 400) return null;
   $j = json_decode($body, true);
   return is_array($j) ? $j : null;
+}
+
+/** Várias URLs JSON em paralelo. $urls = [chave => url]. */
+function baixar_json_multi($urls, $timeout = 8) {
+  $out = [];
+  foreach ($urls as $k => $_) $out[$k] = null;
+  if (!$urls || !function_exists("curl_multi_init")) {
+    foreach ($urls as $k => $url) $out[$k] = baixar_json($url, $timeout);
+    return $out;
+  }
+  $mh = curl_multi_init();
+  $chs = [];
+  foreach ($urls as $k => $url) {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_TIMEOUT => $timeout,
+      CURLOPT_USERAGENT => "TorcidaLive/1.3",
+      CURLOPT_SSL_VERIFYPEER => true,
+      CURLOPT_ENCODING => ""
+    ]);
+    curl_multi_add_handle($mh, $ch);
+    $chs[$k] = $ch;
+  }
+  $running = null;
+  do {
+    curl_multi_exec($mh, $running);
+    if ($running) curl_multi_select($mh, 0.5);
+  } while ($running > 0);
+  foreach ($chs as $k => $ch) {
+    $body = curl_multi_getcontent($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_multi_remove_handle($mh, $ch);
+    curl_close($ch);
+    if ($body === false || $code >= 400) continue;
+    $j = json_decode($body, true);
+    if (is_array($j)) $out[$k] = $j;
+  }
+  curl_multi_close($mh);
+  return $out;
+}
+
+function store_cache_get($nome, $ttlSec) {
+  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+  $f = torcida_store_dir() . DIRECTORY_SEPARATOR . $nome;
+  if (!is_file($f) || (time() - filemtime($f)) >= $ttlSec) return null;
+  $j = json_decode(@file_get_contents($f), true);
+  return is_array($j) ? $j : null;
+}
+
+function store_cache_put($nome, $data) {
+  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+  $f = torcida_store_dir() . DIRECTORY_SEPARATOR . $nome;
+  @file_put_contents($f, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+}
+
+function api_cache_headers($sec = 30) {
+  header("Cache-Control: public, max-age=" . (int) $sec . ", s-maxage=" . (int) $sec, true);
 }
 
 function header_time() {
@@ -183,14 +243,19 @@ function avatar_data_uri($nome, $hex = "1e90ff") {
 }
 
 /** Agenda do time: 1 request ESPN schedule → últimos + próximos. */
-function agenda_do_clube($time) {
+function agenda_do_clube($time, $dataSched = null) {
   $id = crest_id($time);
   if (!$id) return ["ultimos" => [], "proximos" => [], "proximo" => null];
-  $liga = espn_liga_time($time);
-  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/schedule", 10);
+  $cacheNome = "agenda_v1_" . $id . ".json";
+  if ($dataSched === null) {
+    $cached = store_cache_get($cacheNome, 90);
+    if (is_array($cached) && isset($cached["ultimos"])) return $cached;
+    $liga = espn_liga_time($time);
+    $dataSched = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/schedule", 8);
+  }
   $ultimos = [];
   $proximos = [];
-  foreach (($data["events"] ?? []) as $ev) {
+  foreach (($dataSched["events"] ?? []) as $ev) {
     $j = evento_jogo($ev, $time);
     if ($j["status"] === "encerrado") {
       if ($j["placarMandante"] === null || $j["placarVisitante"] === null) continue;
@@ -202,11 +267,13 @@ function agenda_do_clube($time) {
   }
   usort($ultimos, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
   usort($proximos, function ($a, $b) { return strcmp($a["data"] . $a["horario"], $b["data"] . $b["horario"]); });
-  return [
+  $pack = [
     "ultimos" => array_slice($ultimos, 0, 10),
     "proximos" => array_slice($proximos, 0, 8),
     "proximo" => $proximos[0] ?? null
   ];
+  store_cache_put($cacheNome, $pack);
+  return $pack;
 }
 
 function ultimos_do_clube($time, $dias = 18) {
@@ -449,19 +516,17 @@ function evento_jogo($ev, $timeUser) {
 }
 
 function scoreboard($ymd, $liga = "bra.1") {
+  $cacheNome = "sb_" . preg_replace('/[^a-z0-9.]+/i', "_", $liga) . "_" . $ymd . ".json";
+  $cached = store_cache_get($cacheNome, 45);
+  if (is_array($cached) && array_key_exists("events", $cached)) return $cached["events"];
   $url = "https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/scoreboard?dates=" . str_replace("-", "", $ymd) . "&limit=100";
-  $data = baixar_json($url);
-  return $data["events"] ?? [];
+  $data = baixar_json($url, 8);
+  $events = $data["events"] ?? [];
+  store_cache_put($cacheNome, ["events" => $events]);
+  return $events;
 }
 
-function tabela_bra() {
-  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
-  $cacheFile = torcida_store_dir() . DIRECTORY_SEPARATOR . "tabela_bra_v1.json";
-  if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 120) {
-    $cached = json_decode(@file_get_contents($cacheFile), true);
-    if (is_array($cached) && $cached) return $cached;
-  }
-  $data = baixar_json("https://site.api.espn.com/apis/v2/sports/soccer/bra.1/standings");
+function parse_tabela_espn($data) {
   if (!$data) return [];
   $entries = [];
   foreach (($data["children"] ?? []) as $ch) {
@@ -487,9 +552,15 @@ function tabela_bra() {
     ];
   }
   usort($out, function ($a, $b) { return ($a["posicao"] ?? 99) <=> ($b["posicao"] ?? 99); });
-  if ($out) {
-    @file_put_contents($cacheFile, json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-  }
+  return $out;
+}
+
+function tabela_bra() {
+  $cached = store_cache_get("tabela_bra_v1.json", 120);
+  if ($cached) return $cached;
+  $data = baixar_json("https://site.api.espn.com/apis/v2/sports/soccer/bra.1/standings", 8);
+  $out = parse_tabela_espn($data);
+  if ($out) store_cache_put("tabela_bra_v1.json", $out);
   return $out;
 }
 
@@ -634,8 +705,10 @@ if ($acao === "proximo") {
 
 if ($acao === "hoje") {
   $hoje = hoje_sp();
-  $evs = scoreboard($hoje);
+  $liga = espn_liga_time($timeUser);
+  $evs = scoreboard($hoje, $liga);
   $jogos = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evs);
+  api_cache_headers(30);
   ok([
     "data" => $hoje,
     "jogos" => $jogos,
@@ -669,24 +742,62 @@ if ($acao === "agenda") {
 if ($acao === "portal") {
   require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
   $hoje = hoje_sp();
-  $cacheKey = "portal_v2_" . preg_replace('/[^a-z0-9]+/i', "_", mb_strtolower($timeUser)) . "_" . $hoje . ".json";
+  $cacheKey = "portal_v3_" . preg_replace('/[^a-z0-9]+/i', "_", mb_strtolower($timeUser)) . "_" . $hoje . ".json";
   $cacheFile = torcida_store_dir() . DIRECTORY_SEPARATOR . $cacheKey;
-  if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 60) {
+  if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 90) {
     $cached = json_decode(@file_get_contents($cacheFile), true);
     if (is_array($cached) && isset($cached["jogosHoje"])) {
       $cached["cache"] = true;
+      api_cache_headers(30);
       ok($cached);
     }
   }
 
-  /* Leve: 1 scoreboard (hoje) + 1 schedule (agenda) + 1 standings — sem 7 dias nem news */
+  /* ESPN em paralelo: só pede o que não está em cache local */
   $liga = espn_liga_time($timeUser);
-  $evsHoje = scoreboard($hoje, $liga);
+  $id = crest_id($timeUser);
+  $sbNome = "sb_" . preg_replace('/[^a-z0-9.]+/i', "_", $liga) . "_" . $hoje . ".json";
+  $sbCached = store_cache_get($sbNome, 45);
+  $agendaCached = $id ? store_cache_get("agenda_v1_" . $id . ".json", 90) : ["ultimos" => [], "proximos" => [], "proximo" => null];
+  $tabelaCached = store_cache_get("tabela_bra_v1.json", 120);
+
+  $urls = [];
+  if (!$sbCached) {
+    $urls["hoje"] = "https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/scoreboard?dates=" . str_replace("-", "", $hoje) . "&limit=100";
+  }
+  if ($id && !$agendaCached) {
+    $urls["sched"] = "https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/schedule";
+  }
+  if (!$tabelaCached) {
+    $urls["stand"] = "https://site.api.espn.com/apis/v2/sports/soccer/bra.1/standings";
+  }
+  $raw = $urls ? baixar_json_multi($urls, 8) : [];
+
+  if ($sbCached) {
+    $evsHoje = $sbCached["events"] ?? [];
+  } else {
+    $evsHoje = $raw["hoje"]["events"] ?? [];
+    store_cache_put($sbNome, ["events" => $evsHoje]);
+  }
   $jogosHoje = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evsHoje);
-  $agenda = agenda_do_clube($timeUser);
+
+  if ($agendaCached) {
+    $agenda = $agendaCached;
+  } else {
+    $agenda = agenda_do_clube($timeUser, isset($raw["sched"]) ? $raw["sched"] : null);
+  }
   $proximos = $agenda["proximos"];
   $ultimos = $agenda["ultimos"];
-  $tabela = tabela_bra();
+
+  if ($tabelaCached) {
+    $tabela = $tabelaCached;
+  } elseif (!empty($raw["stand"])) {
+    $tabela = parse_tabela_espn($raw["stand"]);
+    if ($tabela) store_cache_put("tabela_bra_v1.json", $tabela);
+  } else {
+    $tabela = tabela_bra();
+  }
+
   $linha = null;
   foreach ($tabela as $l) {
     if (nome_bate($l["time"], $timeUser)) { $linha = $l; break; }
@@ -706,7 +817,7 @@ if ($acao === "portal") {
     "extra" => [],
     "proximos" => array_slice($proximos, 0, 8),
     "tabela" => $tabela,
-    "meta" => ["fonte" => "ESPN", "via" => "php-leve"],
+    "meta" => ["fonte" => "ESPN", "via" => "php-paralelo"],
     "noticiasMeta" => [],
     "noticias" => ["jogo" => [], "mercado" => []],
     "manchete" => null,
@@ -722,6 +833,7 @@ if ($acao === "portal") {
     "cache" => false
   ];
   @file_put_contents($cacheFile, json_encode($pack, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+  api_cache_headers(30);
   ok($pack);
 }
 

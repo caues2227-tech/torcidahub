@@ -2,14 +2,14 @@
 (function () {
   "use strict";
 
-  var FOTO = "/img/estadio-torcida.jpg";
+  var FOTO = "/img/estadio-noite.webp";
   var reduced = !(window.TorcidaQuerMotion ? window.TorcidaQuerMotion() : !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   function ensureCss() {
     if (document.querySelector('link[href*="fundo.css"]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/css/fundo.css?v=13";
+    link.href = "/css/fundo.css?v=26";
     document.head.appendChild(link);
   }
 
@@ -43,9 +43,9 @@
     img.alt = "";
     img.width = 1600;
     img.height = 900;
-    img.loading = "eager";
+    img.loading = "lazy";
     img.decoding = "async";
-    img.setAttribute("fetchpriority", "high");
+    img.setAttribute("fetchpriority", "low");
     root.appendChild(img);
 
     root.appendChild(el("div", "fundo-escurece"));

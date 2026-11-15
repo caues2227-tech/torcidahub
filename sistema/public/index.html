@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#05070c" />
+  <meta name="description" content="Portal do torcedor: notícias, jogos ao vivo e sua nação em um só lugar." />
+  <meta property="og:title" content="Torcida. — Monte sua nação" />
+  <meta property="og:description" content="Portal do torcedor: notícias, jogos ao vivo e sua nação em um só lugar." />
+  <title>Torcida. — Monte sua nação</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/archivo-latin-wght-normal.woff2" />
+  <link rel="stylesheet" href="/css/fonts.css?v=24" />
+  <link rel="stylesheet" href="/estilos.css?v=24" />
+  <link rel="stylesheet" href="/css/tokens.css?v=24" />
+  <link rel="stylesheet" href="/css/base.css?v=24" />
+  <link rel="stylesheet" href="/css/portal.css?v=24" />
+  <script src="/tema.js"></script>
+</head>
+<body class="pagina-portal">
+  <a class="pular" href="#principal">Ir para o conteúdo</a>
+  <header class="topo" id="topo"></header>
+
+  <main id="principal" class="conteudo">
+    <section class="hoje-hero" id="hero" aria-labelledby="titulo">
+      <p class="hoje-rotulo rotulo" id="rotuloHero" hidden><i class="ponto-vivo" hidden id="pontoVivo"></i><span id="rotuloTxt">Ao vivo</span></p>
+      <div class="hoje-placar num-display" id="placarHero" hidden aria-live="polite"></div>
+      <div data-reveal>
+        <h1 class="hoje-titulo titulo-display" id="titulo"><span class="mask-linha"><span>Tudo do clube, agora</span></span></h1>
+      </div>
+      <p class="hoje-sub" id="lead">Resumo real do seu clube: tabela, próximo jogo e notícias.</p>
+      <p class="hoje-atualizado" id="atualizado" hidden></p>
+      <div class="ticker-vivo" id="ticker" hidden><div class="ticker-pista" id="tickerPista"></div></div>
+    </section>
+
+    <div class="hoje-grid">
+      <div>
+        <a class="destaque-card" id="manchete" hidden target="_blank" rel="noopener"></a>
+        <section class="resumo-bloco" id="resumoCard" hidden>
+          <p class="rotulo"><span id="resumoEscudo"></span> Resumo do dia</p>
+          <p id="resumoTexto"></p>
+        </section>
+      </div>
+      <article class="holo-card card-holo" id="clube" aria-label="Seu clube">
+        <i class="canto tl"></i><i class="canto tr"></i><i class="canto bl"></i><i class="canto br"></i>
+        <div class="esqueleto esqueleto-card"></div>
+      </article>
+    </div>
+
+    <section class="hoje-jogos" id="secAoVivo" hidden aria-label="Jogos ao vivo">
+      <div class="trilho-cab">
+        <h2 class="rotulo"><i class="ponto-vivo" aria-hidden="true"></i> Ao vivo agora</h2>
+        <a class="rotulo com-ponto" href="/jogos.html">Ver todos</a>
+      </div>
+      <div class="grade-3" id="aoVivoGrade"></div>
+    </section>
+
+    <div class="trilho-cab">
+      <h2 class="rotulo" id="trilhoTitulo">Jogos de hoje</h2>
+      <span class="rotulo" id="dataHoje"></span>
+    </div>
+    <div class="trilho" id="trilho" aria-label="Trilho de jogos"></div>
+
+    <section class="hoje-jogos" aria-label="Jogos de hoje">
+      <div class="grade-3" id="hoje"><div class="esqueleto esqueleto-card"></div></div>
+    </section>
+
+    <section class="hoje-jogos" id="secProximos" hidden aria-label="Próximos jogos">
+      <div class="trilho-cab">
+        <h2 class="rotulo">Próximos jogos</h2>
+        <a class="rotulo com-ponto" href="/jogos.html">Agenda completa</a>
+      </div>
+      <div class="grade-3" id="proximosGrade"></div>
+    </section>
+  </main>
+
+  <div class="troca-tela" id="trocaTela" hidden>
+    <div class="troca-topo">
+      <input type="search" id="trocaBusca" placeholder="Buscar clube…" maxlength="60" autocomplete="off" />
+      <button type="button" class="btn-pill" id="trocaFechar">Fechar</button>
+    </div>
+    <div class="troca-grade" id="trocaGrade"></div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/js/vendor-loader.js?v=24"></script>
+  <script src="/js/vendor/gsap.min.js"></script>
+  <script src="/js/vendor/lenis.min.js"></script>
+  <script src="/app.js?v=24"></script>
+  <script src="/auth.js?v=24"></script>
+  <script src="/js/dados-estaticos.js?v=24"></script>
+  <script src="/js/nav.js?v=24"></script>
+  <script src="/js/motion.js?v=24"></script>
+  <script src="/js/notif.js?v=24"></script>
+  <script src="/portal.js?v=24"></script>
+  <script src="/chat.js?v=24"></script>
+</body>
+</html>

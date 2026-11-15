@@ -1,7 +1,8 @@
 RewriteEngine On
 
-# Home → login do app
-RewriteRule ^$ sistema/public/login.html [L]
+# Home → portal (Hoje) em /
+RewriteRule ^$ sistema/public/index.html [L]
+RewriteRule ^portal\.html$ / [R=301,L]
 
 # Auth / ranking / bot / live PHP (Hostinger sem Node)
 RewriteRule ^api/(login|cadastro|logout|me)/?$ sistema/public/api/index.php [L,QSA]

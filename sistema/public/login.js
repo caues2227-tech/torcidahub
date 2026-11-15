@@ -7,7 +7,7 @@
   var touch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
   var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   var voltar = T.voltarUrl();
-  var destino = voltar || "/portal.html";
+  var destino = voltar || "/";
   var clubeSelecionado = null;
   /* Escudos ESPN CDN — IDs da tabela bra.1 / bra.2. */
   var ESPN_CREST = {

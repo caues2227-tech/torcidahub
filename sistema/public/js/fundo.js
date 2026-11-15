@@ -43,6 +43,7 @@
     img.alt = "";
     img.width = 1600;
     img.height = 900;
+    img.loading = "eager";
     img.decoding = "async";
     img.setAttribute("fetchpriority", "high");
     root.appendChild(img);

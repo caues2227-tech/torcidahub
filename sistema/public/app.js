@@ -198,7 +198,8 @@
     var cls = "escudo" + (tam ? " escudo-" + tam : "");
     var src = url || (nome ? urlEscudo(nome) : "");
     if (!src) return '<span class="' + cls + ' escudo-letra">' + esc(iniciais(nome)) + "</span>";
-    return '<img class="' + cls + '" src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-escudo="' + esc(nome || "") + '">';
+    var mono = esc(iniciais(nome) || "?");
+    return '<img class="' + cls + '" src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-escudo="' + esc(nome || "") + '" onerror="this.onerror=null;this.outerHTML=\'<span class=\\\'' + cls + ' escudo-letra\\\'>' + mono + '</span>\'">';
   }
 
   function avatar(o) {
@@ -456,7 +457,7 @@
   /* ---------------------------------------------------------------- topo, menu e busca */
   // Hoje · Meu Clube · Jogos · Nação · Bot (atalhos 1–5)
   var MENU = [
-    ["Hoje", "/portal.html", "portal"],
+    ["Hoje", "/", "portal"],
     ["Meu Clube", "/meu-clube.html", "coracao"],
     ["Jogos", "/jogos.html", "jogos"],
     ["Nação", "/feed.html", "nacao"],
@@ -464,7 +465,11 @@
     ["Bot", "/chatbot.html", "bot"]
   ];
 
-  function paginaAtual() { return location.pathname === "/" ? "/portal.html" : location.pathname; }
+  function paginaAtual() {
+    var p = location.pathname || "/";
+    if (p === "/" || p === "/index.html" || p === "/portal.html") return "/";
+    return p;
+  }
 
   function menuUsuarioHtml(e) {
     var linhas = "";
@@ -492,7 +497,7 @@
     var atual = paginaAtual();
     topo.innerHTML =
       '<div class="topo-in">' +
-      '<a class="marca" href="/portal.html" aria-label="Torcida"><span class="marca-logo" aria-hidden="true">T</span><span class="marca-nome">TORCIDA<i>.</i></span></a>' +
+      '<a class="marca" href="/" aria-label="Torcida"><span class="marca-logo" aria-hidden="true">T</span><span class="marca-nome">TORCIDA<i>.</i></span></a>' +
       '<button type="button" class="btn-hamb" id="btnHamb" aria-label="Abrir menu"><span></span><span></span><span></span></button>' +
       '<nav class="menu" aria-label="Principal">' + MENU.map(function (m) {
         return '<a class="com-ponto" href="' + m[1] + '"' + (atual === m[1] ? ' aria-current="page"' : "") + ">" + m[0] + "</a>";
@@ -717,6 +722,11 @@
       s.defer = true;
       document.head.appendChild(s);
     }
-    /* Sino/notificações removido — era fake (badge "3") */
+    if (!w.TorcidaNotif) {
+      var sn = document.createElement("script");
+      sn.src = "/js/notif.js?v=24";
+      sn.defer = true;
+      document.head.appendChild(sn);
+    }
   }
 })(window);

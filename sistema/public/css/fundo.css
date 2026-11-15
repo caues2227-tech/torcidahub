@@ -20,15 +20,15 @@ body:not(.auth-page) {
   height: 100%;
   object-fit: cover;
   object-position: center 42%;
-  filter: brightness(0.9) saturate(1.1) contrast(1.05);
-  transform: scale(1.08);
-  animation: fundo-kenburns 40s ease-in-out infinite alternate;
+  filter: brightness(0.88) saturate(1.08) contrast(1.04);
+  transform: scale(1);
+  animation: fundo-kenburns 40s linear infinite alternate;
   will-change: transform;
 }
 
 @keyframes fundo-kenburns {
-  from { transform: scale(1.08) translate(0, 0); }
-  to { transform: scale(1.16) translate(-1%, -1%); }
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.08) translate(-0.6%, -0.4%); }
 }
 
 .fundo-escurece {

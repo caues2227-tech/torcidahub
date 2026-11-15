@@ -65,7 +65,7 @@
       corpo: { nome: nome, time: estado.time, feedTime: estado.feedTime || estado.time }
     }).then(function (d) {
       T.salvarSessao(d);
-      location.href = voltar || "/portal.html";
+      location.href = voltar || "/";
     }).catch(function (err) {
       btn.disabled = false;
       btn.removeAttribute("aria-busy");

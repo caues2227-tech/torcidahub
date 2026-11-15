@@ -331,7 +331,16 @@
     var local = lerCacheLocal();
     if (local) pintar(local);
 
-    return T.api("/api/portal", { semRedirecionar: true }).then(function (p) {
+    var early = window.__torcidaPortalEarly;
+    window.__torcidaPortalEarly = null;
+    var req = early
+      ? Promise.resolve(early).then(function (p) {
+          if (p && (p.jogosHoje || p.clube)) return p;
+          return T.api("/api/portal", { semRedirecionar: true });
+        })
+      : T.api("/api/portal", { semRedirecionar: true });
+
+    return req.then(function (p) {
       gravarCacheLocal(p);
       pintar(p);
     }, function (err) {

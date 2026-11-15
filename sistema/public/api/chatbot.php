@@ -204,12 +204,12 @@ function jogos_hoje() {
 }
 
 function proximo_do_clube($time) {
-  /* Usa /api/proximo (1 request, varre 25 dias no servidor) */
   $host = $_SERVER["HTTP_HOST"] ?? "";
   $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ? "https" : "http";
+
+  /* 1) /api/proximo (busca paralela) */
   if ($host) {
-    $url = $https . "://" . $host . "/api/proximo?time=" . rawurlencode($time);
-    $pack = baixar_json($url, 45);
+    $pack = baixar_json($https . "://" . $host . "/api/proximo?time=" . rawurlencode($time), 50);
     if (!empty($pack["jogo"])) {
       $j = $pack["jogo"];
       return [[
@@ -223,10 +223,30 @@ function proximo_do_clube($time) {
     }
   }
 
-  /* Fallback direto: poucos dias críticos */
+  /* 2) /api/agenda (já consolidada, até 25 dias) */
+  if ($host) {
+    $agenda = baixar_json($https . "://" . $host . "/api/agenda", 50);
+    foreach (($agenda["dias"] ?? []) as $dia) {
+      foreach (($dia["jogos"] ?? []) as $jogo) {
+        if (!nome_bate($jogo["mandante"] ?? "", $time) && !nome_bate($jogo["visitante"] ?? "", $time)) continue;
+        if (($jogo["status"] ?? "") === "encerrado") continue;
+        $dataRef = $dia["data"] ?? "";
+        return [[
+          "casa" => $jogo["mandante"] ?? "?",
+          "fora" => $jogo["visitante"] ?? "?",
+          "pc" => $jogo["placarMandante"] ?? null,
+          "pf" => $jogo["placarVisitante"] ?? null,
+          "status" => (($jogo["status"] ?? "") === "ao vivo" ? "IN" : "PRE"),
+          "hora" => $jogo["horario"] ?? ""
+        ], $dataRef ? date("d/m", strtotime($dataRef)) : ""];
+      }
+    }
+  }
+
+  /* 3) Scoreboards pontuais (dias mais longe primeiro — rodada típica) */
   $tz = new DateTimeZone("America/Sao_Paulo");
   $agora = new DateTime("now", $tz);
-  foreach ([0, 1, 2, 3, 4, 7, 10, 11, 14, 18, 21] as $i) {
+  foreach ([10, 11, 7, 14, 4, 3, 2, 1, 0, 18, 21] as $i) {
     $d = clone $agora;
     $d->modify("+$i day");
     foreach (scoreboard($d->format("Ymd")) as $j) {

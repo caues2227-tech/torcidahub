@@ -163,7 +163,12 @@
     CRB: 9970, "Goiás": 3395, Sport: 7635, "Operário-PR": 18187,
     "São Bernardo": 11268, "Botafogo-SP": 10281, Athletic: 20851, "Cuiabá": 17313,
     "Náutico": 7633, Ceará: 9969, "Avaí": 9966, Londrina: 17333,
-    "América-MG": 6154, "América Mineiro": 6154, "Ponte Preta": 3459
+    "América-MG": 6154, "América Mineiro": 6154, "Ponte Preta": 3459,
+    "Real Madrid": 86, Barcelona: 83, PSG: 160, "Manchester City": 382,
+    "Manchester United": 360, Liverpool: 364, Chelsea: 363, Arsenal: 359,
+    "Bayern Munich": 132, Juventus: 111, "Inter Milan": 110, "AC Milan": 103,
+    "Borussia Dortmund": 124, "Atlético Madrid": 1068, "Atletico Madrid": 1068,
+    Tottenham: 367, Napoli: 114, Ajax: 139, Benfica: 1929, Porto: 437
   };
   function urlEscudo(nome) {
     if (!nome) return "";
@@ -442,6 +447,7 @@
     ["Meu Clube", "/meu-clube.html", "coracao"],
     ["Jogos", "/jogos.html", "jogos"],
     ["Nação", "/feed.html", "nacao"],
+    ["Ranking", "/ranking.html", "ranking"],
     ["Bot", "/chatbot.html", "bot"]
   ];
 

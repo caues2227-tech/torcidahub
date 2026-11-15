@@ -44,17 +44,6 @@
     };
   }
 
-  var IMGS = [
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fm=webp&fit=crop&w=800&q=60",
-    "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fm=webp&fit=crop&w=800&q=60"
-  ];
-
   function noticia(id, o) {
     var h = Math.max(1, o.h || 1);
     return {
@@ -62,7 +51,7 @@
       time: o.time, quando: o.quando || ("há " + h + "h"), ts: Date.now() - h * 36e5,
       tag: o.tag || "jogo", tagLabel: o.tagLabel || "JOGO",
       titulo: o.titulo, resumo: o.resumo, texto: o.titulo,
-      imagem: o.imagem || IMGS[id.length % IMGS.length],
+      imagem: o.imagem || "",
       url: "#", comentarios: o.c || 40, reposts: o.r || 20, likes: o.l || 80,
       secao: o.secao || (o.tag === "mercado" || o.tag === "rebaixamento" ? "mercado" : "jogo"),
       comentariosLista: [], minhaReacao: null, reatores: ["A", "B"], reatoresN: o.l || 80
@@ -401,7 +390,10 @@
   function clubeNoTitulo(titulo) {
     var nomes = ["Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos", "Grêmio", "Internacional",
       "Atlético-MG", "Atlético Mineiro", "Cruzeiro", "Botafogo", "Vasco", "Bahia", "Fluminense",
-      "Athletico-PR", "Athletico Paranaense", "Fortaleza", "Bragantino", "Mirassol", "Cuiabá", "Juventude"];
+      "Athletico-PR", "Athletico Paranaense", "Fortaleza", "Bragantino", "Mirassol", "Cuiabá", "Juventude",
+      "Real Madrid", "Barcelona", "PSG", "Manchester City", "Manchester United", "Liverpool", "Chelsea",
+      "Arsenal", "Bayern Munich", "Juventus", "Inter Milan", "AC Milan", "Borussia Dortmund",
+      "Atlético Madrid", "Tottenham", "Napoli", "Ajax", "Benfica", "Porto"];
     var t = T.normaliza ? T.normaliza(titulo) : String(titulo || "").toLowerCase();
     for (var i = 0; i < nomes.length; i++) {
       var n = T.normaliza ? T.normaliza(nomes[i]) : String(nomes[i]).toLowerCase();
@@ -410,7 +402,7 @@
     return "";
   }
 
-  /** Capa única por matéria — sem repetir banco de fotos genéricas. */
+  /** Capa só quando a matéria não trouxe foto real (escudo/ícone — sem Unsplash). */
   function capaNoticia(p, icone, labelTag) {
     var hue = hueDoTitulo(p.titulo || p.id || "");
     var clube = clubeNoTitulo(p.titulo || "");
@@ -445,7 +437,7 @@
       (p.resumo ? '<p class="news-excerpt">' + esc(p.resumo) + "</p>" : "") +
       '<div class="news-media-wrap">' +
       (p.imagem
-        ? '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">'
+        ? '<img class="news-media-img" src="' + esc(p.imagem) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;var d=document.createElement(\'div\');d.className=\'news-media-cover\';d.innerHTML=\'<span class=fb-icon aria-hidden=true>⚽</span>\';this.replaceWith(d);">'
         : capaNoticia(p, icone, labelTag)) +
       '<span class="media-tag">' + (p.imagem ? "FOTO" : "CAPA") + ": " + esc(fonte) + "</span></div>" +
       '<div class="news-actions news-footer post-acoes">' +

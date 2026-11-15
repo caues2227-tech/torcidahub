@@ -3,7 +3,7 @@
   "use strict";
 
   var D = global.TorcidaData || {};
-  var CACHE_NOTICIAS = "torcida_noticias_global_v8";
+  var CACHE_NOTICIAS = "torcida_noticias_global_v9";
   var CACHE_TTL_NOTICIAS = 15 * 60 * 1000;
   var NOTICIAS_MAX = 60;
   var CACHE_JOGOS = "torcida_jogos_hoje_v1";
@@ -139,19 +139,29 @@
 
   async function buscarNoticiasEspn() {
     try {
-      var res = await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/news");
-      if (!res.ok) throw new Error("ESPN news HTTP " + res.status);
-      var data = await res.json();
-      var arts = (data.articles || []).map(function (a) {
-        return {
-          title: a.headline || a.description || "",
-          description: a.description || "",
-          url: (a.links && a.links.web && a.links.web.href) || "#",
-          image: (a.images && a.images[0] && a.images[0].url) || "",
-          publishedAt: a.published || new Date().toISOString(),
-          source: a.byline || "ESPN"
-        };
-      }).filter(function (a) { return a.title; });
+      var ligas = ["bra.1", "esp.1", "eng.1", "usa.1", "fra.1", "ger.1", "ita.1"];
+      var arts = [];
+      await Promise.all(ligas.map(function (liga) {
+        return fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/" + liga + "/news")
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (data) {
+            if (!data) return;
+            (data.articles || []).forEach(function (a) {
+              arts.push({
+                title: a.headline || a.description || "",
+                description: a.description || "",
+                url: (a.links && a.links.web && a.links.web.href) || "#",
+                image: (a.images && a.images[0] && a.images[0].url) || "",
+                publishedAt: a.published || new Date().toISOString(),
+                source: a.byline || "ESPN"
+              });
+            });
+          })
+          .catch(function () {});
+      }));
+      arts = arts.filter(function (a) { return a.title; });
+      /* Prefere matérias com foto real */
+      arts.sort(function (a, b) { return (b.image ? 1 : 0) - (a.image ? 1 : 0); });
       if (!arts.length) throw new Error("ESPN sem artigos");
       return mapArticles(arts, "espn");
     } catch (e) {
@@ -237,6 +247,12 @@
       return null;
     }
 
+    noticias.sort(function (a, b) {
+      var ia = a.imagem ? 1 : 0;
+      var ib = b.imagem ? 1 : 0;
+      if (ib !== ia) return ib - ia;
+      return (b.ts || 0) - (a.ts || 0);
+    });
     noticias = noticias.slice(0, NOTICIAS_MAX);
     gravarCache(CACHE_NOTICIAS, noticias);
     return noticias;

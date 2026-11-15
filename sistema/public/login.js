@@ -24,7 +24,12 @@
     "São Bernardo": 11268, "Botafogo-SP": 10281, Athletic: 20851, "Cuiabá": 17313,
     "Náutico": 7633, Ceará: 9969, "Avaí": 9966, Londrina: 17333,
     "América-MG": 6154, "América Mineiro": 6154, "Ponte Preta": 3459,
-    CSA: 9970, Paysandu: 6144, Guarani: 6275
+    CSA: 9970, Paysandu: 6144, Guarani: 6275,
+    "Real Madrid": 86, Barcelona: 83, PSG: 160, "Manchester City": 382,
+    "Manchester United": 360, Liverpool: 364, Chelsea: 363, Arsenal: 359,
+    "Bayern Munich": 132, Juventus: 111, "Inter Milan": 110, "AC Milan": 103,
+    "Borussia Dortmund": 124, "Atlético Madrid": 1068, "Atletico Madrid": 1068,
+    Tottenham: 367, Napoli: 114, Ajax: 139, Benfica: 1929, Porto: 437
   };
   function crestUrl(club) {
     var nome = club.name || club.nome || "";
@@ -77,7 +82,26 @@
     { id: "bsp", name: "Botafogo-SP", color: "#c41e3a" },
     { id: "ppt", name: "Ponte Preta", color: "#1a1a1a" },
     { id: "lon", name: "Londrina", color: "#1e5aa8" },
-    { id: "ath", name: "Athletic", color: "#1a1a1a" }
+    { id: "ath", name: "Athletic", color: "#1a1a1a" },
+    { id: "rma", name: "Real Madrid", color: "#ffffff" },
+    { id: "bar", name: "Barcelona", color: "#a50044" },
+    { id: "psg", name: "PSG", color: "#004170" },
+    { id: "mci", name: "Manchester City", color: "#6cabdd" },
+    { id: "mun", name: "Manchester United", color: "#da291c" },
+    { id: "liv", name: "Liverpool", color: "#c8102e" },
+    { id: "che", name: "Chelsea", color: "#034694" },
+    { id: "ars", name: "Arsenal", color: "#ef0107" },
+    { id: "bay", name: "Bayern Munich", color: "#dc052d" },
+    { id: "juve", name: "Juventus", color: "#1a1a1a" },
+    { id: "inter", name: "Inter Milan", color: "#010E80" },
+    { id: "acm", name: "AC Milan", color: "#fb090b" },
+    { id: "bvb", name: "Borussia Dortmund", color: "#fde100" },
+    { id: "atm", name: "Atlético Madrid", color: "#cb3524" },
+    { id: "tot", name: "Tottenham", color: "#132257" },
+    { id: "nap", name: "Napoli", color: "#12A0D7" },
+    { id: "aja", name: "Ajax", color: "#d2122e" },
+    { id: "ben", name: "Benfica", color: "#e32636" },
+    { id: "por", name: "Porto", color: "#003893" }
   ];
 
   function hexToRgb(hex) {

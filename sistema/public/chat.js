@@ -106,7 +106,6 @@
   function enviar(pergunta) {
     pergunta = String(pergunta || "").trim();
     if (!pergunta || ocupado) return;
-    if (window.AUTH && AUTH.bloquearSeVisitante("falar com o Bot")) return;
     ocupado = true;
     botaoEnviar.disabled = true;
     campo.value = "";
@@ -120,7 +119,8 @@
     }).catch(function (err) {
       espera.remove();
       var txt = err.status === 429 ? "Calma, torcedor! Muitas perguntas seguidas. Respire um instante e pergunte de novo."
-        : err.offline ? "A conexão caiu. Confira a internet e tente de novo."
+        : (err.status === 404 || err.offline)
+          ? "Bot offline neste momento. Atualiza a página (Ctrl+F5) ou pergunta de novo em instantes."
         : (err.message || "Não rolou agora. Tente de novo.");
       bolha(txt, "bot");
     }).then(function () {
@@ -144,18 +144,13 @@
   });
 
   pintarHistorico();
-  if (window.AUTH && AUTH.estaVisitante && AUTH.estaVisitante()) {
-    painel.querySelector("#chatEstado").textContent = "visitante — só olha · crie conta pra perguntar";
-    campo.disabled = true;
-    botaoEnviar.disabled = true;
-    painel.querySelector("#chatForm").addEventListener("click", function () {
-      AUTH.exigirConta("falar com o Bot");
-    });
-  }
   T.api("/api/chatbot/status", { semRedirecionar: true }).then(function (d) {
-    if (window.AUTH && AUTH.estaVisitante && AUTH.estaVisitante()) return;
-    painel.querySelector("#chatEstado").textContent = d.ia ? "respostas com IA e dados do site" : "respostas com os dados do site";
-  }).catch(function () { /* sem status, sem problema */ });
+    painel.querySelector("#chatEstado").textContent = d.ia
+      ? "respostas com IA e dados do site"
+      : "respostas com dados ao vivo (ESPN)";
+  }).catch(function () {
+    painel.querySelector("#chatEstado").textContent = "link ativo";
+  });
 
   var q = new URLSearchParams(location.search).get("q");
   if (raizPagina && q) {

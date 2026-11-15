@@ -72,16 +72,217 @@ function crest_map() {
   ];
 }
 
-function crest($nome) {
+function crest_id($nome) {
   $map = crest_map();
-  if (isset($map[$nome])) return "https://a.espncdn.com/i/teamlogos/soccer/500/" . $map[$nome] . ".png";
-  $n = mb_strtolower($nome);
+  if (isset($map[$nome])) return (int) $map[$nome];
+  $n = mb_strtolower(trim((string) $nome));
   foreach ($map as $k => $id) {
     if (mb_stripos($n, mb_strtolower($k)) !== false || mb_stripos(mb_strtolower($k), $n) !== false) {
-      return "https://a.espncdn.com/i/teamlogos/soccer/500/" . $id . ".png";
+      return (int) $id;
     }
   }
-  return "";
+  return null;
+}
+
+function crest($nome) {
+  $id = crest_id($nome);
+  return $id ? ("https://a.espncdn.com/i/teamlogos/soccer/500/" . $id . ".png") : "";
+}
+
+function espn_liga_time($nome) {
+  static $europa = [
+    "Real Madrid", "Barcelona", "PSG", "Manchester City", "Manchester United",
+    "Liverpool", "Chelsea", "Arsenal", "Bayern Munich", "Juventus", "Inter Milan",
+    "AC Milan", "Borussia Dortmund", "Atlético Madrid", "Tottenham", "Napoli",
+    "Ajax", "Benfica", "Porto"
+  ];
+  foreach ($europa as $t) {
+    if (nome_bate($t, $nome)) {
+      if (nome_bate($nome, "Real Madrid") || nome_bate($nome, "Barcelona") || nome_bate($nome, "Atlético Madrid")) return "esp.1";
+      if (nome_bate($nome, "PSG")) return "fra.1";
+      if (nome_bate($nome, "Bayern") || nome_bate($nome, "Dortmund")) return "ger.1";
+      if (nome_bate($nome, "Juventus") || nome_bate($nome, "Milan") || nome_bate($nome, "Napoli") || nome_bate($nome, "Inter")) return "ita.1";
+      if (nome_bate($nome, "Ajax")) return "ned.1";
+      if (nome_bate($nome, "Benfica") || nome_bate($nome, "Porto")) return "por.1";
+      return "eng.1";
+    }
+  }
+  return "bra.1";
+}
+
+/** Baixa vários scoreboards ESPN em paralelo. */
+function scoreboards_multi($datas, $liga = "bra.1", $timeout = 10) {
+  if (!function_exists("curl_multi_init")) {
+    $out = [];
+    foreach ($datas as $d) $out[$d] = scoreboard($d, $liga);
+    return $out;
+  }
+  $mh = curl_multi_init();
+  $chs = [];
+  foreach ($datas as $d) {
+    $url = "https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/scoreboard?dates=" . str_replace("-", "", $d) . "&limit=100";
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_TIMEOUT => $timeout,
+      CURLOPT_USERAGENT => "TorcidaLive/1.2",
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_ENCODING => ""
+    ]);
+    curl_multi_add_handle($mh, $ch);
+    $chs[$d] = $ch;
+  }
+  $running = null;
+  do {
+    curl_multi_exec($mh, $running);
+    if ($running) curl_multi_select($mh, 0.8);
+  } while ($running > 0);
+  $out = [];
+  foreach ($chs as $d => $ch) {
+    $body = curl_multi_getcontent($ch);
+    curl_multi_remove_handle($mh, $ch);
+    curl_close($ch);
+    $data = $body ? json_decode($body, true) : null;
+    $out[$d] = is_array($data) ? ($data["events"] ?? []) : [];
+  }
+  curl_multi_close($mh);
+  return $out;
+}
+
+function letra_resultado($j, $time) {
+  $casa = nome_bate($j["mandante"], $time);
+  $pc = (int) ($j["placarMandante"] ?? 0);
+  $pf = (int) ($j["placarVisitante"] ?? 0);
+  if ($pc === $pf) return "E";
+  if ($casa) return $pc > $pf ? "V" : "D";
+  return $pf > $pc ? "V" : "D";
+}
+
+function ultimos_do_clube($time, $dias = 18) {
+  $hoje = hoje_sp();
+  $datas = [];
+  for ($i = 1; $i <= $dias; $i++) $datas[] = add_dias($hoje, -$i);
+  $liga = espn_liga_time($time);
+  $boards = scoreboards_multi($datas, $liga, 8);
+  $lista = [];
+  foreach ($boards as $d => $evs) {
+    foreach ($evs as $ev) {
+      $j = evento_jogo($ev, $time);
+      if ($j["status"] !== "encerrado") continue;
+      if ($j["placarMandante"] === null || $j["placarVisitante"] === null) continue;
+      if (!$j["quente"]) continue;
+      $j["letra"] = letra_resultado($j, $time);
+      $lista[] = $j;
+    }
+  }
+  usort($lista, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
+  return array_slice($lista, 0, 10);
+}
+
+function stat_jogador($athlete, $nomeStat) {
+  $cats = $athlete["statistics"]["splits"]["categories"] ?? [];
+  foreach ($cats as $c) {
+    foreach (($c["stats"] ?? []) as $s) {
+      if (($s["name"] ?? "") === $nomeStat) return (int) ($s["value"] ?? 0);
+    }
+  }
+  return 0;
+}
+
+function posicao_pt($athlete) {
+  $pos = $athlete["position"] ?? [];
+  $abbr = strtoupper((string) ($pos["abbreviation"] ?? ""));
+  $name = (string) ($pos["displayName"] ?? $pos["name"] ?? "");
+  $map = [
+    "G" => "Goleiro", "GK" => "Goleiro", "GOALKEEPER" => "Goleiro",
+    "D" => "Zagueiro", "DEFENDER" => "Zagueiro", "CENTER-BACK" => "Zagueiro",
+    "M" => "Meia", "MIDFIELDER" => "Meia",
+    "F" => "Atacante", "FORWARD" => "Atacante", "ATTACKER" => "Atacante"
+  ];
+  if (isset($map[$abbr])) return $map[$abbr];
+  $u = strtoupper($name);
+  foreach ($map as $k => $v) {
+    if (strpos($u, $k) !== false) return $v;
+  }
+  return $name ?: "Jogador";
+}
+
+function elenco_espn($time) {
+  require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
+  $id = crest_id($time);
+  if (!$id) return ["jogadores" => [], "artilharia" => [], "via" => "sem-id"];
+
+  $store = torcida_store_dir();
+  $cacheFile = $store . DIRECTORY_SEPARATOR . "elenco_" . $id . ".json";
+  if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 6 * 3600) {
+    $cached = json_decode(@file_get_contents($cacheFile), true);
+    if (is_array($cached) && !empty($cached["jogadores"])) return $cached;
+  }
+
+  $liga = espn_liga_time($time);
+  $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/teams/" . $id . "/roster", 14);
+  $athletes = $data["athletes"] ?? [];
+  /* às vezes vem agrupado por posição */
+  if ($athletes && isset($athletes[0]["items"])) {
+    $flat = [];
+    foreach ($athletes as $grp) {
+      foreach (($grp["items"] ?? []) as $a) $flat[] = $a;
+    }
+    $athletes = $flat;
+  }
+
+  $jogadores = [];
+  foreach ($athletes as $a) {
+    $nome = trim((string) ($a["displayName"] ?? $a["fullName"] ?? ""));
+    if ($nome === "") continue;
+    $pid = (string) ($a["id"] ?? "");
+    $foto = "";
+    if (!empty($a["headshot"]["href"])) $foto = $a["headshot"]["href"];
+    $gols = stat_jogador($a, "totalGoals");
+    $assist = stat_jogador($a, "goalAssists");
+    $apps = stat_jogador($a, "appearances");
+    $jogadores[] = [
+      "id" => $pid,
+      "nome" => $nome,
+      "posicao" => posicao_pt($a),
+      "numero" => (string) ($a["jersey"] ?? ""),
+      "foto" => $foto,
+      "gols" => $gols,
+      "assistencias" => $assist,
+      "jogos" => $apps
+    ];
+  }
+
+  usort($jogadores, function ($x, $y) {
+    $ordem = ["Goleiro" => 1, "Zagueiro" => 2, "Meia" => 3, "Atacante" => 4];
+    $ox = $ordem[$x["posicao"]] ?? 5;
+    $oy = $ordem[$y["posicao"]] ?? 5;
+    if ($ox !== $oy) return $ox <=> $oy;
+    return strcmp($x["nome"], $y["nome"]);
+  });
+
+  $art = $jogadores;
+  usort($art, function ($x, $y) {
+    if (($y["gols"] ?? 0) !== ($x["gols"] ?? 0)) return ($y["gols"] ?? 0) <=> ($x["gols"] ?? 0);
+    return ($y["assistencias"] ?? 0) <=> ($x["assistencias"] ?? 0);
+  });
+  $artilharia = array_values(array_filter($art, function ($j) {
+    return ($j["gols"] ?? 0) > 0 || ($j["assistencias"] ?? 0) > 0;
+  }));
+  $artilharia = array_slice($artilharia, 0, 10);
+
+  $pack = [
+    "time" => $time,
+    "jogadores" => $jogadores,
+    "artilharia" => $artilharia,
+    "via" => "espn-roster",
+    "atualizadoEm" => date("c")
+  ];
+  if ($jogadores) {
+    @file_put_contents($cacheFile, json_encode($pack, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+  }
+  return $pack;
 }
 
 function nome_bate($a, $b) {
@@ -364,17 +565,30 @@ if ($acao === "agenda") {
 
 if ($acao === "portal") {
   $hoje = hoje_sp();
-  $evsHoje = scoreboard($hoje);
+  $liga = espn_liga_time($timeUser);
+  /* Um único lote paralelo: 14 dias atrás + hoje + 6 à frente */
+  $datas = [];
+  for ($i = -14; $i <= 6; $i++) $datas[] = add_dias($hoje, $i);
+  $boards = scoreboards_multi($datas, $liga, 8);
+  $evsHoje = $boards[$hoje] ?? [];
   $jogosHoje = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evsHoje);
   $proximos = [];
-  for ($i = 0; $i < 7 && count($proximos) < 10; $i++) {
-    $d = add_dias($hoje, $i);
-    foreach (scoreboard($d) as $ev) {
+  $ultimos = [];
+  foreach ($datas as $d) {
+    foreach (($boards[$d] ?? []) as $ev) {
       $j = evento_jogo($ev, $timeUser);
-      if ($j["status"] === "encerrado") continue;
+      if ($j["status"] === "encerrado") {
+        if ($j["quente"] && $j["placarMandante"] !== null && $j["placarVisitante"] !== null) {
+          $j["letra"] = letra_resultado($j, $timeUser);
+          $ultimos[] = $j;
+        }
+        continue;
+      }
       $proximos[] = $j;
     }
   }
+  usort($ultimos, function ($a, $b) { return strcmp($b["data"], $a["data"]); });
+  $ultimos = array_slice($ultimos, 0, 10);
   $tabela = tabela_bra();
   $linha = null;
   foreach ($tabela as $l) {
@@ -385,9 +599,9 @@ if ($acao === "portal") {
     if ($j["quente"]) { $proxClube = $j; break; }
   }
   $tema = tema_clube($timeUser);
-  /* Manchete com foto real (ESPN) — some se não houver imagem */
+  /* Manchete opcional — 1 request; some se falhar */
   $manchete = null;
-  $news = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/news");
+  $news = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/" . $liga . "/news", 6);
   foreach (($news["articles"] ?? []) as $a) {
     $img = $a["images"][0]["url"] ?? null;
     if (!$img || strpos($img, "http") !== 0) continue;
@@ -422,7 +636,7 @@ if ($acao === "portal") {
       "escudo" => crest($timeUser),
       "tabela" => $linha,
       "proximo" => $proxClube,
-      "ultimos" => []
+      "ultimos" => $ultimos
     ],
     "tema" => $tema
   ]);
@@ -462,8 +676,14 @@ if ($acao === "coracao") {
 
 if ($acao === "avatares") {
   $time = $_GET["time"] ?? $timeUser;
+  $pack = elenco_espn($time);
   $esc = crest($time);
   ok([
+    "time" => $time,
+    "jogadores" => $pack["jogadores"] ?? [],
+    "artilharia" => $pack["artilharia"] ?? [],
+    "via" => $pack["via"] ?? "espn-roster",
+    "atualizadoEm" => $pack["atualizadoEm"] ?? date("c"),
     "avatares" => [
       ["id" => "crest", "url" => $esc, "nome" => "Escudo"],
       ["id" => "inicial", "url" => "", "nome" => "Inicial"]

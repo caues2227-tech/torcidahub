@@ -760,7 +760,7 @@ if ($acao === "agenda") {
 if ($acao === "portal") {
   require_once __DIR__ . DIRECTORY_SEPARATOR . "_store_path.php";
   $hoje = hoje_sp();
-  $cacheKey = "portal_v3_" . preg_replace('/[^a-z0-9]+/i', "_", mb_strtolower($timeUser)) . "_" . $hoje . ".json";
+  $cacheKey = "portal_v4_" . preg_replace('/[^a-z0-9]+/i', "_", mb_strtolower($timeUser)) . "_" . $hoje . ".json";
   $cacheFile = torcida_store_dir() . DIRECTORY_SEPARATOR . $cacheKey;
   if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < 90) {
     $cached = json_decode(@file_get_contents($cacheFile), true);
@@ -806,6 +806,38 @@ if ($acao === "portal") {
   }
   $proximos = $agenda["proximos"];
   $ultimos = $agenda["ultimos"];
+
+  /* Se a agenda do time vier vazia, completa com scoreboards (cache da agenda ou multi leve) */
+  if (!$proximos) {
+    $agBra = store_cache_get("agenda_bra_" . $hoje . ".json", 90);
+    if ($agBra && !empty($agBra["dias"])) {
+      foreach ($agBra["dias"] as $dia) {
+        foreach (($dia["jogos"] ?? []) as $j) {
+          if (!nome_bate($j["mandante"] ?? "", $timeUser) && !nome_bate($j["visitante"] ?? "", $timeUser)) continue;
+          if (($j["status"] ?? "") === "encerrado") continue;
+          $proximos[] = $j;
+        }
+      }
+    }
+    if (!$proximos) {
+      $datasProx = [];
+      for ($i = 0; $i < 10; $i++) $datasProx[] = add_dias($hoje, $i);
+      $boardsProx = scoreboards_multi($datasProx, $liga, 6);
+      foreach ($datasProx as $d) {
+        foreach (($boardsProx[$d] ?? []) as $ev) {
+          $j = evento_jogo($ev, $timeUser);
+          if (!nome_bate($j["mandante"], $timeUser) && !nome_bate($j["visitante"], $timeUser)) continue;
+          if ($j["status"] === "encerrado") continue;
+          $proximos[] = $j;
+        }
+      }
+    }
+    usort($proximos, function ($a, $b) {
+      return strcmp(($a["data"] ?? "") . ($a["horario"] ?? ""), ($b["data"] ?? "") . ($b["horario"] ?? ""));
+    });
+    $proximos = array_slice($proximos, 0, 8);
+    if ($proximos) $agenda["proximo"] = $proximos[0];
+  }
 
   if ($tabelaCached) {
     $tabela = $tabelaCached;

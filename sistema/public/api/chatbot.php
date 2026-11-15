@@ -204,79 +204,34 @@ function jogos_hoje() {
 }
 
 function proximo_do_clube($time) {
-  $tz = new DateTimeZone("America/Sao_Paulo");
-  $agora = new DateTime("now", $tz);
-
-  /* 1) Agenda do time na ESPN (1 request) */
-  $tid = espn_id_clube($time);
-  if ($tid) {
-    $data = baixar_json("https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/teams/" . $tid . "/schedule", 12);
-    $candidatos = [];
-    foreach (($data["events"] ?? []) as $ev) {
-      $comp = $ev["competitions"][0] ?? [];
-      $comps = $comp["competitors"] ?? [];
-      $home = null; $away = null;
-      foreach ($comps as $c) {
-        if (($c["homeAway"] ?? "") === "home") $home = $c;
-        if (($c["homeAway"] ?? "") === "away") $away = $c;
-      }
-      $state = strtoupper((string) ($ev["status"]["type"]["state"] ?? ""));
-      if ($state === "POST") continue;
-      $dataIso = $ev["date"] ?? "";
-      if ($dataIso === "") continue;
-      try {
-        $dt = (new DateTime($dataIso))->setTimezone($tz);
-      } catch (Exception $e) { continue; }
-      /* ignora jogos muito antigos (mais de 1 dia atrás) */
-      if ($dt < (clone $agora)->modify("-1 day") && $state !== "IN") continue;
-      $candidatos[] = [
-        "casa" => $home["team"]["displayName"] ?? "?",
-        "fora" => $away["team"]["displayName"] ?? "?",
-        "pc" => $home["score"] ?? null,
-        "pf" => $away["score"] ?? null,
-        "status" => $state,
-        "hora" => $dt->format("H:i"),
-        "_dt" => $dt
-      ];
-    }
-    usort($candidatos, function ($a, $b) { return $a["_dt"] <=> $b["_dt"]; });
-    if ($candidatos) {
-      $j = $candidatos[0];
-      $dia = $j["_dt"]->format("d/m");
-      unset($j["_dt"]);
-      return [$j, $dia];
-    }
-  }
-
-  /* 2) Fallback: /api/agenda do próprio site */
+  /* Usa /api/proximo (1 request, varre 25 dias no servidor) */
   $host = $_SERVER["HTTP_HOST"] ?? "";
   $https = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ? "https" : "http";
   if ($host) {
-    $agenda = baixar_json($https . "://" . $host . "/api/agenda", 14);
-    foreach (($agenda["dias"] ?? []) as $dia) {
-      foreach (($dia["jogos"] ?? []) as $jogo) {
-        if (!nome_bate($jogo["mandante"] ?? "", $time) && !nome_bate($jogo["visitante"] ?? "", $time)) continue;
-        if (($jogo["status"] ?? "") === "encerrado") continue;
-        return [[
-          "casa" => $jogo["mandante"] ?? "?",
-          "fora" => $jogo["visitante"] ?? "?",
-          "pc" => $jogo["placarMandante"] ?? null,
-          "pf" => $jogo["placarVisitante"] ?? null,
-          "status" => (($jogo["status"] ?? "") === "ao vivo" ? "IN" : "PRE"),
-          "hora" => $jogo["horario"] ?? ""
-        ], isset($dia["data"]) ? date("d/m", strtotime($dia["data"])) : ""];
-      }
+    $url = $https . "://" . $host . "/api/proximo?time=" . rawurlencode($time);
+    $pack = baixar_json($url, 45);
+    if (!empty($pack["jogo"])) {
+      $j = $pack["jogo"];
+      return [[
+        "casa" => $j["mandante"] ?? $j["casa"] ?? "?",
+        "fora" => $j["visitante"] ?? $j["fora"] ?? "?",
+        "pc" => $j["placarMandante"] ?? $j["pc"] ?? null,
+        "pf" => $j["placarVisitante"] ?? $j["pf"] ?? null,
+        "status" => (($j["status"] ?? "") === "ao vivo" || ($j["status"] ?? "") === "IN") ? "IN" : "PRE",
+        "hora" => $j["horario"] ?? $j["hora"] ?? ""
+      ], $pack["dia"] ?? ""];
     }
   }
 
-  /* 3) Último recurso: scoreboard dos próximos 21 dias (saltando) */
-  for ($i = 0; $i <= 21; $i += 1) {
+  /* Fallback direto: poucos dias críticos */
+  $tz = new DateTimeZone("America/Sao_Paulo");
+  $agora = new DateTime("now", $tz);
+  foreach ([0, 1, 2, 3, 4, 7, 10, 11, 14, 18, 21] as $i) {
     $d = clone $agora;
     $d->modify("+$i day");
     foreach (scoreboard($d->format("Ymd")) as $j) {
       if (!nome_bate($j["casa"], $time) && !nome_bate($j["fora"], $time)) continue;
-      $st = strtoupper((string) $j["status"]);
-      if ($st === "POST") continue;
+      if (strtoupper((string) $j["status"]) === "POST") continue;
       return [$j, $d->format("d/m")];
     }
   }

@@ -92,7 +92,16 @@ function nome_bate($a, $b) {
   };
   $x = $norm($a); $y = $norm($b);
   if ($x === "" || $y === "") return false;
-  return $x === $y || strpos($x, $y) !== false || strpos($y, $x) !== false;
+  if ($x === $y || strpos($x, $y) !== false || strpos($y, $x) !== false) return true;
+  /* aliases comuns */
+  $alias = function ($n) {
+    if (strpos($n, "atleticomg") !== false || strpos($n, "atleticomineiro") !== false || $n === "galo" || $n === "cam") return "atleticomg";
+    if (strpos($n, "athleticopr") !== false || strpos($n, "athleticoparanaense") !== false) return "athleticopr";
+    if (strpos($n, "vasco") !== false) return "vasco";
+    if (strpos($n, "bragantino") !== false) return "bragantino";
+    return $n;
+  };
+  return $alias($x) === $alias($y);
 }
 
 function status_espn($state) {
@@ -258,6 +267,67 @@ if ($acao === "tabela") {
   ok(["tabela" => tabela_bra(), "via" => "espn-php"]);
 }
 
+if ($acao === "proximo") {
+  $hoje = hoje_sp();
+  $alvo = $_GET["time"] ?? $timeUser;
+  /* Busca paralela dos próximos 25 dias (evita timeout do Hostinger) */
+  $urls = [];
+  for ($i = 0; $i < 25; $i++) {
+    $d = add_dias($hoje, $i);
+    $urls[$d] = "https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard?dates=" . str_replace("-", "", $d) . "&limit=80";
+  }
+  $mh = curl_multi_init();
+  $chs = [];
+  foreach ($urls as $d => $url) {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_TIMEOUT => 10,
+      CURLOPT_USERAGENT => "TorcidaLive/1.1",
+      CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_ENCODING => ""
+    ]);
+    curl_multi_add_handle($mh, $ch);
+    $chs[$d] = $ch;
+  }
+  $running = null;
+  do {
+    curl_multi_exec($mh, $running);
+    if ($running) curl_multi_select($mh, 1.0);
+  } while ($running > 0);
+
+  $achou = null;
+  $diaAchou = null;
+  ksort($chs);
+  foreach ($chs as $d => $ch) {
+    $body = curl_multi_getcontent($ch);
+    curl_multi_remove_handle($mh, $ch);
+    curl_close($ch);
+    if ($achou || !$body) continue;
+    $data = json_decode($body, true);
+    foreach (($data["events"] ?? []) as $ev) {
+      $j = evento_jogo($ev, $alvo);
+      if (!nome_bate($j["mandante"], $alvo) && !nome_bate($j["visitante"], $alvo)) continue;
+      if ($j["status"] === "encerrado") continue;
+      $achou = $j;
+      $diaAchou = $d;
+      break;
+    }
+  }
+  curl_multi_close($mh);
+
+  if ($achou) {
+    ok([
+      "jogo" => $achou,
+      "dia" => date("d/m", strtotime($diaAchou)),
+      "data" => $diaAchou,
+      "via" => "espn-php"
+    ]);
+  }
+  ok(["jogo" => null, "erro" => "Sem próximo jogo na janela", "via" => "espn-php"]);
+}
+
 if ($acao === "hoje") {
   $hoje = hoje_sp();
   $evs = scoreboard($hoje);
@@ -274,7 +344,7 @@ if ($acao === "hoje") {
 if ($acao === "agenda") {
   $hoje = hoje_sp();
   $dias = [];
-  for ($i = 0; $i < 10; $i++) {
+  for ($i = 0; $i < 25; $i++) {
     $d = add_dias($hoje, $i);
     $evs = scoreboard($d);
     $jogos = array_map(function ($ev) use ($timeUser) { return evento_jogo($ev, $timeUser); }, $evs);

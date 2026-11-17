@@ -1,0 +1,14 @@
+﻿Fotos do site Torcida (mesmo repositorio Git)
+
+Site: https://lightyellow-viper-236932.hostingersite.com/
+Repositorio: https://github.com/caues2227-tech/torcidahub
+
+01-hoje-portal.png     - Home / Hoje
+02-meu-clube.png       - Meu Clube (tabela)
+03-jogos.png           - Agenda de jogos
+04-ranking.png         - Ranking de torcida
+05-bot.png             - Bot da Torcida
+06-nacao.png           - Nacao (feed)
+07-login.png           - Splash / tela inicial
+08-login-entrar.png    - Login / entrar
+09-elenco.png          - Elenco (Meu Clube)
